@@ -1,0 +1,251 @@
+# ============================================================
+# compose.yml
+#
+# Usage:
+#   Local dev:  docker compose --profile dev up
+#   Production: docker compose --profile prod up -d
+# ============================================================
+
+services:
+  # ============================================================
+  # Database
+  # ============================================================
+  # TODO: Consider memory cap/shared memory limit (shm_size: 128mb) and exposed port for 
+  db:
+    image: postgres:${POSTGRES_IMAGE_VERSION}
+    restart: unless-stopped
+    volumes:
+      - db-data:/var/lib/postgresql
+      - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    environment:
+      POSTGRES_USER: ${POSTGRES_SUPERUSER}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD}
+      POSTGRES_BACKEND_DB: ${POSTGRES_BACKEND_DB}
+      POSTGRES_BACKEND_USER: ${POSTGRES_BACKEND_USER}
+      POSTGRES_BACKEND_PASSWORD: ${POSTGRES_BACKEND_PASSWORD}
+      KEYCLOAK_DB: ${KEYCLOAK_DB}
+      KEYCLOAK_DB_USER: ${KEYCLOAK_DB_USER}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - internal
+
+  # ============================================================
+  # Identity (Keycloak)
+  # ============================================================
+  identity:
+    image: quay.io/keycloak/keycloak:${KEYCLOAK_IMAGE_VERSION}
+    command: >
+      ${KEYCLOAK_START_COMMAND}
+    environment:
+      # For now skip this, later on create a dedicated production compose.yml to handle this issue because locally Keycloak needs SSL.......
+      # but in prod we need these values
+      # KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-}
+      # KC_PROXY_HEADERS: ${KEYCLOAK_PROXY_HEADERS:-}
+      KC_HTTP_ENABLED: "true"
+      KC_DB: ${KEYCLOAK_RDBMS}
+      KC_DB_URL: ${KEYCLOAK_JDBC_CONNECTION_URL}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USER}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+      KC_HEALTH_ENABLED: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    networks:
+      - internal
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label=traefik-public
+      # HTTP
+      - traefik.http.routers.${STACK_NAME}-identity.rule=Host(`auth.${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-identity.entrypoints=http
+      # HTTPS (ignored in dev — no https entrypoint defined)
+      - traefik.http.routers.${STACK_NAME}-identity-secure.rule=Host(`auth.${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-identity-secure.entrypoints=https
+      - traefik.http.routers.${STACK_NAME}-identity-secure.tls=true
+      - traefik.http.routers.${STACK_NAME}-identity-secure.tls.certresolver=le
+      # Shared service target
+      - traefik.http.services.${STACK_NAME}-identity.loadbalancer.server.port=8080
+
+  # ============================================================
+  # Backend (FastAPI)
+  # ============================================================
+  backend:
+    build:
+      context: ./services/backend
+    volumes:
+      - ./services/backend/app:/src/app
+    environment:
+      IS_PROD: ${IS_PROD}
+      POSTGRES_USER: ${POSTGRES_BACKEND_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_BACKEND_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_BACKEND_DB}
+      POSTGRES_HOST: ${POSTGRES_SERVER}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      KEYCLOAK_INTERNAL_URL: http://identity:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      MEDIAMTX_API_URL: ${MEDIAMTX_API_URL}
+      WEBRTC_BASE_URL: ${WEBRTC_BASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - internal
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label=traefik-public
+      # HTTP
+      - traefik.http.routers.${STACK_NAME}-backend.rule=Host(`api.${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-backend.entrypoints=http
+      # HTTPS
+      - traefik.http.routers.${STACK_NAME}-backend-secure.rule=Host(`api.${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-backend-secure.entrypoints=https
+      - traefik.http.routers.${STACK_NAME}-backend-secure.tls=true
+      - traefik.http.routers.${STACK_NAME}-backend-secure.tls.certresolver=le
+      # Shared service target
+      - traefik.http.services.${STACK_NAME}-backend.loadbalancer.server.port=8000
+
+  # ============================================================
+  # UI (Frontend)
+  # ============================================================
+  ui:
+    build:
+      context: ./services/ui
+    volumes:
+      - ./services/ui/src:/src/src
+      - ./services/ui/index.html:/src/index.html
+    restart: unless-stopped
+    networks:
+      - internal
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label=traefik-public
+      # HTTP
+      - traefik.http.routers.${STACK_NAME}-ui.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-ui.entrypoints=http
+      # HTTPS
+      - traefik.http.routers.${STACK_NAME}-ui-secure.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-ui-secure.entrypoints=https
+      - traefik.http.routers.${STACK_NAME}-ui-secure.tls=true
+      - traefik.http.routers.${STACK_NAME}-ui-secure.tls.certresolver=le
+      # Shared service target
+      - traefik.http.services.${STACK_NAME}-ui.loadbalancer.server.port=5173
+
+  # ============================================================
+  # Streaming (MediaMTX)
+  # ============================================================
+  streaming:
+    image: bluenviron/mediamtx:latest
+    restart: unless-stopped
+    environment:
+      MTX_RTSPTRANSPORTS: tcp
+    ports:
+      - "8554:8554"     # RTSP over TCP — drones publish here
+      - "8189:8189/udp" # WebRTC media (UDP, can't go through Traefik)
+      - "9997:9997"
+    volumes:
+      - ./scripts/mediamtx.yml:/mediamtx.yml:ro
+    networks:
+      - internal
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label=traefik-public
+      # RTSP-over-HTTP publishing + HLS (port 8888)
+      - traefik.http.routers.${STACK_NAME}-streaming.rule=Host(`media.${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-streaming.entrypoints=http
+      - traefik.http.routers.${STACK_NAME}-streaming.service=${STACK_NAME}-streaming
+      - traefik.http.services.${STACK_NAME}-streaming.loadbalancer.server.port=8888
+      # HTTPS
+      - traefik.http.routers.${STACK_NAME}-streaming-secure.rule=Host(`media.${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-streaming-secure.entrypoints=https
+      - traefik.http.routers.${STACK_NAME}-streaming-secure.tls=true
+      - traefik.http.routers.${STACK_NAME}-streaming-secure.tls.certresolver=le
+      - traefik.http.routers.${STACK_NAME}-streaming-secure.service=${STACK_NAME}-streaming
+      # WebRTC signaling + player page (port 8889)
+      - traefik.http.routers.${STACK_NAME}-webrtc.rule=Host(`webrtc.${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-webrtc.entrypoints=http
+      - traefik.http.routers.${STACK_NAME}-webrtc.service=${STACK_NAME}-webrtc
+      - traefik.http.services.${STACK_NAME}-webrtc.loadbalancer.server.port=8889
+      # HTTPS
+      - traefik.http.routers.${STACK_NAME}-webrtc-secure.rule=Host(`webrtc.${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-webrtc-secure.entrypoints=https
+      - traefik.http.routers.${STACK_NAME}-webrtc-secure.tls=true
+      - traefik.http.routers.${STACK_NAME}-webrtc-secure.tls.certresolver=le
+      - traefik.http.routers.${STACK_NAME}-webrtc-secure.service=${STACK_NAME}-webrtc
+
+  # ============================================================
+  # Proxy — Production (HTTPS, Let's Encrypt)
+  # ============================================================
+  proxy:
+    image: traefik:v3
+    profiles: ["prod"]
+    restart: unless-stopped
+    command:
+      - --providers.docker
+      - --providers.docker.constraints=Label(`traefik.constraint-label`, `traefik-public`)
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
+      # HTTP -> HTTPS redirect
+      - --entrypoints.http.http.redirections.entrypoint.to=https
+      - --entrypoints.http.http.redirections.entrypoint.scheme=https
+      # Let's Encrypt
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/certificates/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=http
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certificates:/certificates
+    networks:
+      - internal
+
+  # ============================================================
+  # Proxy — Dev (HTTP only, dashboard enabled)
+  # ============================================================
+  proxy-dev:
+    image: traefik:v3
+    profiles: ["dev"]
+    restart: unless-stopped
+    command:
+      - --providers.docker
+      - --providers.docker.constraints=Label(`traefik.constraint-label`, `traefik-public`)
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.http.address=:80
+      - --api.insecure=true
+      - --accesslog
+      - --log
+    ports:
+      - "80:80"
+      - "8090:8080" # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - internal
+
+# ============================================================
+# Volumes
+# ============================================================
+volumes:
+  db-data:
+  traefik-certificates:
+
+# ============================================================
+# Networks
+# ============================================================
+networks:
+  internal:
