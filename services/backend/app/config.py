@@ -24,6 +24,7 @@ class Settings(BaseSettings):
 
     KEYCLOAK_INTERNAL_URL: str
     KEYCLOAK_REALM: str
+    KEYCLOAK_AUDIENCE: str
 
     @computed_field
     @property

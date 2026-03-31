@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -6,6 +7,11 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api.error.handler import register_exceptions
 from app.api.main import api_router
 from app.data.db.session import create_db_and_tables
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-8s %(name)s — %(message)s",
+)
 
 
 # TODO: See how this works
