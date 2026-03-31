@@ -4,8 +4,7 @@ from app.api.security.deps import CurrentUser
 from app.data.db.model.user import User
 from app.service.user.user_service import UserServiceDep
 
-# TODO: rename all endpoints to not be plural
-router = APIRouter(prefix="/users", redirect_slashes=False)
+router = APIRouter(prefix="/user", tags=["user"], redirect_slashes=False)
 
 
 @router.get("/")

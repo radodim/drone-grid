@@ -1,9 +1,16 @@
 from pydantic import computed_field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # pydantic automatically maps fields to environment variables, no need to do os.environ["<ENV_VAR_NAME>"]
+    # env vars take precedence over the vars in the env files specified here
+    # env_file here is a fallback for running outside the container runtime (e.g. openapi client generation)
+    # env vars are loaded from the same env files listed here for local development, for prod there are overrides
+    model_config = SettingsConfigDict(
+        env_file=("../../.env", "../../config/backend/.env"),
+        env_ignore_empty=True,
+        extra="ignore",
+    )
 
     ### DBMS config ####
 
@@ -39,6 +46,18 @@ class Settings(BaseSettings):
     WEBRTC_BASE_URL: str
 
     ### Media server config ###
+
+    ### Deployment config ###
+
+    ENVIRONMENT: str
+    CORS_ORIGINS: str  # comma-separated list of allowed origins
+
+    @computed_field
+    @property
+    def CORS_ORIGINS_LIST(self) -> list[str]:
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+
+    ### Deployment config ###
 
 
 GLOBAL_APP_SETTINGS = Settings()  # type: ignore

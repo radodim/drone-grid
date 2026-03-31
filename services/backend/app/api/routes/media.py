@@ -9,7 +9,7 @@ from app.service.media.mediamtx.mediamtx_auth_request_model import (
 )
 from app.service.user.user_service import UserService, UserServiceDep
 
-router = APIRouter(prefix="/media", redirect_slashes=False)
+router = APIRouter(prefix="/media", tags=["media"], redirect_slashes=False)
 
 
 @router.post("/auth")

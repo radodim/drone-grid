@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router"
 import { Check, Circle, Copy, Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 
-import type { DronePublic } from "@/client"
+import type { DroneResponse } from "@/client"
 import { Button } from "@/components/ui/button"
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import { DroneActionsMenu } from "./DroneActionsMenu"
@@ -77,7 +77,7 @@ function SecretKey({ secretKey }: { secretKey: string }) {
   )
 }
 
-export const columns: ColumnDef<DronePublic>[] = [
+export const columns: ColumnDef<DroneResponse>[] = [
   {
     accessorKey: "id",
     header: "ID",

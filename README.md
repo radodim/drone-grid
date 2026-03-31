@@ -26,3 +26,4 @@ The components of the system (and the tools used to implement said components) a
 For simplicity the entire deployment of this system is contained in one docker compose file for both local development and production.
 Additional information can be found within DEPLOYMENT.md
 
+# TODO: Integrate a registry to avoid cloning the source on the VPS

@@ -39,8 +39,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen
 
 CMD ["sh", "-c", \
-    "if [ \"$IS_PROD\" = 'true' ]; then \
-        fastapi run app/main.py; \
-    else \
+    "if [ \"$ENVIRONMENT\" = 'local' ]; then \
         fastapi dev --host 0.0.0.0 app/main.py; \
+    else \
+        fastapi run app/main.py; \
     fi"]

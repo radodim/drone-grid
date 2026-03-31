@@ -10,8 +10,7 @@ from app.service.drone.drone_service import DroneServiceDep
 from app.service.exceptions import NonExistentDroneException
 from app.service.media.media_service_factory import MediaServiceDep
 
-# TODO: Rename to /drone and and see redirect_slashes
-router = APIRouter(prefix="/drones", redirect_slashes=False)
+router = APIRouter(prefix="/drone", tags=["drone"], redirect_slashes=False)
 
 
 # TODO: move this to request

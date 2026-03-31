@@ -2,10 +2,12 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.error.handler import register_exceptions
 from app.api.main import api_router
+from app.config import GLOBAL_APP_SETTINGS
 from app.data.db.session import create_db_and_tables
 
 logging.basicConfig(
@@ -14,29 +16,35 @@ logging.basicConfig(
 )
 
 
-# TODO: See how this works
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
     yield
 
 
+__IS_LOCAL = GLOBAL_APP_SETTINGS.ENVIRONMENT == "local"
+
+
+def __generate_operation_id(route: APIRoute) -> str:
+    return f"{route.tags[0]}-{route.name}"
+
+
 app = FastAPI(
+    generate_unique_id_function=__generate_operation_id,
     title="Drone Grid API",
     description="Drone Grid API",
-    openapi_url="/api/v1/openapi.json",
+    openapi_url="/api/v1/openapi.json" if __IS_LOCAL else None,
+    docs_url="/docs" if __IS_LOCAL else None,
+    redoc_url="/redoc" if __IS_LOCAL else None,
     lifespan=lifespan,
 )
 app.include_router(api_router, prefix="/api/v1")
 register_exceptions(app)
 
-# TODO: See how this should be configured for production
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
+    CORSMiddleware,  # CORS is a browser-only mechanism
+    allow_origins=GLOBAL_APP_SETTINGS.CORS_ORIGINS_LIST,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# TODO: Remove OpenAPI JSON endpoint for production

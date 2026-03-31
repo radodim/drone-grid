@@ -3,105 +3,124 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type {
-    DronesListDronesResponse,
-    DronesCreateDroneData,
-    DronesCreateDroneResponse,
-    DronesGetDroneData,
-    DronesGetDroneResponse,
-    DronesDeleteDroneData,
-    DronesDeleteDroneResponse,
-    UsersListUsersResponse,
-} from './types.gen';
+import type { DroneListDronesResponse, DroneCreateDroneData, DroneCreateDroneResponse, DroneGetDroneData, DroneGetDroneResponse, DroneDeleteDroneData, DroneDeleteDroneResponse, MediaMediaAuthData, MediaMediaAuthResponse, UserListUsersResponse, UserMeResponse } from './types.gen';
 
-export class DronesService {
+export class DroneService {
     /**
      * List Drones
-     * Retrieve drones for the current user.
-     * @returns DronePublic[] Successful Response
+     * @returns DroneResponse Successful Response
      * @throws ApiError
      */
-    public static listDrones(): CancelablePromise<DronesListDronesResponse> {
+    public static listDrones(): CancelablePromise<DroneListDronesResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/drones/',
+            url: '/api/v1/drone/'
         });
     }
-
+    
     /**
      * Create Drone
-     * Register a new drone.
      * @param data The data for the request.
      * @param data.requestBody
-     * @returns DronePublic Successful Response
+     * @returns DroneResponse Successful Response
      * @throws ApiError
      */
-    public static createDrone(data: DronesCreateDroneData): CancelablePromise<DronesCreateDroneResponse> {
+    public static createDrone(data: DroneCreateDroneData): CancelablePromise<DroneCreateDroneResponse> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/drones/',
+            url: '/api/v1/drone/',
             body: data.requestBody,
             mediaType: 'application/json',
             errors: {
-                422: 'Validation Error',
-            },
+                422: 'Validation Error'
+            }
         });
     }
-
+    
     /**
      * Get Drone
-     * Get drone by ID.
      * @param data The data for the request.
      * @param data.droneId
-     * @returns DronePublic Successful Response
+     * @returns DroneResponse Successful Response
      * @throws ApiError
      */
-    public static getDrone(data: DronesGetDroneData): CancelablePromise<DronesGetDroneResponse> {
+    public static getDrone(data: DroneGetDroneData): CancelablePromise<DroneGetDroneResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/drones/{drone_id}',
+            url: '/api/v1/drone/{drone_id}',
             path: {
-                drone_id: data.droneId,
+                drone_id: data.droneId
             },
             errors: {
-                422: 'Validation Error',
-            },
+                422: 'Validation Error'
+            }
         });
     }
-
+    
     /**
      * Delete Drone
-     * Delete a drone.
      * @param data The data for the request.
      * @param data.droneId
      * @returns void Successful Response
      * @throws ApiError
      */
-    public static deleteDrone(data: DronesDeleteDroneData): CancelablePromise<DronesDeleteDroneResponse> {
+    public static deleteDrone(data: DroneDeleteDroneData): CancelablePromise<DroneDeleteDroneResponse> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/api/v1/drones/{drone_id}',
+            url: '/api/v1/drone/{drone_id}',
             path: {
-                drone_id: data.droneId,
+                drone_id: data.droneId
             },
             errors: {
-                422: 'Validation Error',
-            },
+                422: 'Validation Error'
+            }
         });
     }
 }
 
-export class UsersService {
+export class MediaService {
     /**
-     * List Users
-     * Retrieve users (admin sees all, regular user sees self).
-     * @returns UserPublic[] Successful Response
+     * Media Auth
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns unknown Successful Response
      * @throws ApiError
      */
-    public static listUsers(): CancelablePromise<UsersListUsersResponse> {
+    public static mediaAuth(data: MediaMediaAuthData): CancelablePromise<MediaMediaAuthResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/media/auth',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
+export class UserService {
+    /**
+     * List Users
+     * @returns User Successful Response
+     * @throws ApiError
+     */
+    public static listUsers(): CancelablePromise<UserListUsersResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/users/',
+            url: '/api/v1/user/'
+        });
+    }
+    
+    /**
+     * Me
+     * @returns User Successful Response
+     * @throws ApiError
+     */
+    public static me(): CancelablePromise<UserMeResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/user/me'
         });
     }
 }
