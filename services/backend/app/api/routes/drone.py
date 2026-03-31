@@ -14,6 +14,7 @@ from app.service.media.media_service_factory import MediaServiceDep
 router = APIRouter(prefix="/drones", redirect_slashes=False)
 
 
+# TODO: move this to request
 class DroneCreate(BaseModel):
     name: str
 

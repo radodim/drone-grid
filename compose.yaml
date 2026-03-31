@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
     volumes:
       - db-data:/var/lib/postgresql
-      - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+      - ./config/postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
     environment:
       POSTGRES_USER: ${POSTGRES_SUPERUSER}
       POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD}
@@ -27,7 +27,7 @@ services:
       KEYCLOAK_DB_USER: ${KEYCLOAK_DB_USER}
       KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_SUPERUSER}" ]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -152,11 +152,11 @@ services:
     environment:
       MTX_RTSPTRANSPORTS: tcp
     ports:
-      - "8554:8554"     # RTSP over TCP — drones publish here
+      - "8554:8554" # RTSP over TCP — drones publish here
       - "8189:8189/udp" # WebRTC media (UDP, can't go through Traefik)
       - "9997:9997"
     volumes:
-      - ./scripts/mediamtx.yml:/mediamtx.yml:ro
+      - ./config/mediamtx/mediamtx.yml:/mediamtx.yml:ro
     networks:
       - internal
     labels:
@@ -190,7 +190,7 @@ services:
   # ============================================================
   proxy:
     image: traefik:v3
-    profiles: ["prod"]
+    profiles: [ "prod" ]
     restart: unless-stopped
     command:
       - --providers.docker
@@ -219,7 +219,7 @@ services:
   # ============================================================
   proxy-dev:
     image: traefik:v3
-    profiles: ["dev"]
+    profiles: [ "dev" ]
     restart: unless-stopped
     command:
       - --providers.docker
@@ -244,8 +244,8 @@ volumes:
   db-data:
   traefik-certificates:
 
-# ============================================================
-# Networks
-# ============================================================
+    # ============================================================
+    # Networks
+    # ============================================================
 networks:
   internal:
