@@ -1,9 +1,12 @@
 # ============================================================
-# compose.yml
+# compose.yaml — Production baseline
+#
+# Local dev overrides are in compose.override.yaml
+# (automatically merged by Docker Compose)
 #
 # Usage:
-#   Local dev:  docker compose --profile dev up
-#   Production: docker compose --profile prod up -d
+#   Local dev:  docker compose up
+#   Production: docker compose -f compose.yaml up -d
 # ============================================================
 
 services:
@@ -24,15 +27,13 @@ services:
       interval: 10s
       retries: 5
       start_period: 30s
-    networks:
-      - internal
 
   # ============================================================
   # Identity (Keycloak)
   # ============================================================
   identity:
     image: quay.io/keycloak/keycloak:26.5
-    command: start-dev # overridden to "start" in Github Workflow for production
+    command: start
     env_file:
       - ./config/keycloak/.env
     depends_on:
@@ -43,16 +44,15 @@ services:
       resources:
         limits:
           memory: 1g
-    networks:
-      - internal
     labels:
       - traefik.enable=true
       - traefik.constraint-label=traefik-public
-      # HTTP
-      - traefik.http.routers.${STACK_NAME}-identity.rule=Host(`auth.${DOMAIN}`)
+      # Only expose paths required for OIDC — /admin, /metrics, /health are blocked
+      # See: https://www.keycloak.org/server/reverseproxy#_exposed_path_recommendations
+      - traefik.http.routers.${STACK_NAME}-identity.rule=Host(`auth.${DOMAIN}`) && (PathPrefix(`/realms`) || PathPrefix(`/resources`) || PathPrefix(`/.well-known`))
       - traefik.http.routers.${STACK_NAME}-identity.entrypoints=http
       # HTTPS (ignored in dev — no https entrypoint defined)
-      - traefik.http.routers.${STACK_NAME}-identity-secure.rule=Host(`auth.${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-identity-secure.rule=Host(`auth.${DOMAIN}`) && (PathPrefix(`/realms`) || PathPrefix(`/resources`) || PathPrefix(`/.well-known`))
       - traefik.http.routers.${STACK_NAME}-identity-secure.entrypoints=https
       - traefik.http.routers.${STACK_NAME}-identity-secure.tls=true
       - traefik.http.routers.${STACK_NAME}-identity-secure.tls.certresolver=le
@@ -65,8 +65,6 @@ services:
   backend:
     build:
       context: ./services/backend
-    volumes:
-      - ./services/backend/app:/src/app
     env_file:
       # Docker Compose's automatic .env loading only does variable substitution in the compose file itself
       # it doesn't inject those vars into containers, that's why .env is explicitly specified here
@@ -76,8 +74,6 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
-    networks:
-      - internal
     labels:
       - traefik.enable=true
       - traefik.constraint-label=traefik-public
@@ -98,15 +94,9 @@ services:
   ui:
     build:
       context: ./services/ui
-      target: dev
-    volumes:
-      - ./services/ui/src:/src/src
-      - ./services/ui/index.html:/src/index.html
     env_file:
       - .env
     restart: unless-stopped
-    networks:
-      - internal
     labels:
       - traefik.enable=true
       - traefik.constraint-label=traefik-public
@@ -119,7 +109,7 @@ services:
       - traefik.http.routers.${STACK_NAME}-ui-secure.tls=true
       - traefik.http.routers.${STACK_NAME}-ui-secure.tls.certresolver=le
       # Shared service target
-      - traefik.http.services.${STACK_NAME}-ui.loadbalancer.server.port=5173
+      - traefik.http.services.${STACK_NAME}-ui.loadbalancer.server.port=80
 
   # ============================================================
   # Streaming (MediaMTX)
@@ -130,33 +120,24 @@ services:
     environment:
       MTX_RTSPTRANSPORTS: tcp
     ports:
-      - "8554:8554" # RTSP over TCP — drones publish here
       - "8189:8189/udp" # WebRTC media (UDP, can't go through Traefik)
-      - "9997:9997"
     volumes:
       - ./config/mediamtx/mediamtx.yml:/mediamtx.yml:ro
-    networks:
-      - internal
     labels:
       - traefik.enable=true
       - traefik.constraint-label=traefik-public
-      # RTSP-over-HTTP publishing + HLS (port 8888)
-      - traefik.http.routers.${STACK_NAME}-streaming.rule=Host(`media.${DOMAIN}`)
-      - traefik.http.routers.${STACK_NAME}-streaming.entrypoints=http
-      - traefik.http.routers.${STACK_NAME}-streaming.service=${STACK_NAME}-streaming
-      - traefik.http.services.${STACK_NAME}-streaming.loadbalancer.server.port=8888
-      # HTTPS
-      - traefik.http.routers.${STACK_NAME}-streaming-secure.rule=Host(`media.${DOMAIN}`)
-      - traefik.http.routers.${STACK_NAME}-streaming-secure.entrypoints=https
-      - traefik.http.routers.${STACK_NAME}-streaming-secure.tls=true
-      - traefik.http.routers.${STACK_NAME}-streaming-secure.tls.certresolver=le
-      - traefik.http.routers.${STACK_NAME}-streaming-secure.service=${STACK_NAME}-streaming
-      # WebRTC signaling + player page (port 8889)
+      # RTSPS — Traefik terminates TLS on :443, forwards plain RTSP to MediaMTX
+      - traefik.tcp.routers.${STACK_NAME}-rtsp.rule=HostSNI(`media.${DOMAIN}`)
+      - traefik.tcp.routers.${STACK_NAME}-rtsp.entrypoints=https
+      - traefik.tcp.routers.${STACK_NAME}-rtsp.tls=true
+      - traefik.tcp.routers.${STACK_NAME}-rtsp.tls.certresolver=le
+      - traefik.tcp.services.${STACK_NAME}-rtsp.loadbalancer.server.port=8554
+      # WebRTC signaling (HTTP, port 8889)
       - traefik.http.routers.${STACK_NAME}-webrtc.rule=Host(`webrtc.${DOMAIN}`)
       - traefik.http.routers.${STACK_NAME}-webrtc.entrypoints=http
       - traefik.http.routers.${STACK_NAME}-webrtc.service=${STACK_NAME}-webrtc
       - traefik.http.services.${STACK_NAME}-webrtc.loadbalancer.server.port=8889
-      # HTTPS
+      # WebRTC signaling (HTTPS)
       - traefik.http.routers.${STACK_NAME}-webrtc-secure.rule=Host(`webrtc.${DOMAIN}`)
       - traefik.http.routers.${STACK_NAME}-webrtc-secure.entrypoints=https
       - traefik.http.routers.${STACK_NAME}-webrtc-secure.tls=true
@@ -164,11 +145,10 @@ services:
       - traefik.http.routers.${STACK_NAME}-webrtc-secure.service=${STACK_NAME}-webrtc
 
   # ============================================================
-  # Proxy — Production (HTTPS, Let's Encrypt)
+  # Proxy (Traefik) — HTTPS with Let's Encrypt
   # ============================================================
   proxy:
     image: traefik:v3
-    profiles: [ "prod" ]
     restart: unless-stopped
     command:
       - --providers.docker
@@ -189,31 +169,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-certificates:/certificates
-    networks:
-      - internal
-
-  # ============================================================
-  # Proxy — Dev (HTTP only, dashboard enabled)
-  # ============================================================
-  proxy-dev:
-    image: traefik:v3
-    profiles: [ "dev" ]
-    restart: unless-stopped
-    command:
-      - --providers.docker
-      - --providers.docker.constraints=Label(`traefik.constraint-label`, `traefik-public`)
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.http.address=:80
-      - --api.insecure=true
-      - --accesslog
-      - --log
-    ports:
-      - "80:80"
-      - "8090:8080" # Traefik dashboard
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - internal
 
 # ============================================================
 # Volumes
@@ -221,9 +176,3 @@ services:
 volumes:
   db-data:
   traefik-certificates:
-
-    # ============================================================
-    # Networks
-    # ============================================================
-networks:
-  internal:

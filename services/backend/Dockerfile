@@ -38,9 +38,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen
 
-CMD ["sh", "-c", \
-    "if [ \"$ENVIRONMENT\" = 'local' ]; then \
-        fastapi dev --host 0.0.0.0 app/main.py; \
-    else \
-        fastapi run app/main.py; \
-    fi"]
+CMD ["fastapi", "run", "app/main.py"]
