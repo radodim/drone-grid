@@ -193,6 +193,8 @@ services:
       - --certificatesresolvers.le.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.le.acme.storage=/certificates/acme.json
       - --certificatesresolvers.le.acme.httpchallenge.entrypoint=http
+      - --accesslog
+      - --log
     ports:
       - "80:80"
       - "443:443"
