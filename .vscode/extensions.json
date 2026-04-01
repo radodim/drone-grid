@@ -1,6 +1,9 @@
 {
     "recommendations": [
         "ms-python.python",
-        "charliermarsh.ruff"
+        "charliermarsh.ruff",
+        "yoavbls.pretty-ts-errors",
+        "biomejs.biome",
+        "bradlc.vscode-tailwindcss"
     ]
 }

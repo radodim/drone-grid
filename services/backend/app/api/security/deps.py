@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated, Any
 
 import jwt
@@ -11,6 +12,8 @@ from app.service.user.user_service import UserServiceDep
 
 __JWKS_CLIENT = PyJWKClient(GLOBAL_APP_SETTINGS.KEYCLOAK_JWKS_URL)
 BearerToken = Annotated[HTTPAuthorizationCredentials, Security(HTTPBearer())]
+
+logger = logging.getLogger(__name__)
 
 
 def __get_current_user(
@@ -44,7 +47,7 @@ def decode_jwt_token(jwt_token: str) -> dict[str, Any]:
             jwt_token,
             __JWKS_CLIENT.get_signing_key_from_jwt(jwt_token),
             algorithms=["RS256"],
-            options={"verify_aud": False},  # TODO: verify the audience
+            audience=GLOBAL_APP_SETTINGS.KEYCLOAK_AUDIENCE,
         )
     except Exception:
         raise HTTPException(

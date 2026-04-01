@@ -1,0 +1,110 @@
+DRONE GRID — First Production Deployment
+=========================================
+
+1. UFW: allow 22 only
+2. docker compose -f compose.yaml up -d
+4. SSH tunnel: ssh -L 8080:localhost:8080 vps
+5. Browse http://localhost:8080, configure realm, client, users
+6. Restart without the port: docker compose -f compose.yaml up -d identity
+7. UFW: allow 80, 443, 8189/udp
+8. You're live
+
+https://www.keycloak.org/server/configuration-production take a look at this - what to provide for hostname and what to enable in reverse proxy
+
+## 3. GitHub Actions CI/CD
+- [ ] Install and configure self-hosted GitHub runner on VPS
+- [ ] Configure GitHub secrets:
+      - DOMAIN
+      - ACME_EMAIL
+      - POSTGRES_PASSWORD (superuser)
+      - POSTGRES_BACKEND_PASSWORD
+      - KEYCLOAK_DB_PASSWORD
+      - KC_BOOTSTRAP_ADMIN_PASSWORD
+      - CORS_ORIGINS (https://yourdomain.com)
+      - WEBRTC_BASE_URL (https://webrtc.yourdomain.com)
+- [ ] Create .github/workflows/deploy.yml:
+      - Trigger on push to main
+      - Clone/pull repo on VPS
+      - Write secrets into .env files (or use environment substitution)
+      - Run: docker compose -f compose.yaml up -d --build
+      - Health check after deploy
+#- [ ] Consider: container registry (ghcr.io) to avoid building on VPS
+#      (noted as TODO in README already)
+
+## 7. Security Hardening
+- [ ] All .env files have "changethis" passwords — override via GitHub secrets
+- [ ] Keycloak admin password — change after first login or use a strong bootstrap password
+- [ ] Backend has no /health endpoint — add one for monitoring/load balancer checks
+- [ ] Keycloak: command is `start` in prod (good), but verify:
+      - KC_HOSTNAME is set correctly (may need KC_HOSTNAME=auth.yourdomain.com)
+      - KC_PROXY_HEADERS=xforwarded (Keycloak is behind Traefik)
+- [ ] Traefik: consider enabling access logs in prod for debugging
+
+## 8. Raspberry Pi (Drone Client)
+- [ ] Pi connects via RTSP in dev (rtsp://host:8554) and RTSPS in prod (rtsps://media.yourdomain.com:443)
+      Verify the RTSP client on the Pi supports RTSPS/TLS (e.g. ffmpeg with TLS enabled)
+- [ ] Pi authenticates with drone UUID as username and secret_key as password
+      (MediaMTX external auth → backend /media/auth endpoint)
+- [ ] Test 4G connectivity: RTSP over TCP handles NAT/carrier-grade NAT well,
+      but verify MTU/fragmentation doesn't cause issues
+- [ ] Consider: what happens on stream disconnect? Reconnect logic on the Pi side
+
+
+
+
+
+
+
+
+## 1. Keycloak Configuration
+- [ ] Export dev realm config as JSON (Keycloak Admin > Realm Settings > Action > Partial Export)
+      This gives you a baseline with the drone-grid client, audience mapper, and PKCE settings
+- [ ] Create a prod realm JSON variant:
+      - Disable user self-registration
+      - Stricter password policy
+      - Disable the admin bootstrap user after first login (KC_BOOTSTRAP_ADMIN_USERNAME)
+- [ ] Mount realm JSON into Keycloak container via volume for auto-import on first start:
+      command: start --import-realm
+      volumes: ./config/keycloak/realm-prod.json:/opt/keycloak/data/import/realm.json:ro
+- [ ] For first startup: port-forward to Keycloak (ssh -L 8080:localhost:8080 vps)
+      to manually verify realm imported correctly and create initial users
+
+## 2. VPS Setup
+- [ ] Create VPS (Digital Ocean droplet)
+- [ ] UFW: allow 22 (SSH), 80 (HTTP, needed for LE challenge), 443 (HTTPS + RTSPS via SNI),
+      8189/udp (WebRTC media). Block everything else
+- [ ] Install Docker Engine + Docker Compose plugin
+- [ ] Migrate domain to Digital Ocean DNS
+- [ ] Create DNS records:
+      - A record: yourdomain.com → droplet IP
+      - A record: api.yourdomain.com → droplet IP
+      - A record: auth.yourdomain.com → droplet IP
+      - A record: media.yourdomain.com → droplet IP
+      - A record: webrtc.yourdomain.com → droplet IP
+
+## 6. Database
+- [ ] Alembic is NOT set up — current code uses create_all() on startup
+      Fine for first deploy, but set up Alembic before any schema changes
+- [ ] Verify db-data volume persistence survives container recreation
+- [ ] Plan backup strategy (pg_dump cron or managed backup)
+
+## 10. Misc
+- [ ] Review compose.yaml networks comment (the indentation was nested under volumes, now fixed)
+- [ ] ENVIRONMENT env var: verify backend config.py handles "production" value correctly
+      (currently only checks for "local" to toggle docs/openapi endpoints)
+- [ ] .dockerignore files: verify node_modules, .git, etc. are excluded from build context
+
+## 9. Monitoring & Observability (Nice to Have)
+- [ ] Backend logging is basic (logging.basicConfig) — consider structured JSON logging
+- [ ] No application metrics exposed — consider Prometheus endpoint later
+- [ ] Traefik dashboard is dev-only — consider enabling with auth in prod for debugging
+
+## 5. MediaMTX Production Hardening
+- [ ] mediamtx.yml: authHTTPExclude currently skips auth for api, metrics, pprof actions
+      These ports (9997) aren't exposed externally so it's fine, but verify
+- [ ] mediamtx.yml: webrtcAllowOrigins is ['*'] — restrict to your domain in prod
+- [ ] mediamtx.yml: apiAllowOrigins is ['*'] — restrict or disable if not needed externally
+- [ ] Consider setting webrtcAdditionalHosts to the VPS public IP
+      (helps WebRTC ICE candidates when behind NAT/firewall)
+- [ ] HLS is enabled by default on port 8888 — disable it since it's unused:
+      hls: false

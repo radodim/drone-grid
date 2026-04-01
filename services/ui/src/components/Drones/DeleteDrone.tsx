@@ -3,7 +3,7 @@ import { Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 
-import { DronesService } from "@/client"
+import { DroneService } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -33,7 +33,7 @@ const DeleteDrone = ({ id, name, onSuccess }: DeleteDroneProps) => {
 
   const mutation = useMutation({
     mutationFn: (droneId: string) =>
-      DronesService.deleteDrone({ droneId }),
+      DroneService.deleteDrone({ droneId }),
     onSuccess: () => {
       showSuccessToast("Drone deleted successfully")
       setIsOpen(false)

@@ -1,7 +1,7 @@
 import { EllipsisVertical } from "lucide-react"
 import { useState } from "react"
 
-import type { DronePublic } from "@/client"
+import type { DroneResponse } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -11,7 +11,7 @@ import {
 import DeleteDrone from "./DeleteDrone"
 
 interface DroneActionsMenuProps {
-  drone: DronePublic
+  drone: DroneResponse
 }
 
 export const DroneActionsMenu = ({ drone }: DroneActionsMenuProps) => {
