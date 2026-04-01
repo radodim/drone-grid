@@ -14,6 +14,13 @@ CMD ["bun", "run", "dev", "--host", "0.0.0.0"]
 # ── Build stage: compile static assets ──
 FROM dev AS build
 
+# VITE_ env vars are baked at build time — override via compose build.args in GitHub Workflow for production
+ARG VITE_API_URL
+ARG VITE_KEYCLOAK_URL
+ARG VITE_KEYCLOAK_REALM
+ARG VITE_KEYCLOAK_CLIENT_ID
+ARG VITE_WEBRTC_URL
+
 RUN bun run build
 
 # ── Prod stage: serve via nginx ──

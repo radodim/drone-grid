@@ -321,7 +321,7 @@ rtmpServerCert: server.crt
 # Global settings -> HLS server
 
 # Enable reading streams with the HLS protocol.
-hls: true
+hls: false
 # Address of the HLS listener.
 hlsAddress: :8888
 # Enable HTTPS on the HLS server.

@@ -24,7 +24,7 @@ services:
 
   ui:
     build:
-      target: dev # target build stage in docker
+      target: dev # stops at Vite stage, skips nginx
     volumes:
       - ./services/ui/src:/src/src
       - ./services/ui/index.html:/src/index.html
@@ -34,7 +34,7 @@ services:
   streaming:
     ports:
       - "8554:8554" # RTSP direct (no TLS in dev)
-      - "9997:9997" # Control API
+      - "9997:9997" # MediaMTX API
 
   proxy:
     command:

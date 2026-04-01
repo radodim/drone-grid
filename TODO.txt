@@ -9,33 +9,7 @@ DRONE GRID — First Production Deployment
 7. UFW: allow 80, 443, 8189/udp
 8. You're live
 
-## 1. Keycloak Configuration
-- [ ] Export dev realm config as JSON (Keycloak Admin > Realm Settings > Action > Partial Export)
-      This gives you a baseline with the drone-grid client, audience mapper, and PKCE settings
-- [ ] Create a prod realm JSON variant:
-      - Disable user self-registration
-      - Stricter password policy
-      - Disable the admin bootstrap user after first login (KC_BOOTSTRAP_ADMIN_USERNAME)
-- [ ] Mount realm JSON into Keycloak container via volume for auto-import on first start:
-      command: start --import-realm
-      volumes: ./config/keycloak/realm-prod.json:/opt/keycloak/data/import/realm.json:ro
-- [ ] For first startup: port-forward to Keycloak (ssh -L 8080:localhost:8080 vps)
-      to manually verify realm imported correctly and create initial users
-
 https://www.keycloak.org/server/configuration-production take a look at this - what to provide for hostname and what to enable in reverse proxy
-
-## 2. VPS Setup
-- [ ] Create VPS (Digital Ocean droplet)
-- [ ] UFW: allow 22 (SSH), 80 (HTTP, needed for LE challenge), 443 (HTTPS + RTSPS via SNI),
-      8189/udp (WebRTC media). Block everything else
-- [ ] Install Docker Engine + Docker Compose plugin
-- [ ] Migrate domain to Digital Ocean DNS
-- [ ] Create DNS records:
-      - A record: yourdomain.com → droplet IP
-      - A record: api.yourdomain.com → droplet IP
-      - A record: auth.yourdomain.com → droplet IP
-      - A record: media.yourdomain.com → droplet IP
-      - A record: webrtc.yourdomain.com → droplet IP
 
 ## 3. GitHub Actions CI/CD
 - [ ] Install and configure self-hosted GitHub runner on VPS
@@ -54,37 +28,8 @@ https://www.keycloak.org/server/configuration-production take a look at this - w
       - Write secrets into .env files (or use environment substitution)
       - Run: docker compose -f compose.yaml up -d --build
       - Health check after deploy
-- [ ] Consider: container registry (ghcr.io) to avoid building on VPS
-      (noted as TODO in README already)
-
-## 4. Frontend Build for Production
-- [ ] VITE_ env vars are baked at build time, NOT read at runtime
-      The prod Dockerfile (multi-stage, nginx) runs `bun run build` during image build
-      so VITE_ vars must be available as build args or in the build environment:
-      - Option A: ARG + ENV in Dockerfile, pass via compose build.args
-      - Option B: Generate services/ui/.env.production before build in CI
-- [ ] Vars that need prod values:
-      - VITE_API_URL=https://api.yourdomain.com
-      - VITE_KEYCLOAK_URL=https://auth.yourdomain.com
-      - VITE_KEYCLOAK_REALM=drone-grid
-      - VITE_KEYCLOAK_CLIENT_ID=drone-grid
-      - VITE_WEBRTC_URL=https://webrtc.yourdomain.com
-
-## 5. MediaMTX Production Hardening
-- [ ] mediamtx.yml: authHTTPExclude currently skips auth for api, metrics, pprof actions
-      These ports (9997) aren't exposed externally so it's fine, but verify
-- [ ] mediamtx.yml: webrtcAllowOrigins is ['*'] — restrict to your domain in prod
-- [ ] mediamtx.yml: apiAllowOrigins is ['*'] — restrict or disable if not needed externally
-- [ ] Consider setting webrtcAdditionalHosts to the VPS public IP
-      (helps WebRTC ICE candidates when behind NAT/firewall)
-- [ ] HLS is enabled by default on port 8888 — disable it since it's unused:
-      hls: false
-
-## 6. Database
-- [ ] Alembic is NOT set up — current code uses create_all() on startup
-      Fine for first deploy, but set up Alembic before any schema changes
-- [ ] Verify db-data volume persistence survives container recreation
-- [ ] Plan backup strategy (pg_dump cron or managed backup)
+#- [ ] Consider: container registry (ghcr.io) to avoid building on VPS
+#      (noted as TODO in README already)
 
 ## 7. Security Hardening
 - [ ] All .env files have "changethis" passwords — override via GitHub secrets
@@ -111,6 +56,38 @@ https://www.keycloak.org/server/configuration-production take a look at this - w
 
 
 
+## 1. Keycloak Configuration
+- [ ] Export dev realm config as JSON (Keycloak Admin > Realm Settings > Action > Partial Export)
+      This gives you a baseline with the drone-grid client, audience mapper, and PKCE settings
+- [ ] Create a prod realm JSON variant:
+      - Disable user self-registration
+      - Stricter password policy
+      - Disable the admin bootstrap user after first login (KC_BOOTSTRAP_ADMIN_USERNAME)
+- [ ] Mount realm JSON into Keycloak container via volume for auto-import on first start:
+      command: start --import-realm
+      volumes: ./config/keycloak/realm-prod.json:/opt/keycloak/data/import/realm.json:ro
+- [ ] For first startup: port-forward to Keycloak (ssh -L 8080:localhost:8080 vps)
+      to manually verify realm imported correctly and create initial users
+
+## 2. VPS Setup
+- [ ] Create VPS (Digital Ocean droplet)
+- [ ] UFW: allow 22 (SSH), 80 (HTTP, needed for LE challenge), 443 (HTTPS + RTSPS via SNI),
+      8189/udp (WebRTC media). Block everything else
+- [ ] Install Docker Engine + Docker Compose plugin
+- [ ] Migrate domain to Digital Ocean DNS
+- [ ] Create DNS records:
+      - A record: yourdomain.com → droplet IP
+      - A record: api.yourdomain.com → droplet IP
+      - A record: auth.yourdomain.com → droplet IP
+      - A record: media.yourdomain.com → droplet IP
+      - A record: webrtc.yourdomain.com → droplet IP
+
+## 6. Database
+- [ ] Alembic is NOT set up — current code uses create_all() on startup
+      Fine for first deploy, but set up Alembic before any schema changes
+- [ ] Verify db-data volume persistence survives container recreation
+- [ ] Plan backup strategy (pg_dump cron or managed backup)
+
 ## 10. Misc
 - [ ] Review compose.yaml networks comment (the indentation was nested under volumes, now fixed)
 - [ ] ENVIRONMENT env var: verify backend config.py handles "production" value correctly
@@ -121,3 +98,13 @@ https://www.keycloak.org/server/configuration-production take a look at this - w
 - [ ] Backend logging is basic (logging.basicConfig) — consider structured JSON logging
 - [ ] No application metrics exposed — consider Prometheus endpoint later
 - [ ] Traefik dashboard is dev-only — consider enabling with auth in prod for debugging
+
+## 5. MediaMTX Production Hardening
+- [ ] mediamtx.yml: authHTTPExclude currently skips auth for api, metrics, pprof actions
+      These ports (9997) aren't exposed externally so it's fine, but verify
+- [ ] mediamtx.yml: webrtcAllowOrigins is ['*'] — restrict to your domain in prod
+- [ ] mediamtx.yml: apiAllowOrigins is ['*'] — restrict or disable if not needed externally
+- [ ] Consider setting webrtcAdditionalHosts to the VPS public IP
+      (helps WebRTC ICE candidates when behind NAT/firewall)
+- [ ] HLS is enabled by default on port 8888 — disable it since it's unused:
+      hls: false

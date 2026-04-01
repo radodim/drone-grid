@@ -1,0 +1,24 @@
+name: Deploy to Production
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  deploy:
+    runs-on:
+      - self-hosted
+    env:
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_BACKEND_PASSWORD: ${{ secrets.POSTGRES_BACKEND_PASSWORD }}
+      KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.KC_BOOTSTRAP_ADMIN_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - run: cat .env.prod >> .env
+      - run: cat config/backend/.env.prod >> config/backend/.env
+      - run: cat config/keycloak/.env.prod >> config/keycloak/.env
+      - run: docker compose -f compose.yaml build
+      - run: docker compose -f compose.yaml up -d
