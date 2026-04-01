@@ -36,6 +36,8 @@ services:
     command: start
     env_file:
       - ./config/keycloak/.env
+    ports:
+      - "127.0.0.1:8080:8080"
     depends_on:
       db:
         condition: service_healthy
@@ -73,6 +75,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      identity:
+        condition: service_started
     restart: unless-stopped
     labels:
       - traefik.enable=true
@@ -96,6 +100,9 @@ services:
       context: ./services/ui
     env_file:
       - .env
+    depends_on:
+      backend:
+        condition: service_started
     restart: unless-stopped
     labels:
       - traefik.enable=true
@@ -116,6 +123,9 @@ services:
   # ============================================================
   streaming:
     image: bluenviron/mediamtx:latest
+    depends_on:
+      backend:
+        condition: service_started
     restart: unless-stopped
     environment:
       MTX_RTSPTRANSPORTS: tcp

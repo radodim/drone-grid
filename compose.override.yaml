@@ -10,7 +10,9 @@
 
 services:
   identity:
-    command: start-dev
+    command: start-dev --import-realm
+    volumes:
+      - ./config/keycloak/${ENVIRONMENT}-realm.json:/opt/keycloak/data/import/realm.json:ro
     labels:
       # Override prod path restriction — allow all paths for admin console access in dev
       - traefik.http.routers.${STACK_NAME}-identity.rule=Host(`auth.${DOMAIN}`)
@@ -32,6 +34,7 @@ services:
   streaming:
     ports:
       - "8554:8554" # RTSP direct (no TLS in dev)
+      - "9997:9997" # Control API
 
   proxy:
     command:

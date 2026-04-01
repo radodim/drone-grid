@@ -1,6 +1,14 @@
 DRONE GRID — First Production Deployment
 =========================================
 
+1. UFW: allow 22 only
+2. docker compose -f compose.yaml up -d
+4. SSH tunnel: ssh -L 8080:localhost:8080 vps
+5. Browse http://localhost:8080, configure realm, client, users
+6. Restart without the port: docker compose -f compose.yaml up -d identity
+7. UFW: allow 80, 443, 8189/udp
+8. You're live
+
 ## 1. Keycloak Configuration
 - [ ] Export dev realm config as JSON (Keycloak Admin > Realm Settings > Action > Partial Export)
       This gives you a baseline with the drone-grid client, audience mapper, and PKCE settings
@@ -96,13 +104,20 @@ https://www.keycloak.org/server/configuration-production take a look at this - w
       but verify MTU/fragmentation doesn't cause issues
 - [ ] Consider: what happens on stream disconnect? Reconnect logic on the Pi side
 
-## 9. Monitoring & Observability (Nice to Have)
-- [ ] Backend logging is basic (logging.basicConfig) — consider structured JSON logging
-- [ ] No application metrics exposed — consider Prometheus endpoint later
-- [ ] Traefik dashboard is dev-only — consider enabling with auth in prod for debugging
+
+
+
+
+
+
 
 ## 10. Misc
 - [ ] Review compose.yaml networks comment (the indentation was nested under volumes, now fixed)
 - [ ] ENVIRONMENT env var: verify backend config.py handles "production" value correctly
       (currently only checks for "local" to toggle docs/openapi endpoints)
 - [ ] .dockerignore files: verify node_modules, .git, etc. are excluded from build context
+
+## 9. Monitoring & Observability (Nice to Have)
+- [ ] Backend logging is basic (logging.basicConfig) — consider structured JSON logging
+- [ ] No application metrics exposed — consider Prometheus endpoint later
+- [ ] Traefik dashboard is dev-only — consider enabling with auth in prod for debugging
