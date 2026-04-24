@@ -143,8 +143,10 @@ class DroneController:
 
     async def dispatch(self, msg: ControlMessage) -> None:
         match msg.root:
-            case ControlInput(a=a):
-                await self.set_manual_control(*a)
+            case ControlInput(axes=axes):
+                await self.set_manual_control(
+                    axes.pitch, axes.roll, axes.throttle, axes.yaw
+                )
             case Arm():
                 await self.arm()
             case Takeoff():

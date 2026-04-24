@@ -9,13 +9,19 @@ export interface ControlSocketState {
   send: (payload: object) => void
 }
 
-/** Wire protocol — matches what the companion (NATS consumer) expects. */
+/** Wire protocol — validated by the backend (Pydantic) and consumed by the companion. */
+type Axes = {
+  pitch: number   // -1..1
+  roll: number    // -1..1
+  throttle: number // 0..1 (multicopter convention)
+  yaw: number     // -1..1
+}
 type ControlMessage =
-  | { t: "c"; a: [number, number, number, number] } // [pitch, roll, throttle, yaw]
-  | { t: "arm" }
-  | { t: "takeoff" }
-  | { t: "land" }
-  | { t: "disarm" }
+  | { type: "control_input"; axes: Axes }
+  | { type: "arm" }
+  | { type: "takeoff" }
+  | { type: "land" }
+  | { type: "disarm" }
 
 /**
  * Manages a single WebSocket to /api/v1/control/{droneId}.
@@ -65,11 +71,11 @@ export function useControlSocket(droneId: string): ControlSocketState {
 /** Type-safe helpers for each message kind — keeps callers from free-typing JSON blobs. */
 export const controlMessages = {
   control: (pitch: number, roll: number, throttle: number, yaw: number): ControlMessage => ({
-    t: "c",
-    a: [pitch, roll, throttle, yaw],
+    type: "control_input",
+    axes: { pitch, roll, throttle, yaw },
   }),
-  arm: (): ControlMessage => ({ t: "arm" }),
-  takeoff: (): ControlMessage => ({ t: "takeoff" }),
-  land: (): ControlMessage => ({ t: "land" }),
-  disarm: (): ControlMessage => ({ t: "disarm" }),
+  arm: (): ControlMessage => ({ type: "arm" }),
+  takeoff: (): ControlMessage => ({ type: "takeoff" }),
+  land: (): ControlMessage => ({ type: "land" }),
+  disarm: (): ControlMessage => ({ type: "disarm" }),
 }

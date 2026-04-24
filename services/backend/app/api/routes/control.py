@@ -1,3 +1,4 @@
+import json
 import logging
 from uuid import UUID
 
@@ -9,8 +10,10 @@ from fastapi import (
     WebSocketException,
     status,
 )
+from pydantic import ValidationError
 
 from app.api.security.deps import decode_jwt_token
+from app.data.control.model.message import ControlMessage
 from app.service.drone.drone_service import DroneServiceDep
 from app.service.exceptions import InvalidTokenError, NonExistentDroneException
 from app.service.messaging.messaging_service import MessagingServiceDep
@@ -56,12 +59,19 @@ async def control_socket(
 
     try:
         while True:
-            # Forward every text frame from the client as-is to NATS.
-            # Schema validation lives on the companion side (the consumer).
-            payload = (
-                await websocket.receive_text()
-            )  # TODO: validate this payload with Pydantic
-            await messaging.publish_control(str(drone_id), payload.encode())
+            try:
+                raw = await websocket.receive_json()
+                msg = ControlMessage.model_validate(raw)
+            except (json.JSONDecodeError, ValidationError) as e:
+                logger.warning(
+                    f"Dropping invalid control message from user {user.id} "
+                    f"drone {drone_id}: {e}"
+                )
+                continue
+
+            await messaging.publish_control(
+                str(drone_id), msg.model_dump_json().encode()
+            )
     except WebSocketDisconnect:
         logger.info(
             f"Control websocket connection closed for drone {drone_id}, user: {user.id}"
