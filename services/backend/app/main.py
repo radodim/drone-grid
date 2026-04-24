@@ -9,6 +9,7 @@ from app.api.error.handler import register_exceptions
 from app.api.main import api_router
 from app.config import GLOBAL_APP_SETTINGS
 from app.data.db.session import create_db_and_tables
+from app.service.messaging.messaging_service import connect_nats
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,7 +20,11 @@ logging.basicConfig(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
-    yield
+    app.state.nats = await connect_nats()
+    try:
+        yield
+    finally:
+        await app.state.nats.drain()
 
 
 __IS_LOCAL = GLOBAL_APP_SETTINGS.ENVIRONMENT == "local"

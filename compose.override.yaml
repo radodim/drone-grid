@@ -31,6 +31,12 @@ services:
     labels:
       - traefik.http.services.${STACK_NAME}-ui.loadbalancer.server.port=5173
 
+  messaging:
+    ports:
+      - "4222:4222" # NATS TCP
+      - "8222:8222" # NATS WebSocket
+      - "8223:8223" # NATS Monitoring API
+
   streaming:
     ports:
       - "8554:8554" # RTSP direct (no TLS in dev)

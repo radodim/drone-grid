@@ -34,6 +34,29 @@ services:
       start_period: 30s
 
   # ============================================================
+  # Messaging (NATS)
+  # ============================================================
+  messaging:
+    image: nats:2.12.6
+    restart: unless-stopped
+    volumes:
+      - ./config/nats/nats.conf:/etc/nats/nats.conf:ro
+    command: -c /etc/nats/nats.conf
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label=traefik-public
+      # HTTP
+      - traefik.http.routers.${STACK_NAME}-messaging.rule=Host(`messaging.${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-messaging.entrypoints=http
+      # HTTPS — used by remote consumers (e.g. companion computer over 4G)
+      - traefik.http.routers.${STACK_NAME}-messaging-secure.rule=Host(`messaging.${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-messaging-secure.entrypoints=https
+      - traefik.http.routers.${STACK_NAME}-messaging-secure.tls=true
+      - traefik.http.routers.${STACK_NAME}-messaging-secure.tls.certresolver=le
+      # Shared service target
+      - traefik.http.services.${STACK_NAME}-messaging.loadbalancer.server.port=8222
+
+  # ============================================================
   # Identity (Keycloak)
   # ============================================================
   identity:

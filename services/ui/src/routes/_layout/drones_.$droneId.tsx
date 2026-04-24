@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import "@/lib/mediamtx-reader"
+import { DroneControls } from "@/components/Drones/DroneControls"
 import { Button } from "@/components/ui/button"
 import keycloak from "@/keycloak"
 
@@ -73,6 +74,7 @@ function DroneStream() {
             <p className="text-destructive text-sm">{error}</p>
           </div>
         )}
+        <DroneControls droneId={droneId} />
       </div>
     </div>
   )
