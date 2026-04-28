@@ -56,3 +56,61 @@ services:
       - "8090:8080" # Traefik dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+  # ============================================================
+  # TEMPORARY — manual single-drone SITL for end-to-end verification.
+  # DELETE THIS BLOCK once the backend's SimulatedDroneProvisioner spawns
+  # PX4 + companion containers per drone_id via the Docker Engine API.
+  #
+  # Pinned to the (drone_id, drone_secret) pair currently used to prove
+  # the wire format works. Hardcode your drone_id and drone_secret here for testing.
+  #
+  # The PX4 container pushes the camera RTP stream to the companion (not to
+  # mediamtx directly) so the companion handles UDP→RTSP republish — same
+  # path a real Pi will use, and the only one that scales past one drone.
+  # ============================================================
+  # px4-sitl:
+  #   image: px4io/px4-sitl-gazebo:v1.17.0-alpha1-1551-g381149fb01
+  #   environment:
+  #     PX4_SIM_MODEL: gz_x500_mono_cam
+  #     PX4_GZ_WORLD: walls
+  #     # Companion shares this container's network namespace (see below), so
+  #     # localhost from PX4 reaches the companion's listeners directly.
+  #     PX4_VIDEO_HOST_IP: 127.0.0.1
+  #   volumes:
+  #     # Mount the patched script at /tmp; the wrapper entrypoint copies it
+  #     # into place before invoking PX4's own entrypoint. Direct bind-mount
+  #     # over the real path breaks the image's `sed -i` (atomic rename can't
+  #     # replace a bind-mounted file).
+  #     - ./config/px4-sitl/px4-rc.mavlink:/tmp/px4-rc.mavlink.override:ro
+  #   entrypoint:
+  #     - sh
+  #     - -c
+  #     - |
+  #       cp /tmp/px4-rc.mavlink.override /opt/px4-gazebo/etc/init.d-posix/px4-rc.mavlink
+  #       exec /opt/px4-gazebo/bin/px4-entrypoint.sh "$@"
+  #     - --
+  #   depends_on:
+  #     - streaming
+
+  # companion:
+  #   build:
+  #     context: ./services/companion
+  #   # Share the PX4 container's network namespace. PX4's MAVLink and Gazebo
+  #   # video plugin push to localhost by default; sharing netns means the
+  #   # companion is reachable as localhost without any PX4 reconfiguration.
+  #   network_mode: "service:px4-sitl"
+  #   environment:
+  #     # PX4's onboard MAVLink pushes unprompted to 127.0.0.1:14540 (per the
+  #     # patched px4-rc.mavlink). Companion just listens — udpin avoids the
+  #     # PX4 onboard-mode reply-port quirk that breaks udpout.
+  #     MAVSDK_CONNECTION_URL: udpin://0.0.0.0:14540
+  #     DRONE_ID: <DRONE_ID>
+  #     DRONE_SECRET: <DRONE_SECRET>
+  #     MESSAGING_SYSTEM_URL: nats://messaging:4222
+  #     MEDIA_SERVER_URL: streaming:8554
+  #     VIDEO__SOURCE: gazebo
+  #     VIDEO__PORT: "5600"
+  #   depends_on:
+  #     - messaging
+  #     - streaming
+  #     - px4-sitl
