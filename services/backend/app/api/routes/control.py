@@ -61,7 +61,7 @@ async def control_socket(
         while True:
             try:
                 raw = await websocket.receive_json()
-                msg = ControlMessage.model_validate(raw)
+                message = ControlMessage.model_validate(raw)
             except (json.JSONDecodeError, ValidationError) as e:
                 logger.warning(
                     f"Dropping invalid control message from user {user.id} "
@@ -69,9 +69,7 @@ async def control_socket(
                 )
                 continue
 
-            await messaging.publish_control(
-                str(drone_id), msg.model_dump_json().encode()
-            )
+            await messaging.publish_control(str(drone_id), message)
     except WebSocketDisconnect:
         logger.info(
             f"Control websocket connection closed for drone {drone_id}, user: {user.id}"

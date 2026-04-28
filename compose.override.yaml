@@ -106,11 +106,15 @@ services:
   #     MAVSDK_CONNECTION_URL: udpin://0.0.0.0:14540
   #     DRONE_ID: <DRONE_ID>
   #     DRONE_SECRET: <DRONE_SECRET>
-  #     MESSAGING_SYSTEM_URL: nats://messaging:4222
+  #     MESSAGING__TYPE: drone_grid
+  #     MESSAGING__URL: ws://backend:8000/api/v1/companion
   #     MEDIA_SERVER_URL: streaming:8554
   #     VIDEO__SOURCE: gazebo
   #     VIDEO__PORT: "5600"
   #   depends_on:
-  #     - messaging
-  #     - streaming
-  #     - px4-sitl
+  #     backend:
+  #       condition: service_healthy
+  #     streaming:
+  #       condition: service_started
+  #     px4-sitl:
+  #       condition: service_started

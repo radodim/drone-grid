@@ -2,8 +2,8 @@ import asyncio
 import logging
 
 from mavsdk import System
+from mavsdk.action import ActionError
 from mavsdk.telemetry import FlightMode
-
 from messaging.client import MessagingClient
 from models import (
     Arm,
@@ -83,7 +83,11 @@ class DroneController:
             logger.warning("Ignoring arm: drone is airborne (unexpected)")
             return
         logger.info("Arming")
-        await self._drone.action.arm()
+        try:
+            await self._drone.action.arm()
+        except ActionError as e:
+            logger.warning(f"Arm rejected by PX4: {e}")
+            return
         # PX4 accepts start_position_control() only once the manual_control
         # stream is flowing at ≥10 Hz. Send half a second of neutral frames
         # ourselves so the mode switch doesn't trip an RC-loss failsafe on
@@ -100,7 +104,11 @@ class DroneController:
             logger.info("Ignoring takeoff: already airborne")
             return
         logger.info("Taking off")
-        await self._drone.action.takeoff()
+        try:
+            await self._drone.action.takeoff()
+        except ActionError as e:
+            logger.warning(f"Takeoff rejected by PX4: {e}")
+            return
         # action.takeoff() overrides PX4 into AUTO_TAKEOFF → AUTO_LOITER
         # (reported as HOLD). Wait for HOLD, then return control to the
         # pilot via POSCTL so sticks become live again.
@@ -113,7 +121,11 @@ class DroneController:
             logger.info("Ignoring land: not airborne")
             return
         logger.info("Landing")
-        await self._drone.action.land()
+        try:
+            await self._drone.action.land()
+        except ActionError as e:
+            logger.warning(f"Land rejected by PX4: {e}")
+            return
         # AUTO_LAND self-disarms on touchdown; in_air flips False once
         # PX4's landing detector fires.
         await self._wait_for_ground()
@@ -130,7 +142,10 @@ class DroneController:
             logger.warning("Ignoring disarm: drone is airborne")
             return
         logger.info("Disarming")
-        await self._drone.action.disarm()
+        try:
+            await self._drone.action.disarm()
+        except ActionError as e:
+            logger.warning(f"Disarm rejected by PX4: {e}")
 
     async def set_manual_control(
         self, pitch: float, roll: float, throttle: float, yaw: float
@@ -192,6 +207,7 @@ class DroneController:
     async def _airborne(self) -> bool:
         return await _latest(self._drone.telemetry.in_air())
 
+    # TODO: Further evaluate
     async def _warm_up_manual_control(self, frames: int = 10, hz: float = 20.0) -> None:
         period = 1 / hz
         for _ in range(frames):

@@ -27,6 +27,22 @@ VideoConfig = Annotated[
 ]
 
 
+class NatsMessaging(BaseModel):
+    type: Literal["nats"]
+    url: str  # e.g. nats://messaging:4222
+
+
+class DroneGridMessaging(BaseModel):
+    type: Literal["drone_grid"]
+    url: str  # e.g. wss://api.drone-grid.com/api/v1/companion
+
+
+MessagingConfig = Annotated[
+    NatsMessaging | DroneGridMessaging,
+    Field(discriminator="type"),
+]
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_ignore_empty=True,
@@ -42,9 +58,9 @@ class Settings(BaseSettings):
     mavsdk_connection_url: str
     drone_id: str
     drone_secret: str
-    messaging_system_url: str
     media_server_url: str
 
+    messaging: MessagingConfig
     video: VideoConfig = NoVideo()
 
 

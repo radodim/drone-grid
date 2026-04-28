@@ -1,45 +1,78 @@
-import logging
-from typing import Annotated
+from abc import abstractmethod
+from contextlib import AbstractAsyncContextManager
+from typing import Annotated, Awaitable, Callable, TypeVar
 
-import nats
 from fastapi import Depends
-from nats.aio.client import Client as NATSClient
+from pydantic import BaseModel
 from starlette.requests import HTTPConnection
 
-from app.config import GLOBAL_APP_SETTINGS
+from app.data.control.model.message import ControlMessage
+from app.data.telemetry.model.telemetry import Telemetry
 
-logger = logging.getLogger(__name__)
+M = TypeVar("M", bound=BaseModel)
+MessageHandler = Callable[[M], Awaitable[None]]
 
 
-# TODO: refactor this to be an abstract base class and implement a concrete NATS implementation, also create a factory to initialize the messaging system (NATS default)
-# do not take bytes as an argument but the same payload for each impl, convert to bytes if needed in the impl (in the case of NATS)
-class MessagingService:
-    """Thin wrapper around the app-level NATS client.
+class Subscription(AbstractAsyncContextManager["Subscription"]):
+    """A live broker subscription scoped to an `async with` block.
 
-    The connection is opened once during FastAPI's lifespan and stored on
-    app.state.nats. This dependency exposes publish/subscribe operations
-    bound to that shared connection — don't create new NATS clients per-request.
+    Entering registers the subscription with the broker; exiting tears it
+    down. Lifecycle is intentionally lexical — every subscription in the
+    backend today lives inside one WebSocket handler — which means callers
+    don't need an explicit `unsubscribe()` and can't forget to call it.
+
+    `__aenter__` is re-declared as abstract here to override the default
+    no-op inherited from AbstractAsyncContextManager — every subscription
+    needs to actively register with the broker, never silently skip it.
     """
 
-    def __init__(self, nc: NATSClient) -> None:
-        self.__nc = nc
-
-    async def publish_control(self, drone_id: str, payload: bytes) -> None:
-        await self.__nc.publish(f"drone.{drone_id}.control", payload)
-
-    async def subscribe_telemetry(self, drone_id: str, callback):
-        return await self.__nc.subscribe(f"drone.{drone_id}.telemetry", cb=callback)
+    @abstractmethod
+    async def __aenter__(self) -> "Subscription": ...
 
 
-async def connect_nats() -> NATSClient:
-    logger.info(f"Connecting to NATS at {GLOBAL_APP_SETTINGS.NATS_URL}...")
-    nc = await nats.connect(GLOBAL_APP_SETTINGS.NATS_URL)
-    logger.info("Successfully connected to the NATS messaging system.")
-    return nc
+class MessagingService(AbstractAsyncContextManager["MessagingService"]):
+    """Abstract publish/subscribe service for the drone control plane.
+
+    Payloads are Pydantic models, never bytes. Concrete implementations own
+    wire-format conversion (JSON today, possibly msgpack later) so callers
+    never touch serialization. Topic naming conventions also live inside
+    the implementation — callers identify drones by id, not subject.
+
+    Lifecycle is managed via the async-context-manager protocol. Broker
+    connections are opened in __aenter__ and drained in __aexit__, mirroring
+    the companion's MessagingClient.
+
+    `__aenter__` is re-declared as abstract here to override the default
+    no-op inherited from AbstractAsyncContextManager — every implementation
+    needs to actively connect, never silently skip the broker handshake.
+    """
+
+    @abstractmethod
+    async def __aenter__(self) -> "MessagingService": ...
+
+    @abstractmethod
+    async def publish_control(self, drone_id: str, message: ControlMessage) -> None: ...
+
+    @abstractmethod
+    async def publish_telemetry(self, drone_id: str, message: Telemetry) -> None: ...
+
+    @abstractmethod
+    def subscribe_control(
+        self, drone_id: str, handler: MessageHandler[ControlMessage]
+    ) -> Subscription:
+        """Returns a not-yet-active subscription. Activate with `async with`;
+        the broker subscribe call happens in the context manager's __aenter__."""
+
+    @abstractmethod
+    def subscribe_telemetry(
+        self, drone_id: str, handler: MessageHandler[Telemetry]
+    ) -> Subscription:
+        """Returns a not-yet-active subscription. Activate with `async with`;
+        the broker subscribe call happens in the context manager's __aenter__."""
 
 
 def __get_messaging_service(conn: HTTPConnection) -> MessagingService:
-    return MessagingService(conn.app.state.nats)
+    return conn.app.state.messaging
 
 
 MessagingServiceDep = Annotated[MessagingService, Depends(__get_messaging_service)]

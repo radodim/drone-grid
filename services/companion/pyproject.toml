@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "aioconsole>=0.8.2",
+    "aiohttp>=3.13.0",
     "mavsdk>=3.15.3",
     "nats-py>=2.14.0",
     "pydantic>=2.13.3",
