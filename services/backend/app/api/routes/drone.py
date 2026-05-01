@@ -1,8 +1,8 @@
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
 
+from app.api.request.drone_create import DroneCreate
 from app.api.response.drone_response import DroneResponse
 from app.api.security.deps import CurrentUser
 from app.data.db.model.drone import Drone
@@ -11,11 +11,6 @@ from app.service.exceptions import NonExistentDroneException
 from app.service.media.media_service_factory import MediaServiceDep
 
 router = APIRouter(prefix="/drone", tags=["drone"], redirect_slashes=False)
-
-
-# TODO: move this to request
-class DroneCreate(BaseModel):
-    name: str
 
 
 @router.get("/")

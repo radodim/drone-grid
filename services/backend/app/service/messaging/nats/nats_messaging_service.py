@@ -102,7 +102,6 @@ class NatsMessagingService(MessagingService):
 
         return _NatsSubscription(self.__client, topic, _deliver)
 
-    # TODO: hardcode these, remove the staticmethods
     @staticmethod
     def __control_topic(drone_id: str) -> str:
         return f"drone.{drone_id}.control"

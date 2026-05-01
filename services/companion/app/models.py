@@ -2,7 +2,6 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, RootModel
 
-
 # ── Inbound: control messages from the UI, via the backend ─────────────────
 #
 # Discriminated on `type`. Each variant carries only the fields that variant

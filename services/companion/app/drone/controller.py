@@ -43,21 +43,19 @@ class DroneController:
         self,
         connection_url: str,
         messaging: MessagingClient,
-        telemetry_topic: str,
         telemetry_freq: float = 2.0,  # Hz
     ) -> None:
         self._drone = System()
         self._connection_url = connection_url
         self._messaging = messaging
-        self._telemetry_topic = telemetry_topic
         self._telemetry_period = 1 / telemetry_freq
 
     async def connect(self) -> None:
         """Connect to the flight controller and wait until it's ready for
         commands. Must be awaited before any action or publish_telemetry call.
 
-        Blocks indefinitely if the FC never connects or never reaches GPS
-        lock — callers own the lifecycle decision about timing out.
+        Blocks indefinitely if the FC never connects or never reaches a
+        fully-healthy state
         """
         await self._drone.connect(system_address=self._connection_url)
 
@@ -67,36 +65,77 @@ class DroneController:
                 logger.info("Connected to drone!")
                 break
 
-        logger.info("Waiting for global position estimate...")
-        async for health in self._drone.telemetry.health():
-            if health.is_global_position_ok and health.is_home_position_ok:
-                logger.info("Global position estimate OK")
-                break
+        # Waits for PX4's full preflight check — sensor calibrations,
+        # local/global/home position, is_armable — to all pass. This is the
+        # MAVSDK readiness signal recommended for arming.
+        # https://mavsdk.mavlink.io/main/en/cpp/guide/taking_off_landing.html
+        logger.info("Waiting for drone to be ready (health_all_ok)...")
+        await self._wait_for_health(timeout=None)
+        logger.info("Drone is ready")
 
-    # ── Actions — one per incoming control message ───────────────────────
+    async def dispatch(self, msg: ControlMessage) -> None:
+        match msg.root:
+            case ControlInput(axes=axes):
+                await self._set_manual_control(
+                    axes.pitch, axes.roll, axes.throttle, axes.yaw
+                )
+            case Arm():
+                await self._arm()
+            case Takeoff():
+                await self._takeoff()
+            case Land():
+                await self._land()
+            case Disarm():
+                await self._disarm()
 
-    async def arm(self) -> None:
+    async def publish_telemetry(self) -> None:
+        while True:
+            try:
+                await self._messaging.publish_telemetry(await self._get_telemetry())
+            except Exception as e:
+                logger.error(f"Telemetry publish error: {e}")
+            await asyncio.sleep(self._telemetry_period)
+
+    # ── Action handlers — one per ControlMessage variant ──────────────────
+
+    async def _arm(self) -> None:
         if await self._armed():
             logger.info("Ignoring arm: already armed")
             return
         if await self._airborne():
             logger.warning("Ignoring arm: drone is airborne (unexpected)")
             return
-        logger.info("Arming")
+        # Defense in depth — connect() already waited for health_all_ok,
+        # but health can degrade between connect and a re-arm (e.g. user
+        # disarms after landing, EKF goes stale while idle). Re-check here
+        # so the user gets "preflight not ready" instead of COMMAND_DENIED.
+        if not await self._wait_for_health():
+            logger.warning("Ignoring arm: preflight checks did not pass in time")
+            return
+        logger.info("Arming...")
         try:
             await self._drone.action.arm()
         except ActionError as e:
             logger.warning(f"Arm rejected by PX4: {e}")
             return
-        # PX4 accepts start_position_control() only once the manual_control
-        # stream is flowing at ≥10 Hz. Send half a second of neutral frames
-        # ourselves so the mode switch doesn't trip an RC-loss failsafe on
-        # the UI's stream establishing late.
+        # action.arm() returns when PX4 acks the command, but armed=True
+        # in telemetry takes a beat longer to flip. Without this wait the
+        # next mode-change call (start_position_control) races the arming
+        # state machine and PX4 silently drops the mode-change ack.
+        # https://mavsdk.mavlink.io/main/en/cpp/guide/taking_off_landing.html#arming
+        await self._wait_for_armed()
+        # MAVSDK's start_position_control() docs: "Requires manual control
+        # input to be sent regularly already." If we hit the mode change
+        # before a stream is flowing, PX4 rejects it or trips RC-loss
+        # failsafe (COM_RC_LOSS_T = 0.5s). We send half a second of neutral
+        # frames at 20 Hz to satisfy the precondition before the UI's
+        # gamepad stream takes over.
+        # https://mavsdk.mavlink.io/main/en/cpp/api_reference/classmavsdk_1_1_manual_control.html#classmavsdk_1_1_manual_control_1a4e3b0094ec1f9d2a3a2cc59afb71fbe7
         await self._warm_up_manual_control()
         await self._drone.manual_control.start_position_control()
         logger.info("Armed and in POSCTL — sticks live")
 
-    async def takeoff(self) -> None:
+    async def _takeoff(self) -> None:
         if not await self._armed():
             logger.info("Ignoring takeoff: not armed")
             return
@@ -116,7 +155,7 @@ class DroneController:
         await self._drone.manual_control.start_position_control()
         logger.info("Hovering in POSCTL — sticks live")
 
-    async def land(self) -> None:
+    async def _land(self) -> None:
         if not await self._airborne():
             logger.info("Ignoring land: not airborne")
             return
@@ -131,7 +170,7 @@ class DroneController:
         await self._wait_for_ground()
         logger.info("Landed")
 
-    async def disarm(self) -> None:
+    async def _disarm(self) -> None:
         if not await self._armed():
             logger.info("Ignoring disarm: already disarmed")
             return
@@ -147,45 +186,91 @@ class DroneController:
         except ActionError as e:
             logger.warning(f"Disarm rejected by PX4: {e}")
 
-    async def set_manual_control(
+    async def _set_manual_control(
         self, pitch: float, roll: float, throttle: float, yaw: float
     ) -> None:
         await self._drone.manual_control.set_manual_control_input(
             pitch, roll, throttle, yaw
         )
 
-    # ── Dispatch — a bound method matching MessageHandler[ControlMessage] ─
-
-    async def dispatch(self, msg: ControlMessage) -> None:
-        match msg.root:
-            case ControlInput(axes=axes):
-                await self.set_manual_control(
-                    axes.pitch, axes.roll, axes.throttle, axes.yaw
-                )
-            case Arm():
-                await self.arm()
-            case Takeoff():
-                await self.takeoff()
-            case Land():
-                await self.land()
-            case Disarm():
-                await self.disarm()
-
-    # ── Loop — spawned once as a background task ─────────────────────────
-
-    async def publish_telemetry(self) -> None:
-        while True:
-            try:
-                await self._messaging.publish(
-                    self._telemetry_topic, await self._snapshot()
-                )
-            except Exception as e:
-                logger.error(f"Telemetry publish error: {e}")
-            await asyncio.sleep(self._telemetry_period)
-
     # ── Internal helpers ─────────────────────────────────────────────────
 
-    async def _snapshot(self) -> Telemetry:
+    async def _armed(self) -> bool:
+        return await _latest(self._drone.telemetry.armed())
+
+    async def _airborne(self) -> bool:
+        return await _latest(self._drone.telemetry.in_air())
+
+    async def _wait_for_health(self, timeout: float | None = 30.0) -> bool:
+        """Wait until PX4 reports all health checks passing — covers
+        preflight, sensor calibrations, and position estimates in one
+        signal. Returns True on success, False on timeout. Pass
+        `timeout=None` to wait indefinitely; in that case the only
+        return is True (or hang forever if the drone never recovers).
+        """
+
+        async def _wait() -> bool:
+            async for ok in self._drone.telemetry.health_all_ok():
+                if ok:
+                    return True
+            return False
+
+        if timeout is None:
+            return await _wait()
+        try:
+            async with asyncio.timeout(timeout):
+                return await _wait()
+        except asyncio.TimeoutError:
+            logger.warning(f"Drone did not become healthy within {timeout}s")
+            return False
+
+    async def _wait_for_armed(self, timeout: float = 5.0) -> None:
+        """Wait for armed=True in telemetry after a successful arm command.
+        Bounded to avoid deadlock if PX4 acked the arm but never
+        flipped armed=True — downstream mode-change calls will
+        fail informatively instead of hanging the dispatch loop.
+        """
+        try:
+            async with asyncio.timeout(timeout):
+                async for armed in self._drone.telemetry.armed():
+                    if armed:
+                        return
+        except asyncio.TimeoutError:
+            logger.warning("Timed out waiting for the drone to be armed.")
+
+    async def _warm_up_manual_control(
+        self, frames: int = 10, freq: float = 20.0
+    ) -> None:
+        period = 1 / freq
+        for _ in range(frames):
+            await self._drone.manual_control.set_manual_control_input(
+                0.0, 0.0, 0.0, 0.0
+            )
+            await asyncio.sleep(period)
+
+    async def _wait_for_mode(self, target: FlightMode, timeout: float = 30.0) -> None:
+        """Wait for PX4 to report the given flight mode"""
+        try:
+            async with asyncio.timeout(timeout):
+                async for mode in self._drone.telemetry.flight_mode():
+                    if mode == target:
+                        return
+        except asyncio.TimeoutError:
+            logger.warning(f"Timed out waiting for flight mode {target.name}")
+
+    async def _wait_for_ground(self, timeout: float = 120.0) -> None:
+        """Wait for PX4's landing detector to flip in_air=False"""
+        try:
+            async with asyncio.timeout(timeout):
+                async for airborne in self._drone.telemetry.in_air():
+                    if not airborne:
+                        return
+        except asyncio.TimeoutError:
+            logger.warning(
+                "Timed out waiting for landing detector to flip in_air=False"
+            )
+
+    async def _get_telemetry(self) -> Telemetry:
         battery = await _latest(self._drone.telemetry.battery())
         armed = await _latest(self._drone.telemetry.armed())
         flight_mode = await _latest(self._drone.telemetry.flight_mode())
@@ -200,28 +285,3 @@ class DroneController:
                 alt=position.relative_altitude_m,
             ),
         )
-
-    async def _armed(self) -> bool:
-        return await _latest(self._drone.telemetry.armed())
-
-    async def _airborne(self) -> bool:
-        return await _latest(self._drone.telemetry.in_air())
-
-    # TODO: Further evaluate
-    async def _warm_up_manual_control(self, frames: int = 10, hz: float = 20.0) -> None:
-        period = 1 / hz
-        for _ in range(frames):
-            await self._drone.manual_control.set_manual_control_input(
-                0.0, 0.0, 0.0, 0.0
-            )
-            await asyncio.sleep(period)
-
-    async def _wait_for_mode(self, target: FlightMode) -> None:
-        async for mode in self._drone.telemetry.flight_mode():
-            if mode == target:
-                return
-
-    async def _wait_for_ground(self) -> None:
-        async for airborne in self._drone.telemetry.in_air():
-            if not airborne:
-                return
