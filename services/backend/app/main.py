@@ -8,7 +8,6 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api.error.handler import register_exceptions
 from app.api.main import api_router
 from app.config import GLOBAL_APP_SETTINGS
-from app.data.db.session import create_db_and_tables
 from app.service.messaging.messaging_service_factory import get_messaging_service
 
 logging.basicConfig(
@@ -19,7 +18,6 @@ logging.basicConfig(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_db_and_tables()
     async with get_messaging_service() as messaging:
         app.state.messaging = messaging
         yield

@@ -29,6 +29,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 COPY ./pyproject.toml /src/
 
+COPY ./alembic.ini /src/alembic.ini
+
+COPY ./scripts /src/scripts
+
 COPY ./app /src/app
 
 # Sync the project
@@ -38,4 +42,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen
 
-CMD ["fastapi", "run", "app/main.py"]
+CMD ["bash", "-c", "/src/scripts/prestart.sh && fastapi run app/main.py"]
