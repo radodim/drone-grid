@@ -1,14 +1,7 @@
 from video.source import VideoSource
 
 
-class RpicamSource(VideoSource):
-    """H.264 from the Pi's CSI camera via rpicam-vid, written to stdout.
-
-    Encoder settings match the original shell pipeline — low-latency,
-    baseline profile, short GOP with inline SPS/PPS so decoders can join
-    the stream mid-flight without waiting for the next IDR.
-    """
-
+class RpicamVideoSource(VideoSource):
     def __init__(
         self,
         width: int,
@@ -22,7 +15,7 @@ class RpicamSource(VideoSource):
         self._bitrate = bitrate
 
     async def build_command(self) -> list[str]:
-        return [  # TODO: see why ruff automatically formats this for each list element to be on a new line, I'm not a fan personally
+        return [
             "rpicam-vid",
             "-t",
             "0",

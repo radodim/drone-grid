@@ -41,6 +41,32 @@ services:
     ports:
       - "8554:8554" # RTSP direct (no TLS in dev)
       - "9997:9997" # MediaMTX API
+    networks:
+      default:
+        aliases:
+          - webrtc.localhost
+    environment:
+      # MediaMTX resolves webrtcAdditionalHosts entries to IPs in its own
+      # network namespace before putting them in the SDP, so we have to
+      # advertise BOTH the docker-network address AND the host loopback:
+      #   - `webrtc.localhost`  → resolved (inside this container) to the
+      #                           streaming container's docker IP. The
+      #                           companion publisher reaches it directly
+      #                           on the docker network.
+      #   - `127.0.0.1`         → put through verbatim. The browser on the
+      #                           host reaches it via the 8189/udp port
+      #                           mapping in compose.yaml.
+      # Each client gets two candidates and ICE picks the one it can reach.
+      MTX_WEBRTCIPSFROMINTERFACES: "no"
+      # Per MediaMTX docs (mediamtx.org/docs/usage/configuration), array env
+      # vars are comma-separated. Two host candidates expected: webrtc.localhost
+      # resolves to docker IP (reachable by companion); 127.0.0.1 is reachable
+      # by the browser via the 8189/udp port mapping in compose.yaml.
+      MTX_WEBRTCADDITIONALHOSTS: webrtc.localhost
+      # Default 10s is too tight for FFmpeg's experimental WHIP muxer, which
+      # doesn't include ICE candidates in its offer — peer-reflexive
+      # discovery via incoming STUN binds takes longer to complete.
+      MTX_WEBRTCHANDSHAKETIMEOUT: 30s
 
   proxy:
     command:
@@ -68,52 +94,53 @@ services:
   # mediamtx directly) so the companion handles UDP→RTSP republish — same
   # path a real Pi will use, and the only one that scales past one drone.
   # ============================================================
-  # px4-sitl:
-  #   image: px4io/px4-sitl-gazebo:v1.17.0-alpha1-1551-g381149fb01
-  #   environment:
-  #     PX4_SIM_MODEL: gz_x500_mono_cam
-  #     PX4_GZ_WORLD: walls
-  #     # Companion shares this container's network namespace (see below), so
-  #     # localhost from PX4 reaches the companion's listeners directly.
-  #     PX4_VIDEO_HOST_IP: 127.0.0.1
-  #   volumes:
-  #     # Mount the patched script at /tmp; the wrapper entrypoint copies it
-  #     # into place before invoking PX4's own entrypoint. Direct bind-mount
-  #     # over the real path breaks the image's `sed -i` (atomic rename can't
-  #     # replace a bind-mounted file).
-  #     - ./config/px4-sitl/px4-rc.mavlink:/tmp/px4-rc.mavlink.override:ro
-  #   entrypoint:
-  #     - sh
-  #     - -c
-  #     - |
-  #       cp /tmp/px4-rc.mavlink.override /opt/px4-gazebo/etc/init.d-posix/px4-rc.mavlink
-  #       exec /opt/px4-gazebo/bin/px4-entrypoint.sh "$@"
-  #     - --
-  #   depends_on:
-  #     - streaming
+  px4-sitl:
+    image: px4io/px4-sitl-gazebo:v1.17.0-alpha1-1551-g381149fb01
+    environment:
+      PX4_SIM_MODEL: gz_x500_mono_cam
+      PX4_GZ_WORLD: walls
+      # Companion shares this container's network namespace (see below), so
+      # localhost from PX4 reaches the companion's listeners directly.
+      PX4_VIDEO_HOST_IP: 127.0.0.1
+    volumes:
+      # Mount the patched script at /tmp; the wrapper entrypoint copies it
+      # into place before invoking PX4's own entrypoint. Direct bind-mount
+      # over the real path breaks the image's `sed -i` (atomic rename can't
+      # replace a bind-mounted file).
+      - ./config/px4-sitl/px4-rc.mavlink:/tmp/px4-rc.mavlink.override:ro
+    entrypoint:
+      - sh
+      - -c
+      - |
+        cp /tmp/px4-rc.mavlink.override /opt/px4-gazebo/etc/init.d-posix/px4-rc.mavlink
+        exec /opt/px4-gazebo/bin/px4-entrypoint.sh "$@"
+      - --
+    depends_on:
+      - streaming
 
-  # companion:
-  #   build:
-  #     context: ./services/companion
-  #   # Share the PX4 container's network namespace. PX4's MAVLink and Gazebo
-  #   # video plugin push to localhost by default; sharing netns means the
-  #   # companion is reachable as localhost without any PX4 reconfiguration.
-  #   network_mode: "service:px4-sitl"
-  #   environment:
-  #     # PX4's onboard MAVLink pushes unprompted to 127.0.0.1:14540 (per the
-  #     # patched px4-rc.mavlink). Companion just listens — udpin avoids the
-  #     # PX4 onboard-mode reply-port quirk that breaks udpout.
-  #     MAVSDK_CONNECTION_URL: udpin://0.0.0.0:14540
-  #     DRONE_ID: <DRONE_ID>
-  #     DRONE_SECRET: <DRONE_SECRET>
-  #     MESSAGING_URL: ws://backend:8000/api/v1/companion
-  #     MEDIA_SERVER_URL: streaming:8554
-  #     VIDEO__SOURCE: gazebo
-  #     VIDEO__PORT: "5600"
-  #   depends_on:
-  #     backend:
-  #       condition: service_healthy
-  #     streaming:
-  #       condition: service_started
-  #     px4-sitl:
-  #       condition: service_started
+  companion:
+    build:
+      context: ./services/companion
+    # Share the PX4 container's network namespace. PX4's MAVLink and Gazebo
+    # video plugin push to localhost by default; sharing netns means the
+    # companion is reachable as localhost without any PX4 reconfiguration.
+    network_mode: "service:px4-sitl"
+    environment:
+      DRONE_ID: 30068d63-a265-4020-b7e1-35979a55bcc6
+      DRONE_SECRET: db058adcbd77445aae2ff4b04b6ab64b
+      # PX4's onboard MAVLink pushes unprompted to 127.0.0.1:14540 (per the
+      # patched px4-rc.mavlink). Companion just listens — udpin avoids the
+      # PX4 onboard-mode reply-port quirk that breaks udpout.
+      CONTROL__CONNECTION_URL: udpin://0.0.0.0:14540
+      CONTROL__MESSAGING_URL: ws://backend:8000/api/v1/companion
+      VIDEO__MEDIA_SERVER_URL: streaming:8889
+      VIDEO__SOURCE__TYPE: gazebo
+      VIDEO__SOURCE__PORT: "5600"
+      VIDEO__PUBLISHER__TYPE: whip
+    depends_on:
+      backend:
+        condition: service_healthy
+      streaming:
+        condition: service_started
+      px4-sitl:
+        condition: service_started

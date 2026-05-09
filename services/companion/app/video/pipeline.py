@@ -40,7 +40,7 @@ class VideoPipeline:
                 *src_cmd,
                 stdin=asyncio.subprocess.DEVNULL,
                 stdout=write_fd,
-                stderr=asyncio.subprocess.PIPE,
+                stderr=None,  # inherit parent stderr → ffmpeg output visible in container logs
             )
         except BaseException:
             os.close(read_fd)
@@ -53,7 +53,7 @@ class VideoPipeline:
                 *pub_cmd,
                 stdin=read_fd,
                 stdout=asyncio.subprocess.DEVNULL,
-                stderr=asyncio.subprocess.PIPE,
+                stderr=None,  # inherit parent stderr → ffmpeg output visible in container logs
             )
         except BaseException:
             os.close(read_fd)

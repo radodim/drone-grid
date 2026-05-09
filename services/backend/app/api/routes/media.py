@@ -18,10 +18,10 @@ def media_auth(
     drone_service: DroneServiceDep,
     user_service: UserServiceDep,
 ):
-    if body.protocol == "rtsp" and body.action == "publish":
+    if body.action == "publish" and body.protocol in ("rtsp", "webrtc"):
         return __validate_drone_publish(body, drone_service)
 
-    if body.protocol == "webrtc" and body.action == "read":
+    if body.action == "read" and body.protocol == "webrtc":
         return __validate_user_read(body, drone_service, user_service)
 
     raise HTTPException(status_code=401, detail="Unauthorized")
@@ -30,14 +30,16 @@ def media_auth(
 def __validate_drone_publish(
     body: MediaMtxAuthRequestModel, drone_service: DroneService
 ):
-    drone_id = __parse_uuid(body.user, "Invalid drone ID")
+    # Drone ID is the stream path. MediaMTX populates `path` consistently
+    # for both RTSP (URL path) and WHIP (URL path stripped of `/whip`).
+    drone_id = __parse_uuid(body.path, "Invalid drone ID")
     drone = drone_service.get_drone(drone_id)
 
-    if drone.secret_key != body.password:
+    # Secret arrives as basic-auth password for RTSP, Bearer token for WHIP.
+    # MediaMTX populates whichever the client sent; the other is empty.
+    provided_secret = body.password or body.token
+    if drone.secret_key != provided_secret:
         raise HTTPException(status_code=401, detail="Invalid secret key")
-
-    if body.path != str(drone.id):
-        raise HTTPException(status_code=401, detail="Path must match drone ID")
 
     return {"ok": True}
 

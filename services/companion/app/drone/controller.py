@@ -1,5 +1,7 @@
 import asyncio
 import logging
+from contextlib import AbstractAsyncContextManager
+from types import TracebackType
 
 from mavsdk import System
 from mavsdk.action import ActionError
@@ -20,47 +22,57 @@ logger = logging.getLogger(__name__)
 
 
 async def _latest(async_iter):
-    """Pull a single value from a mavsdk async iterator.
-
-    mavsdk exposes telemetry as async iterators that yield indefinitely.
-    For preflight checks and one-shot snapshots we want the current value,
-    not an ongoing subscription — this helper does exactly that.
-    """
     return await async_iter.__aiter__().__anext__()
 
 
-class DroneController:
-    """Owns every drone-facing operation: command handling, preflight
-    guards, mode transitions, and telemetry publishing. mavsdk is only
-    touched from inside this class so main.py stays orchestration-only.
-
-    Preflight guards read fresh telemetry on every invocation — no cached
-    state, mavsdk is the single source of truth. Invalid preconditions
-    become a logged no-op rather than a state-corrupting mavsdk call.
-    """
-
+class DroneController(AbstractAsyncContextManager["DroneController"]):
     def __init__(
         self,
         connection_url: str,
         messaging: MessagingClient,
         telemetry_freq: float = 2.0,  # Hz
     ) -> None:
-        self._drone = System()
-        self._connection_url = connection_url
-        self._messaging = messaging
-        self._telemetry_period = 1 / telemetry_freq
+        self.__drone = System()
+        self.__connection_url = connection_url
+        self.__messaging = messaging
+        self.__telemetry_period = 1 / telemetry_freq
 
-    async def connect(self) -> None:
-        """Connect to the flight controller and wait until it's ready for
-        commands. Must be awaited before any action or publish_telemetry call.
+    async def __aenter__(self) -> "DroneController":
+        await self._connect()
+        return self
 
-        Blocks indefinitely if the FC never connects or never reaches a
-        fully-healthy state
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        # No cleanup needed today — MAVSDK's System has no explicit close,
+        # and the messaging client's lifecycle is owned by the caller.
+        # Kept as a placeholder so future cleanup (unsubscribe, drone
+        # disarm-on-exit, etc.) can land without changing the public API.
+        pass
+
+    async def run(self) -> None:
+        """Subscribe to control commands and publish telemetry until cancelled.
+
+        Must be called within `async with controller:` — relies on the
+        MAVSDK connection being open.
         """
-        await self._drone.connect(system_address=self._connection_url)
+        await self.__messaging.subscribe_control(self._dispatch)
+        logger.info("Subscribed to control channel; publishing telemetry")
+        while True:
+            try:
+                await self.__messaging.publish_telemetry(await self._get_telemetry())
+            except Exception as e:
+                logger.error(f"Telemetry publish error: {e}")
+            await asyncio.sleep(self.__telemetry_period)
+
+    async def _connect(self) -> None:
+        await self.__drone.connect(system_address=self.__connection_url)
 
         logger.info("Waiting for drone to connect...")
-        async for state in self._drone.core.connection_state():
+        async for state in self.__drone.core.connection_state():
             if state.is_connected:
                 logger.info("Connected to drone!")
                 break
@@ -73,7 +85,7 @@ class DroneController:
         await self._wait_for_health(timeout=None)
         logger.info("Drone is ready")
 
-    async def dispatch(self, msg: ControlMessage) -> None:
+    async def _dispatch(self, msg: ControlMessage) -> None:
         match msg.root:
             case ControlInput(axes=axes):
                 await self._set_manual_control(
@@ -87,14 +99,6 @@ class DroneController:
                 await self._land()
             case Disarm():
                 await self._disarm()
-
-    async def publish_telemetry(self) -> None:
-        while True:
-            try:
-                await self._messaging.publish_telemetry(await self._get_telemetry())
-            except Exception as e:
-                logger.error(f"Telemetry publish error: {e}")
-            await asyncio.sleep(self._telemetry_period)
 
     # ── Action handlers — one per ControlMessage variant ──────────────────
 
@@ -114,7 +118,7 @@ class DroneController:
             return
         logger.info("Arming...")
         try:
-            await self._drone.action.arm()
+            await self.__drone.action.arm()
         except ActionError as e:
             logger.warning(f"Arm rejected by PX4: {e}")
             return
@@ -132,7 +136,7 @@ class DroneController:
         # gamepad stream takes over.
         # https://mavsdk.mavlink.io/main/en/cpp/api_reference/classmavsdk_1_1_manual_control.html#classmavsdk_1_1_manual_control_1a4e3b0094ec1f9d2a3a2cc59afb71fbe7
         await self._warm_up_manual_control()
-        await self._drone.manual_control.start_position_control()
+        await self.__drone.manual_control.start_position_control()
         logger.info("Armed and in POSCTL — sticks live")
 
     async def _takeoff(self) -> None:
@@ -144,7 +148,7 @@ class DroneController:
             return
         logger.info("Taking off")
         try:
-            await self._drone.action.takeoff()
+            await self.__drone.action.takeoff()
         except ActionError as e:
             logger.warning(f"Takeoff rejected by PX4: {e}")
             return
@@ -152,7 +156,7 @@ class DroneController:
         # (reported as HOLD). Wait for HOLD, then return control to the
         # pilot via POSCTL so sticks become live again.
         await self._wait_for_mode(FlightMode.HOLD)
-        await self._drone.manual_control.start_position_control()
+        await self.__drone.manual_control.start_position_control()
         logger.info("Hovering in POSCTL — sticks live")
 
     async def _land(self) -> None:
@@ -161,7 +165,7 @@ class DroneController:
             return
         logger.info("Landing")
         try:
-            await self._drone.action.land()
+            await self.__drone.action.land()
         except ActionError as e:
             logger.warning(f"Land rejected by PX4: {e}")
             return
@@ -182,24 +186,24 @@ class DroneController:
             return
         logger.info("Disarming")
         try:
-            await self._drone.action.disarm()
+            await self.__drone.action.disarm()
         except ActionError as e:
             logger.warning(f"Disarm rejected by PX4: {e}")
 
     async def _set_manual_control(
         self, pitch: float, roll: float, throttle: float, yaw: float
     ) -> None:
-        await self._drone.manual_control.set_manual_control_input(
+        await self.__drone.manual_control.set_manual_control_input(
             pitch, roll, throttle, yaw
         )
 
     # ── Internal helpers ─────────────────────────────────────────────────
 
     async def _armed(self) -> bool:
-        return await _latest(self._drone.telemetry.armed())
+        return await _latest(self.__drone.telemetry.armed())
 
     async def _airborne(self) -> bool:
-        return await _latest(self._drone.telemetry.in_air())
+        return await _latest(self.__drone.telemetry.in_air())
 
     async def _wait_for_health(self, timeout: float | None = 30.0) -> bool:
         """Wait until PX4 reports all health checks passing — covers
@@ -210,7 +214,7 @@ class DroneController:
         """
 
         async def _wait() -> bool:
-            async for ok in self._drone.telemetry.health_all_ok():
+            async for ok in self.__drone.telemetry.health_all_ok():
                 if ok:
                     return True
             return False
@@ -232,7 +236,7 @@ class DroneController:
         """
         try:
             async with asyncio.timeout(timeout):
-                async for armed in self._drone.telemetry.armed():
+                async for armed in self.__drone.telemetry.armed():
                     if armed:
                         return
         except asyncio.TimeoutError:
@@ -243,7 +247,7 @@ class DroneController:
     ) -> None:
         period = 1 / freq
         for _ in range(frames):
-            await self._drone.manual_control.set_manual_control_input(
+            await self.__drone.manual_control.set_manual_control_input(
                 0.0, 0.0, 0.0, 0.0
             )
             await asyncio.sleep(period)
@@ -252,7 +256,7 @@ class DroneController:
         """Wait for PX4 to report the given flight mode"""
         try:
             async with asyncio.timeout(timeout):
-                async for mode in self._drone.telemetry.flight_mode():
+                async for mode in self.__drone.telemetry.flight_mode():
                     if mode == target:
                         return
         except asyncio.TimeoutError:
@@ -262,7 +266,7 @@ class DroneController:
         """Wait for PX4's landing detector to flip in_air=False"""
         try:
             async with asyncio.timeout(timeout):
-                async for airborne in self._drone.telemetry.in_air():
+                async for airborne in self.__drone.telemetry.in_air():
                     if not airborne:
                         return
         except asyncio.TimeoutError:
@@ -271,10 +275,10 @@ class DroneController:
             )
 
     async def _get_telemetry(self) -> Telemetry:
-        battery = await _latest(self._drone.telemetry.battery())
-        armed = await _latest(self._drone.telemetry.armed())
-        flight_mode = await _latest(self._drone.telemetry.flight_mode())
-        position = await _latest(self._drone.telemetry.position())
+        battery = await _latest(self.__drone.telemetry.battery())
+        armed = await _latest(self.__drone.telemetry.armed())
+        flight_mode = await _latest(self.__drone.telemetry.flight_mode())
+        position = await _latest(self.__drone.telemetry.position())
         return Telemetry(
             armed=armed,
             mode=str(flight_mode),
