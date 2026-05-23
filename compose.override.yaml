@@ -95,6 +95,10 @@ services:
   # companion:
   #   build:
   #     context: ./services/companion
+  #   volumes:
+  #     # Bind-mount the app so code changes need only `docker compose restart
+  #     # companion`, not a full rebuild. Dev-only (this file); prod bakes it in.
+  #     - ./services/companion/app:/src/app
   #   # Share the PX4 container's network namespace. PX4's MAVLink and Gazebo
   #   # video plugin push to localhost by default; sharing netns means the
   #   # companion is reachable as localhost without any PX4 reconfiguration.
@@ -103,13 +107,13 @@ services:
   #     # PX4's onboard MAVLink pushes unprompted to 127.0.0.1:14540 (per the
   #     # patched px4-rc.mavlink). Companion just listens — udpin avoids the
   #     # PX4 onboard-mode reply-port quirk that breaks udpout.
-  #     MAVSDK_CONNECTION_URL: udpin://0.0.0.0:14540
   #     DRONE_ID: <DRONE_ID>
   #     DRONE_SECRET: <DRONE_SECRET>
-  #     MESSAGING_URL: ws://backend:8000/api/v1/companion
-  #     MEDIA_SERVER_URL: streaming:8554
-  #     VIDEO__SOURCE: gazebo
-  #     VIDEO__PORT: "5600"
+  #     CONTROL__CONNECTION_URL: udpin://0.0.0.0:14540
+  #     CONTROL__MESSAGING_URL: ws://backend:8000/api/v1/companion
+  #     VIDEO__SOURCE__TYPE: gazebo
+  #     VIDEO__SOURCE__PORT: "5600"
+  #     VIDEO__MEDIA_SERVER_URL: streaming:8554
   #   depends_on:
   #     backend:
   #       condition: service_healthy

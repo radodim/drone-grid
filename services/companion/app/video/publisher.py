@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 
+# TODO: Discuss whether or not to combine publisher and source interfaces because the structure is exactly the same.
 class VideoPublisher(ABC):
     """Consumes an H.264 byte stream from stdin and delivers it to a sink.
 
