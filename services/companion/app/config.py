@@ -6,10 +6,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class RpicamVideo(BaseModel):
     type: Literal["rpicam"]
-    width: int = 960
+    width: int = 1280
     height: int = 720
     fps: int = 30
-    bitrate: str = "2000k"
+    bitrate: str = "3m"
+    vflip: bool = True
+    hflip: bool = True
 
 
 class GazeboVideo(BaseModel):
@@ -26,11 +28,16 @@ VideoSourceConfig = Annotated[
 class VideoConfig(BaseModel):
     source: VideoSourceConfig
     media_server_url: str
+    secure: bool = False
+    restart_delay_s: float = 5.0
 
 
 class ControlConfig(BaseModel):
     connection_url: str
     messaging_url: str
+    restart_delay_s: float = 5.0
+    heartbeat_s: float = 15.0
+    telemetry_period_s: float = 0.5
 
 
 class Settings(BaseSettings):
@@ -38,19 +45,16 @@ class Settings(BaseSettings):
         env_ignore_empty=True,
         env_nested_delimiter="__",
         extra="ignore",
-        # CLI args layer on top of env; precedence is CLI > env > defaults.
+        # precedence is CLI > env > defaults.
         cli_parse_args=True,
         cli_kebab_case=True,
         cli_avoid_json=True,
         cli_implicit_flags=True,
     )
 
-    # Shared identity — used for both messaging auth (control) and media auth
-    # (video), so required regardless of which subsystems are enabled.
     drone_id: str
     drone_secret: str
 
-    # Each subsystem is all-or-nothing: present (fully configured) or absent.
     control: ControlConfig | None = None
     video: VideoConfig | None = None
 

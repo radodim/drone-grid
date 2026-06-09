@@ -3,7 +3,8 @@
         "**/__pycache__": true
     },
     "python.analysis.extraPaths": [
-        "services/backend"
+        "services/backend",
+        "services/companion"
     ],
     "python.analysis.diagnosticMode": "workspace",
     "python.analysis.typeCheckingMode": "basic",

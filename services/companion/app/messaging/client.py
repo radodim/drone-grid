@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Awaitable, Callable, TypeVar
 
-from models import ControlMessage, Telemetry
+from app.models import ControlMessage, Telemetry
 from pydantic import BaseModel
 
 M = TypeVar("M", bound=BaseModel)
@@ -11,10 +11,7 @@ MessageHandler = Callable[[M], Awaitable[None]]
 
 class MessagingClient(ABC):
     @abstractmethod
-    async def __aenter__(self) -> "MessagingClient": ...
-
-    @abstractmethod
-    async def __aexit__(self, exc_type, exc, tb) -> None: ...
+    async def run(self) -> None: ...
 
     @abstractmethod
     async def publish_telemetry(self, message: Telemetry) -> None: ...
