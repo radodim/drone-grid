@@ -39,9 +39,6 @@ services:
   messaging:
     image: nats:2.12.6
     restart: unless-stopped
-    volumes:
-      - ./config/nats/nats.conf:/etc/nats/nats.conf:ro
-    command: -c /etc/nats/nats.conf
 
   # ============================================================
   # Identity (Keycloak)
