@@ -45,4 +45,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen
 
-CMD ["python", "app/main.py"]
+CMD ["python", "-m", "app.main"]

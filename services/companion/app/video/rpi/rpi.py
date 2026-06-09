@@ -1,28 +1,25 @@
-from video.source import VideoSource
+from app.video.process import VideoProcess
 
 
-class RpicamSource(VideoSource):
-    """H.264 from the Pi's CSI camera via rpicam-vid, written to stdout.
-
-    Encoder settings match the original shell pipeline — low-latency,
-    baseline profile, short GOP with inline SPS/PPS so decoders can join
-    the stream mid-flight without waiting for the next IDR.
-    """
-
+class RpicamVideoSource(VideoProcess):
     def __init__(
         self,
         width: int,
         height: int,
         fps: int,
         bitrate: str,
+        vflip: bool = False,
+        hflip: bool = False,
     ) -> None:
-        self._width = width
-        self._height = height
-        self._fps = fps
-        self._bitrate = bitrate
+        self.__width = width
+        self.__height = height
+        self.__fps = fps
+        self.__bitrate = bitrate
+        self.__vflip = vflip
+        self.__hflip = hflip
 
-    async def build_command(self) -> list[str]:
-        return [  # TODO: see why ruff automatically formats this for each list element to be on a new line, I'm not a fan personally
+    def build_command(self) -> list[str]:
+        cmd = [
             "rpicam-vid",
             "-t",
             "0",
@@ -31,20 +28,26 @@ class RpicamSource(VideoSource):
             "--level",
             "4.2",
             "--framerate",
-            str(self._fps),
+            str(self.__fps),
             "--width",
-            str(self._width),
+            str(self.__width),
             "--height",
-            str(self._height),
+            str(self.__height),
             "--bitrate",
-            self._bitrate,
+            self.__bitrate,
             "--low-latency",
             "--profile",
             "baseline",
             "--intra",
             "12",
             "--inline",
-            "-n",
-            "-o",
-            "-",
         ]
+
+        if self.__vflip:
+            cmd.append("--vflip")
+        if self.__hflip:
+            cmd.append("--hflip")
+
+        cmd += ["-n", "-o", "-"]
+
+        return cmd

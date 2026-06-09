@@ -1,43 +1,41 @@
-from config import GazeboVideo, NoVideo, RpicamVideo, Settings
-from video.gazebo.gazebo import GazeboSource
-from video.mediamtx.mediamtx import MediaMtxPublisher
-from video.pipeline import VideoPipeline
-from video.publisher import VideoPublisher
-from video.rpi.rpi import RpicamSource
-from video.source import VideoSource
+from app.config import GazeboVideo, RpicamVideo, VideoConfig
+from app.video.gazebo.gazebo import GazeboVideoSource
+from app.video.pipeline import VideoPipeline
+from app.video.process import VideoProcess
+from app.video.rpi.rpi import RpicamVideoSource
+from app.video.rtsp.rtsp import RtspVideoPublisher
 
 
-def _build_source(video: RpicamVideo | GazeboVideo) -> VideoSource:
-    if isinstance(video, RpicamVideo):
-        return RpicamSource(
-            width=video.width,
-            height=video.height,
-            fps=video.fps,
-            bitrate=video.bitrate,
+def __build_source(source: RpicamVideo | GazeboVideo) -> VideoProcess:
+    if isinstance(source, RpicamVideo):
+        return RpicamVideoSource(
+            width=source.width,
+            height=source.height,
+            fps=source.fps,
+            bitrate=source.bitrate,
+            vflip=source.vflip,
+            hflip=source.hflip,
         )
-    return GazeboSource(port=video.port)
+    return GazeboVideoSource(port=source.port)
 
 
-def _build_publisher(settings: Settings) -> VideoPublisher:
-    # Only MediaMTX is implemented today. When WebRTC / other sinks appear,
-    # promote this to dispatching on a PublisherConfig discriminated union
-    # living next to VideoConfig.
-    return MediaMtxPublisher(
-        drone_id=settings.drone_id,
-        drone_secret=settings.drone_secret,
-        media_server_url=settings.media_server_url,
+def __build_publisher(
+    drone_id: str, drone_secret: str, media_server_url: str, secure: bool
+) -> VideoProcess:
+    return RtspVideoPublisher(
+        drone_id=drone_id,
+        drone_secret=drone_secret,
+        media_server_url=media_server_url,
+        secure=secure,
     )
 
 
-def build_video_pipeline(settings: Settings) -> VideoPipeline | None:
-    """Construct the video pipeline from settings, or None if video is off.
-
-    Callers start/stop the returned pipeline themselves — the factory only
-    composes, never owns lifecycle.
-    """
-    if isinstance(settings.video, NoVideo):
-        return None
+def build_video_pipeline(
+    video: VideoConfig, drone_id: str, drone_secret: str
+) -> VideoPipeline:
     return VideoPipeline(
-        source=_build_source(settings.video),
-        publisher=_build_publisher(settings),
+        source=__build_source(video.source),
+        publisher=__build_publisher(
+            drone_id, drone_secret, video.media_server_url, video.secure
+        ),
     )
