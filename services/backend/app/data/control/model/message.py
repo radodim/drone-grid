@@ -24,14 +24,6 @@ class Arm(BaseModel):
     type: Literal["arm"]
 
 
-class Takeoff(BaseModel):
-    type: Literal["takeoff"]
-
-
-class Land(BaseModel):
-    type: Literal["land"]
-
-
 class Disarm(BaseModel):
     type: Literal["disarm"]
 
@@ -43,6 +35,6 @@ class ControlMessage(RootModel):
     """
 
     root: Annotated[
-        ControlInput | Arm | Takeoff | Land | Disarm,
+        ControlInput | Arm | Disarm,
         Field(discriminator="type"),
     ]

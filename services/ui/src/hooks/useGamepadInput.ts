@@ -23,8 +23,6 @@ export interface GamepadInputOptions {
   /** Fired once per press (rising edge), not on every polled frame while held. */
   onArm?: () => void
   onDisarm?: () => void
-  onTakeoff?: () => void
-  onLand?: () => void
 }
 
 const DEFAULT_DEADZONE = 0.1
@@ -54,22 +52,27 @@ function axisToThrottle(rawY: number, deadzone: number): number {
  *   Right stick Y (axis 3, flip)  -> Pitch
  *   Button 0 (A / X)              -> Arm
  *   Button 1 (B / Circle)         -> Disarm
- *   Button 2 (X / Square)         -> Takeoff
- *   Button 3 (Y / Triangle)       -> Land
  */
-export function useGamepadInput(options: GamepadInputOptions = {}): GamepadInputState {
-  const { deadzone = DEFAULT_DEADZONE, onArm, onDisarm, onTakeoff, onLand } = options
+export function useGamepadInput(
+  options: GamepadInputOptions = {},
+): GamepadInputState {
+  const { deadzone = DEFAULT_DEADZONE, onArm, onDisarm } = options
 
   const [connected, setConnected] = useState(false)
-  const axesRef = useRef<ControlAxes>({ pitch: 0, roll: 0, yaw: 0, throttle: 0 })
+  const axesRef = useRef<ControlAxes>({
+    pitch: 0,
+    roll: 0,
+    yaw: 0,
+    throttle: 0,
+  })
 
   // Callbacks captured in a ref so the polling loop doesn't need to be re-created on every re-render.
-  const handlersRef = useRef({ onArm, onDisarm, onTakeoff, onLand })
-  handlersRef.current = { onArm, onDisarm, onTakeoff, onLand }
+  const handlersRef = useRef({ onArm, onDisarm })
+  handlersRef.current = { onArm, onDisarm }
 
   useEffect(() => {
     let rafId: number
-    const prevButtonState = { arm: false, disarm: false, takeoff: false, land: false }
+    const prevButtonState = { arm: false, disarm: false }
 
     const poll = () => {
       const pads = navigator.getGamepads()
@@ -88,16 +91,11 @@ export function useGamepadInput(options: GamepadInputOptions = {}): GamepadInput
         // Rising-edge detection: fire the callback only on the transition from not-pressed to pressed.
         const armPressed = gp.buttons[0]?.pressed ?? false
         const disarmPressed = gp.buttons[1]?.pressed ?? false
-        const takeoffPressed = gp.buttons[2]?.pressed ?? false
-        const landPressed = gp.buttons[3]?.pressed ?? false
         if (armPressed && !prevButtonState.arm) handlersRef.current.onArm?.()
-        if (disarmPressed && !prevButtonState.disarm) handlersRef.current.onDisarm?.()
-        if (takeoffPressed && !prevButtonState.takeoff) handlersRef.current.onTakeoff?.()
-        if (landPressed && !prevButtonState.land) handlersRef.current.onLand?.()
+        if (disarmPressed && !prevButtonState.disarm)
+          handlersRef.current.onDisarm?.()
         prevButtonState.arm = armPressed
         prevButtonState.disarm = disarmPressed
-        prevButtonState.takeoff = takeoffPressed
-        prevButtonState.land = landPressed
       } else if (connected) {
         setConnected(false)
         axesRef.current = { pitch: 0, roll: 0, yaw: 0, throttle: 0 }

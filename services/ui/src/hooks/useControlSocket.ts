@@ -2,7 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import keycloak from "@/keycloak"
 
-export type ControlSocketStatus = "idle" | "connecting" | "open" | "closed" | "error"
+export type ControlSocketStatus =
+  | "idle"
+  | "connecting"
+  | "open"
+  | "closed"
+  | "error"
 
 export interface ControlSocketState {
   status: ControlSocketStatus
@@ -11,16 +16,14 @@ export interface ControlSocketState {
 
 /** Wire protocol — validated by the backend (Pydantic) and consumed by the companion. */
 type Axes = {
-  pitch: number   // -1..1
-  roll: number    // -1..1
+  pitch: number // -1..1
+  roll: number // -1..1
   throttle: number // 0..1 (multicopter convention)
-  yaw: number     // -1..1
+  yaw: number // -1..1
 }
 type ControlMessage =
   | { type: "control_input"; axes: Axes }
   | { type: "arm" }
-  | { type: "takeoff" }
-  | { type: "land" }
   | { type: "disarm" }
 
 /**
@@ -70,12 +73,15 @@ export function useControlSocket(droneId: string): ControlSocketState {
 
 /** Type-safe helpers for each message kind — keeps callers from free-typing JSON blobs. */
 export const controlMessages = {
-  control: (pitch: number, roll: number, throttle: number, yaw: number): ControlMessage => ({
+  control: (
+    pitch: number,
+    roll: number,
+    throttle: number,
+    yaw: number,
+  ): ControlMessage => ({
     type: "control_input",
     axes: { pitch, roll, throttle, yaw },
   }),
   arm: (): ControlMessage => ({ type: "arm" }),
-  takeoff: (): ControlMessage => ({ type: "takeoff" }),
-  land: (): ControlMessage => ({ type: "land" }),
   disarm: (): ControlMessage => ({ type: "disarm" }),
 }

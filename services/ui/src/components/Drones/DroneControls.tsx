@@ -1,9 +1,6 @@
 import { useEffect } from "react"
 
-import {
-  controlMessages,
-  useControlSocket,
-} from "@/hooks/useControlSocket"
+import { controlMessages, useControlSocket } from "@/hooks/useControlSocket"
 import { useGamepadInput } from "@/hooks/useGamepadInput"
 import { cn } from "@/lib/utils"
 
@@ -25,8 +22,6 @@ export function DroneControls({ droneId }: DroneControlsProps) {
   const { connected: gamepadConnected, axesRef } = useGamepadInput({
     onArm: () => send(controlMessages.arm()),
     onDisarm: () => send(controlMessages.disarm()),
-    onTakeoff: () => send(controlMessages.takeoff()),
-    onLand: () => send(controlMessages.land()),
   })
 
   // 20Hz send loop. Reads the current axes ref each tick — decoupled from the
