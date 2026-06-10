@@ -94,11 +94,11 @@ export function useKeyboardInput(enabled: boolean): InputSourceState {
     }
   }, [enabled])
 
-  const resetThrottle = useCallback(() => {
-    axesRef.current = { ...axesRef.current, throttle: 0 }
+  const setThrottle = useCallback((value: number) => {
+    axesRef.current = { ...axesRef.current, throttle: clamp01(value) }
   }, [])
 
-  return { kind: "keyboard", connected: true, axesRef, resetThrottle }
+  return { kind: "keyboard", connected: true, axesRef, setThrottle }
 }
 
 function isTyping(): boolean {

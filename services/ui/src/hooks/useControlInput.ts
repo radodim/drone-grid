@@ -33,8 +33,11 @@ const GAMEPAD_ARM_THROTTLE_MAX = 0.55
  * Coordinates the input sources behind one contract: exactly one source is
  * active at a time. Auto-detect prefers gamepad, then touch, then keyboard;
  * a manual selection wins while that source stays connected.
+ *
+ * `confirmedDisarmed` (drone reported disarmed by fresh telemetry) decides
+ * the throttle hand-off on source switch — see the seeding effect below.
  */
-export function useControlInput(): ControlInputState {
+export function useControlInput(confirmedDisarmed: boolean): ControlInputState {
   const [manualKind, setManualKind] = useState<InputKind | null>(null)
 
   const gamepad = useGamepadInput()
@@ -77,9 +80,27 @@ export function useControlInput(): ControlInputState {
 
   const resetThrottle = useCallback(() => {
     for (const source of Object.values(sourcesRef.current)) {
-      source.resetThrottle?.()
+      source.setThrottle?.(0)
     }
   }, [])
+
+  // Throttle hand-off on source switch: a sticky source (keyboard/touch)
+  // inherits the previous source's throttle so switching mid-flight doesn't
+  // command a sudden descent; when the drone is confirmed disarmed it resets
+  // to 0 instead, keeping the arm gate naturally satisfied.
+  const confirmedDisarmedRef = useRef(confirmedDisarmed)
+  confirmedDisarmedRef.current = confirmedDisarmed
+  const prevActiveKindRef = useRef(activeKind)
+  useEffect(() => {
+    const prevKind = prevActiveKindRef.current
+    if (prevKind === activeKind) return
+    prevActiveKindRef.current = activeKind
+
+    const previous = sourcesRef.current[prevKind]
+    sourcesRef.current[activeKind].setThrottle?.(
+      confirmedDisarmedRef.current ? 0 : previous.axesRef.current.throttle,
+    )
+  }, [activeKind])
 
   // Low-rate throttle sample so the arm gate re-evaluates as the stick moves.
   const [throttle, setThrottle] = useState(0)

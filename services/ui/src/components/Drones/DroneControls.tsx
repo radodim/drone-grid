@@ -22,7 +22,9 @@ interface DroneControlsProps {
  * Control layer over the drone stream: hold-to-arm/disarm, the input-source
  * selector, the control-link indicator, and — when touch is the active
  * source — the two RC-style gimbal pads. Streams the active source's axes
- * to the backend at 20Hz while the drone is armed and telemetry is live.
+ * to the backend at 20Hz whenever the control link is open: like a real RC
+ * transmitter, the stick stream is a continuous carrier — the flight
+ * controller owns loss failsafes. Only discrete commands are state-gated.
  */
 export function DroneControls({
   droneId,
@@ -33,7 +35,7 @@ export function DroneControls({
 
   const { getAxes, resetThrottle } = controlInput
   useEffect(() => {
-    if (status !== "open" || !droneState.inputLive) return
+    if (status !== "open") return
 
     const intervalId = setInterval(() => {
       const { pitch, roll, throttle, yaw } = getAxes()
@@ -41,7 +43,7 @@ export function DroneControls({
     }, SEND_INTERVAL_MS)
 
     return () => clearInterval(intervalId)
-  }, [status, droneState.inputLive, send, getAxes])
+  }, [status, send, getAxes])
 
   return (
     <>

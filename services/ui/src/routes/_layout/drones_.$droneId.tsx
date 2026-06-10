@@ -32,7 +32,9 @@ function DroneStream() {
     status: telemetryStatus,
     lastMessageAt,
   } = useTelemetrySocket(droneId)
-  const controlInput = useControlInput()
+  const controlInput = useControlInput(
+    telemetry?.mavlink_telemetry?.is_armed === false,
+  )
   const droneState = useDroneState({
     telemetry,
     lastMessageAt,

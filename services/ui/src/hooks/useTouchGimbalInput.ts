@@ -36,15 +36,16 @@ export function useTouchGimbalInput(): InputSourceState & TouchGimbalControls {
   const releaseRightPad = useCallback(() => {
     axesRef.current = { ...axesRef.current, roll: 0, pitch: 0 }
   }, [])
-  const resetThrottle = useCallback(() => {
-    axesRef.current = { ...axesRef.current, throttle: 0 }
+  const setThrottle = useCallback((value: number) => {
+    const throttle = Math.min(1, Math.max(0, value))
+    axesRef.current = { ...axesRef.current, throttle }
   }, [])
 
   return {
     kind: "touch",
     connected,
     axesRef,
-    resetThrottle,
+    setThrottle,
     setLeftPad,
     releaseLeftPad,
     setRightPad,

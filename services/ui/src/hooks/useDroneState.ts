@@ -23,8 +23,6 @@ export interface DroneState {
   videoHealth: VideoHealth
   canArm: Affordance
   canDisarm: Affordance
-  /** Stick input is meaningful: telemetry is live and the drone is armed. */
-  inputLive: boolean
 }
 
 export interface DroneStateInputs {
@@ -121,7 +119,6 @@ export function deriveDroneState(
       throttleSafeToArm,
     ),
     canDisarm: deriveCanDisarm(telemetryHealth, armed, inAir),
-    inputLive: live && armed === true,
   }
 }
 

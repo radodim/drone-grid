@@ -4,13 +4,14 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, AsyncIterator, Awaitable, Callable
 
+from mavsdk import System
+from mavsdk.action import ActionError
+from mavsdk.telemetry import Battery, FlightMode, GpsInfo, Health, Position
+
 from app.exception.drone_exceptions import (
     DroneActionException,
     DroneInitializationException,
 )
-from mavsdk import System
-from mavsdk.action import ActionError
-from mavsdk.telemetry import Battery, FlightMode, GpsInfo, Health, Position
 from app.models import (
     Arm,
     ControlInput,
@@ -235,18 +236,35 @@ class DroneController:
         )
 
     async def __handle_disarm(self, _: Disarm) -> None:
-        await self.__disarm()
-
-    async def __disarm(self) -> None:
-        if not self.__telemetry.is_armed or self.__telemetry.is_in_air:
-            logger.warning("Ignoring disarm. Cannot disarm drone in current state.")
+        # Safety gate mirroring __handle_arm: a refused disarm (e.g. mid-air)
+        # must not fall through to the HOLD mode change below.
+        armed_and_grounded = (
+            self.__telemetry.is_armed is True and self.__telemetry.is_in_air is False
+        )
+        if not armed_and_grounded:
+            logger.warning(
+                f"Ignoring disarm: drone must be armed and grounded "
+                f"(armed={self.__telemetry.is_armed}, in_air={self.__telemetry.is_in_air})."
+            )
             return
 
+        await self.__disarm()
+        await self.__exit_manual_control()
+
+    async def __disarm(self) -> None:
         logger.info("Disarming...")
         try:
             await self.__drone.action.disarm()
         except ActionError as e:
             raise DroneActionException("Disarm rejected by flight controller.") from e
+
+    async def __exit_manual_control(self) -> None:
+        try:
+            await self.__drone.action.hold()
+        except ActionError as e:
+            raise DroneActionException("Failed to switch to HOLD mode.") from e
+
+        logger.info("Disarmed and in HOLD.")
 
     async def __handle_control_input(self, command: ControlInput) -> None:
         axes = command.axes
