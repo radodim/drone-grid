@@ -9,8 +9,7 @@ import type { DroneState } from "@/hooks/useDroneState"
 import { cn } from "@/lib/utils"
 import { type ControlAxes, neutralAxes } from "@/types/input"
 
-// TODO: see how to externalize this as a parameter to the constructor of DroneControls
-const SEND_INTERVAL_MS = 50 // 20Hz — plenty for manual control, within PX4's minimum rate.
+const SEND_INTERVAL_MS = 20 // 50Hz
 
 interface DroneControlsProps {
   droneId: string
