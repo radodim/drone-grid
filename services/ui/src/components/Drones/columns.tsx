@@ -1,5 +1,5 @@
-import type { ColumnDef } from "@tanstack/react-table"
 import { Link } from "@tanstack/react-router"
+import type { ColumnDef } from "@tanstack/react-table"
 import { Check, Circle, Copy, Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 
@@ -53,11 +53,7 @@ function SecretKey({ secretKey }: { secretKey: string }) {
         className="size-6 opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={() => setRevealed(!revealed)}
       >
-        {revealed ? (
-          <EyeOff className="size-3" />
-        ) : (
-          <Eye className="size-3" />
-        )}
+        {revealed ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
         <span className="sr-only">{revealed ? "Hide" : "Reveal"}</span>
       </Button>
       <Button
@@ -86,9 +82,7 @@ export const columns: ColumnDef<DroneResponse>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.name}</span>
-    ),
+    cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
   },
   {
     accessorKey: "secret_key",

@@ -7,15 +7,12 @@ from fastapi import (
     Query,
     WebSocket,
     WebSocketDisconnect,
-    WebSocketException,
-    status,
 )
 from pydantic import ValidationError
 
-from app.api.security.deps import decode_jwt_token
+from app.api.security.drone_access import authorize_drone_access
 from app.data.control.model.message import ControlMessage
 from app.service.drone.drone_service import DroneServiceDep
-from app.service.exceptions import InvalidTokenError, NonExistentDroneException
 from app.service.messaging.messaging_service import MessagingServiceDep
 from app.service.user.user_service import UserServiceDep
 
@@ -35,24 +32,7 @@ async def control_socket(
     # so we accept the JWT as a query param.
     token: str = Query(),
 ):
-    # Authenticate and authorize the connection. JWKS / infrastructure errors
-    # intentionally propagate — they're not the client's fault and shouldn't
-    # look like an auth failure.
-    try:
-        decoded = decode_jwt_token(token)
-        user = user_service.sync_from_token(decoded)
-        drone = drone_service.get_drone(drone_id)
-    except InvalidTokenError | NonExistentDroneException as e:
-        if isinstance(e, InvalidTokenError):
-            logger.warning(
-                f"Websocket authentication rejected for drone {drone_id}, reason '{e.message}'"
-            )
-        elif isinstance(e, NonExistentDroneException):
-            logger.warning("The drone with id '{drone_id}' does not exist")
-        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
-
-    if not user.is_admin and drone.owner_id != user.id:
-        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+    user, _ = authorize_drone_access(token, drone_id, user_service, drone_service)
 
     await websocket.accept()
     logger.info(f"Control socket opened for drone {drone_id} by user {user.id}")

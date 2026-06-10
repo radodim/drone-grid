@@ -32,8 +32,7 @@ const DeleteDrone = ({ id, name, onSuccess }: DeleteDroneProps) => {
   const { handleSubmit } = useForm()
 
   const mutation = useMutation({
-    mutationFn: (droneId: string) =>
-      DroneService.deleteDrone({ droneId }),
+    mutationFn: (droneId: string) => DroneService.deleteDrone({ droneId }),
     onSuccess: () => {
       showSuccessToast("Drone deleted successfully")
       setIsOpen(false)
