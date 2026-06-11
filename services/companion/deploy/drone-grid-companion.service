@@ -1,19 +1,14 @@
 [Unit]
 Description=Drone Grid companion
 Documentation=https://github.com/radodim/drone-grid
-# The companion needs the network for the backend WebSocket; the flight
-# controller link is local.
 Wants=network-online.target
 After=network-online.target
 
 [Service]
-# __RUN_USER__ / __COMPANION_DIR__ are substituted by deploy/install.sh.
+# __RUN_USER__ and __COMPANION_DIR__ are substituted by deploy/install.sh.
 User=__RUN_USER__
 WorkingDirectory=__COMPANION_DIR__
-# Secrets + per-drone config live here, NOT in git. See companion.env.example.
 EnvironmentFile=/etc/drone-grid/companion.env
-# Run the venv interpreter directly (uv-managed Python 3.12, populated by
-# `uv sync`) so boot needs no network and restarts are instant.
 ExecStart=__COMPANION_DIR__/.venv/bin/python -m app.main
 Restart=always
 RestartSec=3
