@@ -159,13 +159,14 @@ services:
   # Streaming (MediaMTX)
   # ============================================================
   streaming:
-    image: bluenviron/mediamtx:latest
+    image: bluenviron/mediamtx:1.17.1
     depends_on:
       backend:
         condition: service_started
     restart: unless-stopped
     environment:
       MTX_RTSPTRANSPORTS: tcp
+      MTX_WEBRTCADDITIONALHOSTS: webrtc.${DOMAIN}
     ports:
       - "8189:8189/udp" # WebRTC media (UDP, can't go through Traefik)
     volumes:
