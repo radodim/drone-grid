@@ -43,7 +43,6 @@ class MavlinkTelemetry(BaseModel):
 
 class CompanionState(str, Enum):
     CONNECTING = "connecting"
-    CALIBRATING = "calibrating"
     READY = "ready"
 
 

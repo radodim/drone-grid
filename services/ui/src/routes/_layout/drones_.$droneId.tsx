@@ -8,6 +8,7 @@ import { DroneControls } from "@/components/Drones/DroneControls"
 import { TelemetryHud } from "@/components/Drones/TelemetryHud"
 import { Button } from "@/components/ui/button"
 import { useControlInput } from "@/hooks/useControlInput"
+import { useControlSocket } from "@/hooks/useControlSocket"
 import { useDroneState } from "@/hooks/useDroneState"
 import { useTelemetrySocket } from "@/hooks/useTelemetrySocket"
 import keycloak from "@/keycloak"
@@ -35,6 +36,9 @@ function DroneStream() {
   const controlInput = useControlInput(
     telemetry?.mavlink_telemetry?.is_armed === false,
   )
+  // Owned here (not in DroneControls) so the HUD's CTRL chip and the
+  // command stream share one socket.
+  const control = useControlSocket(droneId)
   const droneState = useDroneState({
     telemetry,
     lastMessageAt,
@@ -143,11 +147,15 @@ function DroneStream() {
             <p className="text-destructive text-sm">{error}</p>
           </div>
         )}
-        <TelemetryHud telemetry={telemetry} droneState={droneState} />
+        <TelemetryHud
+          telemetry={telemetry}
+          droneState={droneState}
+          controlStatus={control.status}
+        />
         <DroneControls
-          droneId={droneId}
           droneState={droneState}
           controlInput={controlInput}
+          control={control}
         />
         <button
           type="button"

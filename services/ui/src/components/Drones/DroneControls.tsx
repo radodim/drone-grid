@@ -4,33 +4,37 @@ import { HoldButton } from "@/components/Drones/HoldButton"
 import { InputSourceSelector } from "@/components/Drones/InputSourceSelector"
 import { TouchGimbal } from "@/components/Drones/TouchGimbal"
 import type { ControlInputState } from "@/hooks/useControlInput"
-import { controlMessages, useControlSocket } from "@/hooks/useControlSocket"
+import {
+  type ControlSocketState,
+  controlMessages,
+} from "@/hooks/useControlSocket"
 import type { DroneState } from "@/hooks/useDroneState"
-import { cn } from "@/lib/utils"
 import { type ControlAxes, neutralAxes } from "@/types/input"
 
 const SEND_INTERVAL_MS = 20 // 50Hz
 
 interface DroneControlsProps {
-  droneId: string
   droneState: DroneState
   controlInput: ControlInputState
+  /** Owned by the route so the HUD can render the same socket's health. */
+  control: ControlSocketState
 }
 
 /**
  * Control layer over the drone stream: hold-to-arm/disarm, the input-source
- * selector, the control-link indicator, and — when touch is the active
- * source — the two RC-style gimbal pads. Streams the active source's axes
- * to the backend at 20Hz whenever the control link is open: like a real RC
- * transmitter, the stick stream is a continuous carrier — the flight
- * controller owns loss failsafes. Only discrete commands are state-gated.
+ * selector, and — when touch is the active source — the two RC-style gimbal
+ * pads. Streams the active source's axes to the backend at 50Hz whenever
+ * the control link is open: like a real RC transmitter, the stick stream is
+ * a continuous carrier — the flight controller owns loss failsafes. Only
+ * discrete commands are state-gated. (Link health renders in the HUD's
+ * CTRL chip, fed by the same socket via the route.)
  */
 export function DroneControls({
-  droneId,
   droneState,
   controlInput,
+  control,
 }: DroneControlsProps) {
-  const { status, send } = useControlSocket(droneId)
+  const { status, send } = control
 
   const { getAxes, resetThrottle } = controlInput
   useEffect(() => {
@@ -47,7 +51,7 @@ export function DroneControls({
   return (
     <>
       <GimbalPads controlInput={controlInput} />
-      <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 flex items-end gap-4">
+      <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
         <HoldButton
           label="ARM"
           holdMs={2000}
@@ -56,14 +60,11 @@ export function DroneControls({
           disabledReason={droneState.canArm.reason}
           onComplete={() => send(controlMessages.arm())}
         />
-        <div className="flex flex-col items-center gap-2 pb-1">
-          <InputSourceSelector
-            sources={controlInput.sources}
-            activeKind={controlInput.activeKind}
-            onSelect={controlInput.setActiveKind}
-          />
-          <StatusDot label="Link" active={status === "open"} />
-        </div>
+        <InputSourceSelector
+          sources={controlInput.sources}
+          activeKind={controlInput.activeKind}
+          onSelect={controlInput.setActiveKind}
+        />
         <HoldButton
           label="DISARM"
           holdMs={1000}
@@ -138,24 +139,5 @@ function axesEqual(a: ControlAxes, b: ControlAxes): boolean {
     a.roll === b.roll &&
     a.yaw === b.yaw &&
     a.throttle === b.throttle
-  )
-}
-
-interface StatusDotProps {
-  label: string
-  active: boolean
-}
-
-function StatusDot({ label, active }: StatusDotProps) {
-  return (
-    <div className="bg-black/60 text-white rounded px-2 py-1 flex items-center gap-2 text-xs font-mono">
-      <span
-        className={cn(
-          "inline-block size-2 rounded-full",
-          active ? "bg-green-500" : "bg-red-500",
-        )}
-      />
-      {label}
-    </div>
   )
 }

@@ -4,7 +4,7 @@
  * If you change it there, change it here.
  */
 
-export type CompanionState = "connecting" | "calibrating" | "ready"
+export type CompanionState = "connecting" | "ready"
 
 export interface Position {
   lat: number | null

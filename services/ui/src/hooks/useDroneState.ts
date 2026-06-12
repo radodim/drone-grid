@@ -158,7 +158,30 @@ function deriveCanArm(
   if (mavlink == null) return disabled("no flight controller data")
   if (mavlink.is_armed) return disabled("already armed")
   if (mavlink.is_in_air) return disabled("airborne")
-  if (mavlink.health?.is_armable !== true) return disabled("not armable")
+
+  // Specific health reasons before the is_armable catch-all — PX4 checks
+  // more than it exposes, so "not armable" remains the honest fallback.
+  const health = mavlink.health
+  if (health == null) return disabled("no health data")
+  if (
+    health.is_gyrometer_calibrated === false ||
+    health.is_accelerometer_calibrated === false ||
+    health.is_magnetometer_calibrated === false
+  ) {
+    return disabled("sensors not calibrated")
+  }
+  if (
+    health.is_global_position_ok === false ||
+    health.is_local_position_ok === false
+  ) {
+    return disabled("waiting for GPS position")
+  }
+  if (health.is_home_position_ok === false) {
+    return disabled("waiting for home position")
+  }
+  if (health.is_armable !== true) {
+    return disabled("flight controller reports not armable")
+  }
   if (!throttleSafeToArm) return disabled("lower throttle to arm")
 
   return enabled()

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 
 interface LinkIndicatorsProps {
   telemetryHealth: TelemetryHealth
+  controlHealth: "ok" | "down"
   fcLinkHealth: FcLinkHealth
   videoHealth: VideoHealth
 }
@@ -20,25 +21,51 @@ const DOT_COLOR: Record<string, string> = {
   unknown: "bg-zinc-500",
 }
 
-/** Tri-state health dots for the three liveness domains:
- * telemetry transport, companion→FC link, and the video stream. */
+/** Health dots for the four transport segments. CTRL is the only witness
+ * to "HUD healthy but sticks dead"; FC (companion↔flight controller) is
+ * derived from companion-clock timestamps, immune to browser clock skew. */
 export function LinkIndicators({
   telemetryHealth,
+  controlHealth,
   fcLinkHealth,
   videoHealth,
 }: LinkIndicatorsProps) {
   return (
-    <div className="flex gap-2 text-xs font-mono">
-      <HealthDot label="TELEM" state={telemetryHealth} />
-      <HealthDot label="DRONE" state={fcLinkHealth} />
-      <HealthDot label="VIDEO" state={videoHealth} />
+    <div className="pointer-events-auto cursor-default flex gap-2 text-xs font-mono">
+      <HealthDot
+        label="CTRL"
+        state={controlHealth}
+        title="Control channel health"
+      />
+      <HealthDot
+        label="FC"
+        state={fcLinkHealth}
+        title="Flight controller link health"
+      />
+      <HealthDot
+        label="TELEM"
+        state={telemetryHealth}
+        title="Telemetry feed health"
+      />
+      <HealthDot label="VIDEO" state={videoHealth} title="Video stream health" />
     </div>
   )
 }
 
-function HealthDot({ label, state }: { label: string; state: string }) {
+function HealthDot({
+  label,
+  state,
+  title,
+}: {
+  label: string
+  state: string
+  title: string
+}) {
   return (
-    <div className="bg-black/60 text-white rounded px-2 py-1 flex items-center gap-2">
+    <div
+      title={title}
+      className="bg-black/60 text-white rounded px-2 py-1 flex items-center gap-2"
+    >
       <span
         className={cn("inline-block size-2 rounded-full", DOT_COLOR[state])}
       />

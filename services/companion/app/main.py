@@ -6,7 +6,7 @@ from app.config import GLOBAL_APP_SETTINGS, ControlConfig, Settings, VideoConfig
 from app.drone.controller import DroneController
 from app.messaging.client import MessagingClient
 from app.messaging.drone_grid.drone_grid import DroneGridMessagingClient
-from app.models import CompanionState, MavlinkTelemetry, Telemetry
+from app.models import CompanionState, Telemetry
 from app.video.factory import build_video_pipeline
 
 logging.basicConfig(level=logging.INFO)
@@ -71,9 +71,7 @@ async def publish_telemetry(
     while True:
         mavlink_telemtry = controller.mavlink_telemetry()
         telemetry = Telemetry(
-            companion_state=derive_companion_state(
-                mavlink_telemtry, controller.is_ready
-            ),
+            companion_state=derive_companion_state(controller.is_ready),
             companion_state_timestamp=datetime.now(UTC),
             mavlink_telemetry=mavlink_telemtry,
         )
@@ -84,15 +82,8 @@ async def publish_telemetry(
         await asyncio.sleep(period_s)
 
 
-def derive_companion_state(
-    mavlink: MavlinkTelemetry | None, is_ready: bool
-) -> CompanionState:
-    if is_ready:
-        return CompanionState.READY
-    if mavlink is not None:
-        return CompanionState.CALIBRATING
-
-    return CompanionState.CONNECTING
+def derive_companion_state(is_ready: bool) -> CompanionState:
+    return CompanionState.READY if is_ready else CompanionState.CONNECTING
 
 
 if __name__ == "__main__":
