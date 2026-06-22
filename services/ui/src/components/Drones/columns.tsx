@@ -1,7 +1,6 @@
-import type { ColumnDef } from "@tanstack/react-table"
 import { Link } from "@tanstack/react-router"
-import { Check, Circle, Copy, Eye, EyeOff } from "lucide-react"
-import { useState } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
+import { Check, Circle, Copy } from "lucide-react"
 
 import type { DroneResponse } from "@/client"
 import { Button } from "@/components/ui/button"
@@ -32,51 +31,6 @@ function CopyId({ id }: { id: string }) {
   )
 }
 
-function SecretKey({ secretKey }: { secretKey: string }) {
-  const [revealed, setRevealed] = useState(false)
-  const [copiedText, copy] = useCopyToClipboard()
-  const isCopied = copiedText === secretKey
-
-  return (
-    <div className="flex items-center gap-1.5 group">
-      <code
-        className={`text-xs bg-muted px-2 py-1 rounded font-mono ${
-          revealed ? "" : "select-none"
-        }`}
-        style={revealed ? {} : { filter: "blur(5px)" }}
-      >
-        {secretKey}
-      </code>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-6 opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={() => setRevealed(!revealed)}
-      >
-        {revealed ? (
-          <EyeOff className="size-3" />
-        ) : (
-          <Eye className="size-3" />
-        )}
-        <span className="sr-only">{revealed ? "Hide" : "Reveal"}</span>
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-6 opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={() => copy(secretKey)}
-      >
-        {isCopied ? (
-          <Check className="size-3 text-green-500" />
-        ) : (
-          <Copy className="size-3" />
-        )}
-        <span className="sr-only">Copy secret</span>
-      </Button>
-    </div>
-  )
-}
-
 export const columns: ColumnDef<DroneResponse>[] = [
   {
     accessorKey: "id",
@@ -86,14 +40,7 @@ export const columns: ColumnDef<DroneResponse>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.name}</span>
-    ),
-  },
-  {
-    accessorKey: "secret_key",
-    header: "Secret Key",
-    cell: ({ row }) => <SecretKey secretKey={row.original.secret_key} />,
+    cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
   },
   {
     accessorKey: "stream_url",
@@ -121,11 +68,11 @@ export const columns: ColumnDef<DroneResponse>[] = [
     },
   },
   {
-    accessorKey: "created_at",
+    accessorKey: "creation_timestamp",
     header: "Created",
     cell: ({ row }) => (
       <span className="text-muted-foreground text-sm">
-        {new Date(row.original.created_at).toLocaleDateString()}
+        {new Date(row.original.creation_timestamp).toLocaleDateString()}
       </span>
     ),
   },

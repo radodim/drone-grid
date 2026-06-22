@@ -44,7 +44,6 @@ declare module "@tanstack/react-router" {
 }
 
 function App() {
-  const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
   const initialized = useRef(false)
 
@@ -52,29 +51,19 @@ function App() {
     if (initialized.current) return
     initialized.current = true
 
+    // check-sso (not login-required): the app renders for everyone, including
+    // unauthenticated share-link viewers. App routes guard themselves via
+    // _layout's beforeLoad, which redirects to Keycloak when not signed in.
     keycloak
-      .init({ onLoad: "login-required", pkceMethod: "S256" })
-      .then((auth) => {
-        setAuthenticated(auth)
-        setLoading(false)
-      })
-      .catch(() => {
-        setLoading(false)
-      })
+      .init({ onLoad: "check-sso", pkceMethod: "S256" })
+      .then(() => setLoading(false))
+      .catch(() => setLoading(false))
   }, [])
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-background text-muted-foreground">
         Loading...
-      </div>
-    )
-  }
-
-  if (!authenticated) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-background text-destructive">
-        Authentication failed.
       </div>
     )
   }

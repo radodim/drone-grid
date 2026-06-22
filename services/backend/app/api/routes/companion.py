@@ -19,6 +19,7 @@ from app.data.telemetry.model.telemetry import Telemetry
 from app.service.drone.drone_service import DroneServiceDep
 from app.service.exceptions import NonExistentDroneException
 from app.service.messaging.messaging_service import MessagingServiceDep
+from app.utils import sha256_hex
 
 router = APIRouter(prefix="/companion", tags=["companion"])
 
@@ -31,21 +32,8 @@ async def companion_socket(
     drone_service: DroneServiceDep,
     messaging: MessagingServiceDep,
 ):
-    """Bidirectional bridge between a companion process and the internal
-    messaging bus.
-
-    The companion is a server-side client (Python on the Pi) so it can set
-    HTTP headers — unlike the browser's /control endpoint which has to fall
-    back to a query param. We use HTTP Basic Auth: drone_id as the username,
-    drone_secret as the password.
-
-    Wire contract: JSON in both directions, validated against
-    `ControlMessage` (incoming on the NATS side, forwarded to the companion)
-    and `Telemetry` (incoming on the WebSocket, forwarded to NATS). The
-    backend doesn't act on either — it's a typed dumb pipe whose only role
-    on top of forwarding is rejecting malformed payloads at the seam.
-    """
-    drone = _authenticate(websocket, drone_service)
+    """Bidirectional communication channel between the companion and Drone Grid."""
+    drone = __authenticate(websocket, drone_service)
     drone_id = str(drone.id)
 
     await websocket.accept()
@@ -78,7 +66,7 @@ async def companion_socket(
             logger.info(f"Companion socket closed for drone {drone_id}")
 
 
-def _authenticate(websocket: WebSocket, drone_service):
+def __authenticate(websocket: WebSocket, drone_service):
     """Validate HTTP Basic Auth credentials against the Drone record.
 
     Any failure (missing header, malformed encoding, unknown drone, secret
@@ -107,7 +95,7 @@ def _authenticate(websocket: WebSocket, drone_service):
         )
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
 
-    if not secrets.compare_digest(drone.secret_key, password):
+    if not secrets.compare_digest(drone.secret_hash, sha256_hex(password)):
         logger.warning(
             f"Companion socket auth rejected: secret mismatch for drone {drone.id}"
         )

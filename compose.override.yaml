@@ -9,6 +9,10 @@
 # ============================================================
 
 services:
+  db:
+    ports:
+      - "5432:5432" # for DBeaver/local tools
+
   identity:
     command: start-dev --import-realm
     volumes:
@@ -19,6 +23,8 @@ services:
 
   backend:
     command: bash -c "/src/scripts/prestart.sh && fastapi dev --host 0.0.0.0 app/main.py"
+    ports:
+      - "8000:8000" # direct backend access for a LAN companion (Pi), bypassing Traefik
     volumes:
       - ./services/backend/app:/src/app
 

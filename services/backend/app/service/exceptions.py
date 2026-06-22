@@ -23,3 +23,12 @@ class InvalidTokenError(AppException):
 
     def __init__(self, reason: str):
         super().__init__(reason)
+
+
+# Share links
+class InvalidShareTokenError(AppException):
+    """Share token is missing, malformed, expired, or revoked. The handler
+    returns a generic 404 — never reveal which check failed."""
+
+    def __init__(self, reason: str):
+        super().__init__(reason)

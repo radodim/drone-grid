@@ -9,7 +9,7 @@ engine = create_engine(GLOBAL_APP_SETTINGS.DATABASE_URL)
 
 
 def get_session():
-    # TODO: see what it takes to implement async sessions
+    # TODO: weigh benefits of adopting async session
     with Session(engine) as session:
         yield session
 

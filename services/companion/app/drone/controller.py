@@ -1,16 +1,18 @@
 import asyncio
 import logging
+import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, AsyncIterator, Awaitable, Callable
+
+from mavsdk import System
+from mavsdk.action import ActionError
+from mavsdk.telemetry import Battery, FlightMode, GpsInfo, Health, Position
 
 from app.exception.drone_exceptions import (
     DroneActionException,
     DroneInitializationException,
 )
-from mavsdk import System
-from mavsdk.action import ActionError
-from mavsdk.telemetry import Battery, FlightMode, GpsInfo, Health, Position
 from app.models import (
     Arm,
     ControlInput,
@@ -29,6 +31,9 @@ from app.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+MANUAL_CONTROL_STREAM_PERIOD_S = 0.02  # 50Hz
+INPUT_STALE_AFTER_S = 0.5  # matches PX4's default RC-loss timeout (COM_RC_LOSS_T)
 
 
 @dataclass
@@ -50,19 +55,20 @@ class DroneController:
         self,
         connection_url: str,
         fc_connect_timeout: float = 20.0,
-        fc_health_all_ok_timeout: float = 120.0,
+        # fc_health_all_ok_timeout: float = 120.0,
     ) -> None:
         self.__drone: System = System()
         self.__connection_url: str = connection_url
         self.__fc_connect_timeout = fc_connect_timeout
-        self.__fc_health_all_ok_timeout = fc_health_all_ok_timeout
+        # self.__fc_health_all_ok_timeout = fc_health_all_ok_timeout
 
         self.__initialized: bool = False
         self.__telemetry: TelemetryState = TelemetryState()
-        self.__handlers: dict[type, Callable[[Any], Awaitable[None]]] = {
+        self.__latest_input: tuple[ControlInput, float] | None = None
+        self.__commands: asyncio.Queue[Arm | Disarm] = asyncio.Queue(maxsize=1)
+        self.__command_handlers: dict[type, Callable[[Any], Awaitable[None]]] = {
             Arm: self.__handle_arm,
             Disarm: self.__handle_disarm,
-            ControlInput: self.__handle_control_input,
         }
 
     @property
@@ -72,13 +78,17 @@ class DroneController:
     async def run(self) -> None:
         async with asyncio.TaskGroup() as task_group:
             await self.__connect_to_flight_controller()
-            logger.info("Flight controller connected. waiting for health_all_ok...")
 
             self.__start_telemetry_consumers(task_group)
+            task_group.create_task(self.__stream_manual_control())
+            task_group.create_task(self.__process_commands())
 
-            await self.__wait_for_health_all_ok()
+            # No health gate here: telemetry must flow precisely when health is
+            # bad, and armability is PX4's call (health.is_armable), enforced
+            # again in __arm and mirrored by the UI's derived gates.
+            # await self.__wait_for_health_all_ok()
             self.__initialized = True
-            logger.info("Drone is ready to accept control commands.")
+            logger.info("Flight controller connected. Streaming telemetry and accepting commands.")
 
     async def __connect_to_flight_controller(self) -> None:
         await self.__drone.connect(system_address=self.__connection_url)
@@ -133,37 +143,69 @@ class DroneController:
         async for status_text in self.__drone.telemetry.status_text():
             logger.info(f"Status text from flight controller: '{status_text}'")
 
-    async def __wait_for_health_all_ok(self) -> None:
-        try:
-            async with asyncio.timeout(self.__fc_health_all_ok_timeout):
-                async for ok in self.__drone.telemetry.health_all_ok():
-                    if ok:
-                        return
-        except asyncio.TimeoutError:
-            raise DroneInitializationException(
-                f"Did not receive 'health_all_ok' signal in {self.__fc_health_all_ok_timeout}s"
-            )
+    # Retired as a startup barrier (blinded telemetry on real hardware while
+    # GPS/health converge). Kept for reference; see the note in run().
+    # async def __wait_for_health_all_ok(self) -> None:
+    #     try:
+    #         async with asyncio.timeout(self.__fc_health_all_ok_timeout):
+    #             async for ok in self.__drone.telemetry.health_all_ok():
+    #                 if ok:
+    #                     return
+    #     except asyncio.TimeoutError:
+    #         raise DroneInitializationException(
+    #             f"Did not receive 'health_all_ok' signal in {self.__fc_health_all_ok_timeout}s"
+    #         )
 
     async def dispatch(self, msg: ControlMessage) -> None:
-        # TODO: decouple control messages from high-level commands like arm/disarm once long/in-flight operations exist (takeoff/land)
         command = msg.root
-        command_type = type(command)
-        handler = self.__handlers.get(command_type)
-        if handler is None:
-            logger.warning(f"No handler for command '{command_type.__name__}'")
+        if isinstance(command, ControlInput):
+            self.__latest_input = (command, time.monotonic())
             return
+
         try:
-            await handler(command)
-        except Exception as e:
-            name = command_type.__name__
-            if isinstance(e, DroneActionException):
-                logger.error(f"Command '{name}' failed: {e}")
-            else:
-                logger.exception(f"Unexpected error handling command '{name}'")
+            self.__commands.put_nowait(command)
+        except asyncio.QueueFull:
+            logger.warning(
+                f"Dropping '{type(command).__name__}': another command is pending"
+            )
+
+    async def __stream_manual_control(self) -> None:
+        while True:
+            latest = self.__latest_input
+            if latest is not None:
+                control_input, received_at = latest
+                if time.monotonic() - received_at <= INPUT_STALE_AFTER_S:
+                    axes = control_input.axes
+                    await self.__set_manual_control(
+                        axes.pitch, axes.roll, axes.throttle, axes.yaw
+                    )
+            await asyncio.sleep(MANUAL_CONTROL_STREAM_PERIOD_S)
+
+    async def __set_manual_control(
+        self, pitch: float, roll: float, throttle: float, yaw: float
+    ) -> None:
+        await self.__drone.manual_control.set_manual_control_input(
+            pitch, roll, throttle, yaw
+        )
+
+    async def __process_commands(self) -> None:
+        while True:
+            command = await self.__commands.get()
+            handler = self.__command_handlers.get(type(command))
+            if handler is None:
+                logger.warning(f"No handler for command '{type(command).__name__}'")
+                continue
+
+            try:
+                await handler(command)
+            except Exception as e:
+                name = type(command).__name__
+                if isinstance(e, DroneActionException):
+                    logger.error(f"Command '{name}' failed: {e}")
+                else:
+                    logger.exception(f"Unexpected error handling command '{name}'")
 
     async def __handle_arm(self, _: Arm) -> None:
-        # Safety gate: this sequence ends in __enter_manual_control, which primes
-        # throttle to 0 — harmless on the ground, a commanded descent in the air.
         grounded_and_disarmed = (
             self.__telemetry.is_in_air is False and self.__telemetry.is_armed is False
         )
@@ -210,8 +252,6 @@ class DroneController:
         raise DroneActionException("Drone did not switch to the armed state.")
 
     async def __enter_manual_control(self) -> None:
-        await self.__warm_up_manual_control()
-
         try:
             await self.__drone.manual_control.start_position_control()
         except Exception as e:
@@ -219,38 +259,36 @@ class DroneController:
 
         logger.info("Armed and in POSCTL — manual control is enabled.")
 
-    async def __warm_up_manual_control(
-        self, frames: int = 10, freq: float = 20.0
-    ) -> None:
-        period = 1 / freq
-        for _ in range(frames):
-            await self.__set_manual_control(0.0, 0.0, 0.0, 0.0)
-            await asyncio.sleep(period)
-
-    async def __set_manual_control(
-        self, pitch: float, roll: float, throttle: float, yaw: float
-    ) -> None:
-        await self.__drone.manual_control.set_manual_control_input(
-            pitch, roll, throttle, yaw
-        )
-
     async def __handle_disarm(self, _: Disarm) -> None:
-        await self.__disarm()
-
-    async def __disarm(self) -> None:
-        if not self.__telemetry.is_armed or self.__telemetry.is_in_air:
-            logger.warning("Ignoring disarm. Cannot disarm drone in current state.")
+        # Safety gate mirroring __handle_arm: a refused disarm (e.g. mid-air)
+        # must not fall through to the HOLD mode change below.
+        armed_and_grounded = (
+            self.__telemetry.is_armed is True and self.__telemetry.is_in_air is False
+        )
+        if not armed_and_grounded:
+            logger.warning(
+                f"Ignoring disarm: drone must be armed and grounded "
+                f"(armed={self.__telemetry.is_armed}, in_air={self.__telemetry.is_in_air})."
+            )
             return
 
+        await self.__disarm()
+        await self.__exit_manual_control()
+
+    async def __disarm(self) -> None:
         logger.info("Disarming...")
         try:
             await self.__drone.action.disarm()
         except ActionError as e:
             raise DroneActionException("Disarm rejected by flight controller.") from e
 
-    async def __handle_control_input(self, command: ControlInput) -> None:
-        axes = command.axes
-        await self.__set_manual_control(axes.pitch, axes.roll, axes.throttle, axes.yaw)
+    async def __exit_manual_control(self) -> None:
+        try:
+            await self.__drone.action.hold()
+        except ActionError as e:
+            raise DroneActionException("Failed to switch to HOLD mode.") from e
+
+        logger.info("Disarmed and in HOLD.")
 
     def mavlink_telemetry(self) -> MavlinkTelemetry | None:
         if (

@@ -1,16 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import keycloak from "@/keycloak"
-
-export type ControlSocketStatus =
-  | "idle"
-  | "connecting"
-  | "open"
-  | "closed"
-  | "error"
+import {
+  openReconnectingSocket,
+  type ReconnectingSocket,
+  type SocketStatus,
+} from "@/lib/reconnecting-ws"
+import { buildApiWsUrl } from "@/lib/ws"
 
 export interface ControlSocketState {
-  status: ControlSocketStatus
+  status: SocketStatus
   send: (payload: object) => void
 }
 
@@ -27,45 +25,30 @@ type ControlMessage =
   | { type: "disarm" }
 
 /**
- * Manages a single WebSocket to /api/v1/control/{droneId}.
- *
- * The backend forwards every frame received here directly to NATS
- * (drone.<id>.control). It does not parse or reshape the payload.
- *
- * Auth: Keycloak JWT is passed as a query param because browsers can't set
- * headers on native WebSocket connections.
+ * Manages a send-only WebSocket to /api/v1/control/{droneId}; the backend
+ * forwards every frame to NATS (drone.<id>.control). Reconnects with
+ * backoff until unmount; control input is ephemeral, so frames sent while
+ * disconnected are dropped.
  */
 export function useControlSocket(droneId: string): ControlSocketState {
-  const [status, setStatus] = useState<ControlSocketStatus>("idle")
-  const wsRef = useRef<WebSocket | null>(null)
+  const [status, setStatus] = useState<SocketStatus>("connecting")
+  const socketRef = useRef<ReconnectingSocket | null>(null)
 
   useEffect(() => {
-    setStatus("connecting")
-
-    // VITE_API_URL is http(s) — flip the scheme for WebSocket.
-    const apiUrl = new URL(import.meta.env.VITE_API_URL)
-    apiUrl.protocol = apiUrl.protocol === "https:" ? "wss:" : "ws:"
-    apiUrl.pathname = `/api/v1/control/${droneId}`
-    apiUrl.searchParams.set("token", keycloak.token ?? "")
-
-    const ws = new WebSocket(apiUrl.toString())
-    wsRef.current = ws
-
-    ws.addEventListener("open", () => setStatus("open"))
-    ws.addEventListener("close", () => setStatus("closed"))
-    ws.addEventListener("error", () => setStatus("error"))
+    const socket = openReconnectingSocket({
+      buildUrl: () => buildApiWsUrl(`/api/v1/control/${droneId}`),
+      onStatusChange: setStatus,
+    })
+    socketRef.current = socket
 
     return () => {
-      ws.close()
-      wsRef.current = null
+      socket.close()
+      socketRef.current = null
     }
   }, [droneId])
 
   const send = useCallback((payload: object) => {
-    const ws = wsRef.current
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(payload))
-    }
+    socketRef.current?.send(JSON.stringify(payload))
   }, [])
 
   return { status, send }

@@ -7,29 +7,50 @@ export type DroneCreate = {
 export type DroneResponse = {
     id: string;
     name: string;
-    secret_key: string;
-    owner_id: string;
-    created_at: string;
-    updated_at: string;
+    creation_user_id: string;
+    creation_timestamp: string;
+    update_timestamp: string;
     stream_url?: (string | null);
+};
+
+export type DroneSecretResponse = {
+    id: string;
+    name: string;
+    creation_user_id: string;
+    creation_timestamp: string;
+    update_timestamp: string;
+    stream_url?: (string | null);
+    secret: string;
 };
 
 export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
 
-export type MediaMtxAuthRequestModel = {
-    user: string;
-    password: string;
-    token: string;
-    action: 'publish' | 'read';
-    path: string;
-    protocol: 'rtsp' | 'webrtc';
+export type ShareCreate = {
+    label?: (string | null);
+    ttl_hours?: number;
 };
 
-export type action = 'publish' | 'read';
+export type ShareCreatedResponse = {
+    id: string;
+    token: string;
+    expiration_timestamp: string;
+};
 
-export type protocol = 'rtsp' | 'webrtc';
+/**
+ * The additional data that the user needs to view the streams.
+ */
+export type ShareResolvedResponse = {
+    drone_id: string;
+};
+
+export type ShareResponse = {
+    id: string;
+    label: (string | null);
+    creation_timestamp: string;
+    expiration_timestamp: string;
+};
 
 export type User = {
     id?: string;
@@ -40,8 +61,8 @@ export type User = {
     first_name?: (string | null);
     last_name?: (string | null);
     is_admin?: boolean;
-    created_at?: string;
-    updated_at?: string;
+    creation_timestamp?: string;
+    update_timestamp?: string;
 };
 
 export type ValidationError = {
@@ -54,31 +75,68 @@ export type ValidationError = {
     };
 };
 
-export type DroneListDronesResponse = (Array<DroneResponse>);
+export type DronesListDronesResponse = (Array<DroneResponse>);
 
-export type DroneCreateDroneData = {
+export type DronesCreateDroneData = {
     requestBody: DroneCreate;
 };
 
-export type DroneCreateDroneResponse = (DroneResponse);
+export type DronesCreateDroneResponse = (DroneSecretResponse);
 
-export type DroneGetDroneData = {
+export type DronesGetDroneData = {
     droneId: string;
 };
 
-export type DroneGetDroneResponse = (DroneResponse);
+export type DronesGetDroneResponse = (DroneResponse);
 
-export type DroneDeleteDroneData = {
+export type DronesDeleteDroneData = {
     droneId: string;
 };
 
-export type DroneDeleteDroneResponse = (void);
+export type DronesDeleteDroneResponse = (void);
 
-export type MediaMediaAuthData = {
-    requestBody: MediaMtxAuthRequestModel;
+export type DronesRotateSecretData = {
+    droneId: string;
 };
 
-export type MediaMediaAuthResponse = (unknown);
+export type DronesRotateSecretResponse = (DroneSecretResponse);
+
+export type DronesCreateShareData = {
+    droneId: string;
+    requestBody: ShareCreate;
+};
+
+export type DronesCreateShareResponse = (ShareCreatedResponse);
+
+export type DronesListSharesData = {
+    droneId: string;
+};
+
+export type DronesListSharesResponse = (Array<ShareResponse>);
+
+export type DronesGetShareData = {
+    droneId: string;
+    shareId: string;
+};
+
+export type DronesGetShareResponse = (ShareResponse);
+
+export type DronesRevokeShareData = {
+    droneId: string;
+    shareId: string;
+};
+
+export type DronesRevokeShareResponse = (void);
+
+export type HealthHealthResponse = ({
+    [key: string]: (string);
+});
+
+export type SharesResolveShareData = {
+    token: string;
+};
+
+export type SharesResolveShareResponse = (ShareResolvedResponse);
 
 export type UserListUsersResponse = (Array<User>);
 

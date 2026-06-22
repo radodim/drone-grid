@@ -23,24 +23,20 @@ export const DroneResponseSchema = {
             type: 'string',
             title: 'Name'
         },
-        secret_key: {
-            type: 'string',
-            title: 'Secret Key'
-        },
-        owner_id: {
+        creation_user_id: {
             type: 'string',
             format: 'uuid',
-            title: 'Owner Id'
+            title: 'Creation User Id'
         },
-        created_at: {
+        creation_timestamp: {
             type: 'string',
             format: 'date-time',
-            title: 'Created At'
+            title: 'Creation Timestamp'
         },
-        updated_at: {
+        update_timestamp: {
             type: 'string',
             format: 'date-time',
-            title: 'Updated At'
+            title: 'Update Timestamp'
         },
         stream_url: {
             anyOf: [
@@ -55,8 +51,55 @@ export const DroneResponseSchema = {
         }
     },
     type: 'object',
-    required: ['id', 'name', 'secret_key', 'owner_id', 'created_at', 'updated_at'],
+    required: ['id', 'name', 'creation_user_id', 'creation_timestamp', 'update_timestamp'],
     title: 'DroneResponse'
+} as const;
+
+export const DroneSecretResponseSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        creation_user_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Creation User Id'
+        },
+        creation_timestamp: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Creation Timestamp'
+        },
+        update_timestamp: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Update Timestamp'
+        },
+        stream_url: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Stream Url'
+        },
+        secret: {
+            type: 'string',
+            title: 'Secret'
+        }
+    },
+    type: 'object',
+    required: ['id', 'name', 'creation_user_id', 'creation_timestamp', 'update_timestamp', 'secret'],
+    title: 'DroneSecretResponse'
 } as const;
 
 export const HTTPValidationErrorSchema = {
@@ -73,38 +116,99 @@ export const HTTPValidationErrorSchema = {
     title: 'HTTPValidationError'
 } as const;
 
-export const MediaMtxAuthRequestModelSchema = {
+export const ShareCreateSchema = {
     properties: {
-        user: {
-            type: 'string',
-            title: 'User'
+        label: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Label'
         },
-        password: {
+        ttl_hours: {
+            type: 'integer',
+            maximum: 24,
+            minimum: 1,
+            title: 'Ttl Hours',
+            default: 2
+        }
+    },
+    type: 'object',
+    title: 'ShareCreate'
+} as const;
+
+export const ShareCreatedResponseSchema = {
+    properties: {
+        id: {
             type: 'string',
-            title: 'Password'
+            format: 'uuid',
+            title: 'Id'
         },
         token: {
             type: 'string',
             title: 'Token'
         },
-        action: {
+        expiration_timestamp: {
             type: 'string',
-            enum: ['publish', 'read'],
-            title: 'Action'
-        },
-        path: {
-            type: 'string',
-            title: 'Path'
-        },
-        protocol: {
-            type: 'string',
-            enum: ['rtsp', 'webrtc'],
-            title: 'Protocol'
+            format: 'date-time',
+            title: 'Expiration Timestamp'
         }
     },
     type: 'object',
-    required: ['user', 'password', 'token', 'action', 'path', 'protocol'],
-    title: 'MediaMtxAuthRequestModel'
+    required: ['id', 'token', 'expiration_timestamp'],
+    title: 'ShareCreatedResponse'
+} as const;
+
+export const ShareResolvedResponseSchema = {
+    properties: {
+        drone_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Drone Id'
+        }
+    },
+    type: 'object',
+    required: ['drone_id'],
+    title: 'ShareResolvedResponse',
+    description: 'The additional data that the user needs to view the streams.'
+} as const;
+
+export const ShareResponseSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        label: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Label'
+        },
+        creation_timestamp: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Creation Timestamp'
+        },
+        expiration_timestamp: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Expiration Timestamp'
+        }
+    },
+    type: 'object',
+    required: ['id', 'label', 'creation_timestamp', 'expiration_timestamp'],
+    title: 'ShareResponse'
 } as const;
 
 export const UserSchema = {
@@ -164,15 +268,15 @@ export const UserSchema = {
             title: 'Is Admin',
             default: false
         },
-        created_at: {
+        creation_timestamp: {
             type: 'string',
             format: 'date-time',
-            title: 'Created At'
+            title: 'Creation Timestamp'
         },
-        updated_at: {
+        update_timestamp: {
             type: 'string',
             format: 'date-time',
-            title: 'Updated At'
+            title: 'Update Timestamp'
         }
     },
     type: 'object',

@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 
 from app.service.exceptions import (
     AppException,
+    InvalidShareTokenError,
     InvalidTokenError,
     MediaServerException,
     NonExistentDroneException,
@@ -20,6 +21,8 @@ EXCEPTIONS_STATUS_MAP: dict[type[AppException], tuple[int, str | None]] = {
     # auth — never expose the underlying reason ("token expired", "invalid
     # signature", …) to the client; keep it in logs only.
     InvalidTokenError: (status.HTTP_401_UNAUTHORIZED, "Invalid token."),
+    # share — collapse invalid/expired/revoked to a generic 404.
+    InvalidShareTokenError: (status.HTTP_404_NOT_FOUND, "Share link not found."),
 }
 
 
