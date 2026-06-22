@@ -169,7 +169,7 @@ export function ShareDialog({ droneId }: { droneId: string }) {
                 <div>
                   <div>{share.label || "Untitled link"}</div>
                   <div className="text-xs text-muted-foreground">
-                    Expires {formatExpiry(share.expires_at)}
+                    Expires {formatExpiry(share.expiration_timestamp)}
                   </div>
                 </div>
                 <Button

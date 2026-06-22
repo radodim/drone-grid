@@ -1,4 +1,3 @@
-import hashlib
 import secrets
 import uuid
 from datetime import timedelta
@@ -8,17 +7,15 @@ from fastapi import Depends
 from sqlmodel import col, select
 
 from app.data.db.model.drone_share import DroneShare
-from app.data.db.model.utils import get_utcnow
 from app.data.db.session import DbSessionDep
 from app.service.exceptions import InvalidShareTokenError
+from app.utils import get_utcnow, sha256_hex
 
-# Unmistakably not a JWT — lets the auth seam branch on the credential shape
-# without ambiguous "try-decode-then-fallback".
-SHARE_TOKEN_PREFIX = "dgs_"
+SHARE_TOKEN_PREFIX = "dgs_"  # used to differentiate the share token from a JWT
 
 
 def hash_share_token(raw_token: str) -> str:
-    return hashlib.sha256(raw_token.encode()).hexdigest()
+    return sha256_hex(raw_token)
 
 
 class ShareService:

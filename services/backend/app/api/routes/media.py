@@ -1,3 +1,4 @@
+import secrets
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
@@ -14,6 +15,7 @@ from app.service.share.share_service import (
     ShareServiceDep,
 )
 from app.service.user.user_service import UserService, UserServiceDep
+from app.utils import sha256_hex
 
 router = APIRouter(prefix="/media", tags=["media"], redirect_slashes=False)
 
@@ -40,7 +42,7 @@ def __validate_drone_publish(
     drone_id = __parse_uuid(body.user, "Invalid drone ID")
     drone = drone_service.get_drone(drone_id)
 
-    if drone.secret_key != body.password:
+    if not secrets.compare_digest(drone.secret_hash, sha256_hex(body.password)):
         raise HTTPException(status_code=401, detail="Invalid secret key")
 
     if body.path != str(drone.id):

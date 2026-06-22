@@ -4,8 +4,8 @@ from fastapi import Depends
 from sqlmodel import select
 
 from app.data.db.model.user import User
-from app.data.db.model.utils import get_utcnow
 from app.data.db.session import DbSessionDep
+from app.utils import get_utcnow
 
 
 class UserService:

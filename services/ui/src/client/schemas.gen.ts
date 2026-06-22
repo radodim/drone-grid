@@ -23,24 +23,20 @@ export const DroneResponseSchema = {
             type: 'string',
             title: 'Name'
         },
-        secret_key: {
-            type: 'string',
-            title: 'Secret Key'
-        },
-        owner_id: {
+        creation_user_id: {
             type: 'string',
             format: 'uuid',
-            title: 'Owner Id'
+            title: 'Creation User Id'
         },
-        created_at: {
+        creation_timestamp: {
             type: 'string',
             format: 'date-time',
-            title: 'Created At'
+            title: 'Creation Timestamp'
         },
-        updated_at: {
+        update_timestamp: {
             type: 'string',
             format: 'date-time',
-            title: 'Updated At'
+            title: 'Update Timestamp'
         },
         stream_url: {
             anyOf: [
@@ -55,8 +51,55 @@ export const DroneResponseSchema = {
         }
     },
     type: 'object',
-    required: ['id', 'name', 'secret_key', 'owner_id', 'created_at', 'updated_at'],
+    required: ['id', 'name', 'creation_user_id', 'creation_timestamp', 'update_timestamp'],
     title: 'DroneResponse'
+} as const;
+
+export const DroneSecretResponseSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        creation_user_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Creation User Id'
+        },
+        creation_timestamp: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Creation Timestamp'
+        },
+        update_timestamp: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Update Timestamp'
+        },
+        stream_url: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Stream Url'
+        },
+        secret: {
+            type: 'string',
+            title: 'Secret'
+        }
+    },
+    type: 'object',
+    required: ['id', 'name', 'creation_user_id', 'creation_timestamp', 'update_timestamp', 'secret'],
+    title: 'DroneSecretResponse'
 } as const;
 
 export const HTTPValidationErrorSchema = {
@@ -98,7 +141,7 @@ export const ShareCreateSchema = {
     title: 'ShareCreate'
 } as const;
 
-export const ShareCreatedSchema = {
+export const ShareCreatedResponseSchema = {
     properties: {
         id: {
             type: 'string',
@@ -109,37 +152,32 @@ export const ShareCreatedSchema = {
             type: 'string',
             title: 'Token'
         },
-        expires_at: {
+        expiration_timestamp: {
             type: 'string',
             format: 'date-time',
-            title: 'Expires At'
+            title: 'Expiration Timestamp'
         }
     },
     type: 'object',
-    required: ['id', 'token', 'expires_at'],
-    title: 'ShareCreated',
-    description: 'Returned once at creation — the only time the plaintext token is exposed.'
+    required: ['id', 'token', 'expiration_timestamp'],
+    title: 'ShareCreatedResponse'
 } as const;
 
-export const ShareResolvedSchema = {
+export const ShareResolvedResponseSchema = {
     properties: {
         drone_id: {
             type: 'string',
             format: 'uuid',
             title: 'Drone Id'
-        },
-        drone_name: {
-            type: 'string',
-            title: 'Drone Name'
         }
     },
     type: 'object',
-    required: ['drone_id', 'drone_name'],
-    title: 'ShareResolved',
-    description: 'Public resolve result — what a viewer needs to open the streams.'
+    required: ['drone_id'],
+    title: 'ShareResolvedResponse',
+    description: 'The additional data that the user needs to view the streams.'
 } as const;
 
-export const ShareSummarySchema = {
+export const ShareResponseSchema = {
     properties: {
         id: {
             type: 'string',
@@ -157,21 +195,20 @@ export const ShareSummarySchema = {
             ],
             title: 'Label'
         },
-        created_at: {
+        creation_timestamp: {
             type: 'string',
             format: 'date-time',
-            title: 'Created At'
+            title: 'Creation Timestamp'
         },
-        expires_at: {
+        expiration_timestamp: {
             type: 'string',
             format: 'date-time',
-            title: 'Expires At'
+            title: 'Expiration Timestamp'
         }
     },
     type: 'object',
-    required: ['id', 'label', 'created_at', 'expires_at'],
-    title: 'ShareSummary',
-    description: 'Metadata for an active share (no token — only its hash is stored).'
+    required: ['id', 'label', 'creation_timestamp', 'expiration_timestamp'],
+    title: 'ShareResponse'
 } as const;
 
 export const UserSchema = {

@@ -7,11 +7,20 @@ export type DroneCreate = {
 export type DroneResponse = {
     id: string;
     name: string;
-    secret_key: string;
-    owner_id: string;
-    created_at: string;
-    updated_at: string;
+    creation_user_id: string;
+    creation_timestamp: string;
+    update_timestamp: string;
     stream_url?: (string | null);
+};
+
+export type DroneSecretResponse = {
+    id: string;
+    name: string;
+    creation_user_id: string;
+    creation_timestamp: string;
+    update_timestamp: string;
+    stream_url?: (string | null);
+    secret: string;
 };
 
 export type HTTPValidationError = {
@@ -23,31 +32,24 @@ export type ShareCreate = {
     ttl_hours?: number;
 };
 
-/**
- * Returned once at creation — the only time the plaintext token is exposed.
- */
-export type ShareCreated = {
+export type ShareCreatedResponse = {
     id: string;
     token: string;
-    expires_at: string;
+    expiration_timestamp: string;
 };
 
 /**
- * Public resolve result — what a viewer needs to open the streams.
+ * The additional data that the user needs to view the streams.
  */
-export type ShareResolved = {
+export type ShareResolvedResponse = {
     drone_id: string;
-    drone_name: string;
 };
 
-/**
- * Metadata for an active share (no token — only its hash is stored).
- */
-export type ShareSummary = {
+export type ShareResponse = {
     id: string;
     label: (string | null);
-    created_at: string;
-    expires_at: string;
+    creation_timestamp: string;
+    expiration_timestamp: string;
 };
 
 export type User = {
@@ -79,7 +81,7 @@ export type DronesCreateDroneData = {
     requestBody: DroneCreate;
 };
 
-export type DronesCreateDroneResponse = (DroneResponse);
+export type DronesCreateDroneResponse = (DroneSecretResponse);
 
 export type DronesGetDroneData = {
     droneId: string;
@@ -93,25 +95,31 @@ export type DronesDeleteDroneData = {
 
 export type DronesDeleteDroneResponse = (void);
 
+export type DronesRotateSecretData = {
+    droneId: string;
+};
+
+export type DronesRotateSecretResponse = (DroneSecretResponse);
+
 export type DronesCreateShareData = {
     droneId: string;
     requestBody: ShareCreate;
 };
 
-export type DronesCreateShareResponse = (ShareCreated);
+export type DronesCreateShareResponse = (ShareCreatedResponse);
 
 export type DronesListSharesData = {
     droneId: string;
 };
 
-export type DronesListSharesResponse = (Array<ShareSummary>);
+export type DronesListSharesResponse = (Array<ShareResponse>);
 
 export type DronesGetShareData = {
     droneId: string;
     shareId: string;
 };
 
-export type DronesGetShareResponse = (ShareSummary);
+export type DronesGetShareResponse = (ShareResponse);
 
 export type DronesRevokeShareData = {
     droneId: string;
@@ -128,7 +136,7 @@ export type SharesResolveShareData = {
     token: string;
 };
 
-export type SharesResolveShareResponse = (ShareResolved);
+export type SharesResolveShareResponse = (ShareResolvedResponse);
 
 export type UserListUsersResponse = (Array<User>);
 

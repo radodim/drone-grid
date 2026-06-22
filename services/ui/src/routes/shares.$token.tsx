@@ -13,7 +13,6 @@ export const Route = createFileRoute("/shares/$token")({
 
 interface ResolvedShare {
   drone_id: string
-  drone_name: string
 }
 
 /**
@@ -47,24 +46,10 @@ function SharedView() {
   if (!resolved) {
     return <Centered>Loading…</Centered>
   }
-  return (
-    <Viewer
-      token={token}
-      droneId={resolved.drone_id}
-      droneName={resolved.drone_name}
-    />
-  )
+  return <Viewer token={token} droneId={resolved.drone_id} />
 }
 
-function Viewer({
-  token,
-  droneId,
-  droneName,
-}: {
-  token: string
-  droneId: string
-  droneName: string
-}) {
+function Viewer({ token, droneId }: { token: string; droneId: string }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const readerRef = useRef<{ close: () => void } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -112,9 +97,6 @@ function Viewer({
       )}
       {/* No controlStatus → CTRL chip hidden; no DroneControls mounted. */}
       <TelemetryHud telemetry={telemetry} droneState={droneState} />
-      <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded bg-black/60 px-3 py-1 text-white text-xs font-mono">
-        {droneName} · shared view (read-only)
-      </div>
     </div>
   )
 }

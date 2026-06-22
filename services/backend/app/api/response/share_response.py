@@ -6,34 +6,27 @@ from pydantic import BaseModel
 from app.data.db.model.drone_share import DroneShare
 
 
-class ShareCreated(BaseModel):
-    """Returned once at creation — the only time the plaintext token is exposed."""
-
+class ShareCreatedResponse(BaseModel):
     id: uuid.UUID
     token: str
-    expires_at: datetime
+    expiration_timestamp: datetime
 
 
-class ShareSummary(BaseModel):
-    """Metadata for an active share (no token — only its hash is stored)."""
-
+class ShareResponse(BaseModel):
     id: uuid.UUID
     label: str | None
-    created_at: datetime
-    expires_at: datetime
+    creation_timestamp: datetime
+    expiration_timestamp: datetime
 
     @classmethod
-    def from_share(cls, share: DroneShare) -> "ShareSummary":
+    def from_share(cls, share: DroneShare) -> "ShareResponse":
         return cls(
             id=share.id,
             label=share.label,
-            created_at=share.creation_timestamp,
-            expires_at=share.expiration_timestamp,
+            creation_timestamp=share.creation_timestamp,
+            expiration_timestamp=share.expiration_timestamp,
         )
 
 
-class ShareResolved(BaseModel):
-    """Public resolve result — what a viewer needs to open the streams."""
-
+class ShareResolvedResponse(BaseModel):
     drone_id: uuid.UUID
-    drone_name: str

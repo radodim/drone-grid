@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { DronesListDronesResponse, DronesCreateDroneData, DronesCreateDroneResponse, DronesGetDroneData, DronesGetDroneResponse, DronesDeleteDroneData, DronesDeleteDroneResponse, DronesCreateShareData, DronesCreateShareResponse, DronesListSharesData, DronesListSharesResponse, DronesGetShareData, DronesGetShareResponse, DronesRevokeShareData, DronesRevokeShareResponse, HealthHealthResponse, SharesResolveShareData, SharesResolveShareResponse, UserListUsersResponse, UserMeResponse } from './types.gen';
+import type { DronesListDronesResponse, DronesCreateDroneData, DronesCreateDroneResponse, DronesGetDroneData, DronesGetDroneResponse, DronesDeleteDroneData, DronesDeleteDroneResponse, DronesRotateSecretData, DronesRotateSecretResponse, DronesCreateShareData, DronesCreateShareResponse, DronesListSharesData, DronesListSharesResponse, DronesGetShareData, DronesGetShareResponse, DronesRevokeShareData, DronesRevokeShareResponse, HealthHealthResponse, SharesResolveShareData, SharesResolveShareResponse, UserListUsersResponse, UserMeResponse } from './types.gen';
 
 export class DronesService {
     /**
@@ -22,7 +22,7 @@ export class DronesService {
      * Create Drone
      * @param data The data for the request.
      * @param data.requestBody
-     * @returns DroneResponse Successful Response
+     * @returns DroneSecretResponse Successful Response
      * @throws ApiError
      */
     public static createDrone(data: DronesCreateDroneData): CancelablePromise<DronesCreateDroneResponse> {
@@ -78,11 +78,31 @@ export class DronesService {
     }
     
     /**
+     * Rotate Secret
+     * @param data The data for the request.
+     * @param data.droneId
+     * @returns DroneSecretResponse Successful Response
+     * @throws ApiError
+     */
+    public static rotateSecret(data: DronesRotateSecretData): CancelablePromise<DronesRotateSecretResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/drones/{drone_id}/secret',
+            path: {
+                drone_id: data.droneId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
      * Create Share
      * @param data The data for the request.
      * @param data.droneId
      * @param data.requestBody
-     * @returns ShareCreated Successful Response
+     * @returns ShareCreatedResponse Successful Response
      * @throws ApiError
      */
     public static createShare(data: DronesCreateShareData): CancelablePromise<DronesCreateShareResponse> {
@@ -104,7 +124,7 @@ export class DronesService {
      * List Shares
      * @param data The data for the request.
      * @param data.droneId
-     * @returns ShareSummary Successful Response
+     * @returns ShareResponse Successful Response
      * @throws ApiError
      */
     public static listShares(data: DronesListSharesData): CancelablePromise<DronesListSharesResponse> {
@@ -125,7 +145,7 @@ export class DronesService {
      * @param data The data for the request.
      * @param data.droneId
      * @param data.shareId
-     * @returns ShareSummary Successful Response
+     * @returns ShareResponse Successful Response
      * @throws ApiError
      */
     public static getShare(data: DronesGetShareData): CancelablePromise<DronesGetShareResponse> {
@@ -184,7 +204,7 @@ export class SharesService {
      * Resolve Share
      * @param data The data for the request.
      * @param data.token
-     * @returns ShareResolved Successful Response
+     * @returns ShareResolvedResponse Successful Response
      * @throws ApiError
      */
     public static resolveShare(data: SharesResolveShareData): CancelablePromise<SharesResolveShareResponse> {

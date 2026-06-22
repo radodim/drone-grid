@@ -3,7 +3,7 @@ from datetime import datetime
 
 from sqlmodel import Field, SQLModel
 
-from app.data.db.model.utils import get_utcnow
+from app.utils import get_utcnow
 
 
 class DroneShare(SQLModel, table=True):

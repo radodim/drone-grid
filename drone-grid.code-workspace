@@ -1,13 +1,16 @@
 {
   "folders": [
-    {"path": "."},
     {
-      "path": "services/backend",
-      "name": "Backend"
+      "name": "drone-grid",
+      "path": "."
     },
     {
-      "path": "services/companion",
-      "name": "Companion"
+      "name": "Backend",
+      "path": "services/backend"
+    },
+    {
+      "name": "Companion",
+      "path": "services/companion"
     }
   ],
   "settings": {

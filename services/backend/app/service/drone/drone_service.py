@@ -1,3 +1,4 @@
+import secrets
 import uuid
 from typing import Annotated
 
@@ -7,6 +8,7 @@ from sqlmodel import select
 from app.data.db.model.drone import Drone
 from app.data.db.session import DbSessionDep
 from app.service.exceptions import NonExistentDroneException
+from app.utils import get_utcnow, sha256_hex
 
 
 class DroneService:
@@ -31,13 +33,29 @@ class DroneService:
 
         return drone
 
-    def create_drone(self, drone_name: str, user_id: uuid.UUID) -> Drone:
-        drone = Drone(name=drone_name, creation_user_id=user_id)
+    def create_drone(self, drone_name: str, user_id: uuid.UUID) -> tuple[Drone, str]:
+        """Create a drone; returns the row and the plaintext secret (shown once)."""
+        raw_secret = secrets.token_urlsafe(32)
+        drone = Drone(
+            name=drone_name,
+            creation_user_id=user_id,
+            secret_hash=sha256_hex(raw_secret),
+        )
         self.__db_session.add(drone)
         self.__db_session.commit()
         self.__db_session.refresh(drone)
 
-        return drone
+        return drone, raw_secret
+
+    def rotate_secret(self, drone: Drone) -> str:
+        raw_secret = secrets.token_urlsafe(32)
+        drone.secret_hash = sha256_hex(raw_secret)
+        drone.update_timestamp = get_utcnow()
+        self.__db_session.add(drone)
+        self.__db_session.commit()
+        self.__db_session.refresh(drone)
+
+        return raw_secret
 
     def delete_drone(self, drone: Drone) -> None:
         self.__db_session.delete(drone)

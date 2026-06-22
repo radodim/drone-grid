@@ -4,8 +4,8 @@ from fastapi import APIRouter, status
 
 from app.api.request.drone_create import DroneCreate
 from app.api.request.share_create import ShareCreate
-from app.api.response.drone_response import DroneResponse
-from app.api.response.share_response import ShareCreated, ShareSummary
+from app.api.response.drone_response import DroneResponse, DroneSecretResponse
+from app.api.response.share_response import ShareCreatedResponse, ShareResponse
 from app.api.security.deps import CurrentUser
 from app.data.db.model.drone import Drone
 from app.data.db.model.user import User
@@ -42,10 +42,9 @@ def create_drone(
     body: DroneCreate,
     user: CurrentUser,
     drone_service: DroneServiceDep,
-) -> DroneResponse:
-    return DroneResponse.from_drone(
-        drone_service.create_drone(body.name, user_id=user.id)
-    )
+) -> DroneSecretResponse:
+    drone, secret = drone_service.create_drone(body.name, user_id=user.id)
+    return DroneSecretResponse.from_drone_with_secret(drone, secret)
 
 
 @router.get("/{drone_id}")
@@ -64,10 +63,13 @@ def delete_drone(drone_id: UUID, user: CurrentUser, drone_service: DroneServiceD
     )
 
 
-# ---------------------------------------------------------------------------
-# Share links — authenticated, owner-scoped CRUD over a drone's sub-resource.
-# (The PUBLIC, anonymous resolve endpoint lives in share.py.)
-# ---------------------------------------------------------------------------
+@router.post("/{drone_id}/secret", status_code=status.HTTP_200_OK)
+def rotate_secret(
+    drone_id: UUID, user: CurrentUser, drone_service: DroneServiceDep
+) -> DroneSecretResponse:
+    drone = __get_drone_if_authorized(drone_id, user, drone_service)
+    secret = drone_service.rotate_secret(drone)
+    return DroneSecretResponse.from_drone_with_secret(drone, secret)
 
 
 @router.post("/{drone_id}/shares", status_code=status.HTTP_201_CREATED)
@@ -77,11 +79,11 @@ def create_share(
     user: CurrentUser,
     drone_service: DroneServiceDep,
     share_service: ShareServiceDep,
-) -> ShareCreated:
+) -> ShareCreatedResponse:
     __get_drone_if_authorized(drone_id, user, drone_service)
     share, raw_token = share_service.mint(drone_id, user.id, body.ttl_hours, body.label)
-    return ShareCreated(
-        id=share.id, token=raw_token, expires_at=share.expiration_timestamp
+    return ShareCreatedResponse(
+        id=share.id, token=raw_token, expiration_timestamp=share.expiration_timestamp
     )
 
 
@@ -91,10 +93,10 @@ def list_shares(
     user: CurrentUser,
     drone_service: DroneServiceDep,
     share_service: ShareServiceDep,
-) -> list[ShareSummary]:
+) -> list[ShareResponse]:
     __get_drone_if_authorized(drone_id, user, drone_service)
     return [
-        ShareSummary.from_share(share) for share in share_service.list_active(drone_id)
+        ShareResponse.from_share(share) for share in share_service.list_active(drone_id)
     ]
 
 
@@ -105,14 +107,12 @@ def get_share(
     user: CurrentUser,
     drone_service: DroneServiceDep,
     share_service: ShareServiceDep,
-) -> ShareSummary:
+) -> ShareResponse:
     __get_drone_if_authorized(drone_id, user, drone_service)
-    return ShareSummary.from_share(share_service.get(drone_id, share_id))
+    return ShareResponse.from_share(share_service.get(drone_id, share_id))
 
 
-@router.delete(
-    "/{drone_id}/shares/{share_id}", status_code=status.HTTP_204_NO_CONTENT
-)
+@router.delete("/{drone_id}/shares/{share_id}", status_code=status.HTTP_204_NO_CONTENT)
 def revoke_share(
     drone_id: UUID,
     share_id: UUID,

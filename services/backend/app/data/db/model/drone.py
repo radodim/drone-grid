@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, SQLModel
 
-from app.data.db.model.utils import get_utcnow
+from app.utils import get_utcnow
 
 
 class Drone(SQLModel, table=True):
@@ -12,7 +12,7 @@ class Drone(SQLModel, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str
-    secret_key: str = Field(default_factory=lambda: uuid.uuid4().hex)
+    secret_hash: str
     creation_user_id: uuid.UUID = Field(
         foreign_key="user.id", index=True, ondelete="CASCADE"
     )
