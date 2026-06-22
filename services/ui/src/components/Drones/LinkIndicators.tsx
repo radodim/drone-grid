@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils"
 
 interface LinkIndicatorsProps {
   telemetryHealth: TelemetryHealth
-  controlHealth: "ok" | "down"
+  /** Omitted for read-only share viewers — they hold no control channel. */
+  controlHealth?: "ok" | "down"
   fcLinkHealth: FcLinkHealth
   videoHealth: VideoHealth
 }
@@ -21,9 +22,9 @@ const DOT_COLOR: Record<string, string> = {
   unknown: "bg-zinc-500",
 }
 
-/** Health dots for the four transport segments. CTRL is the only witness
- * to "HUD healthy but sticks dead"; FC (companion↔flight controller) is
- * derived from companion-clock timestamps, immune to browser clock skew. */
+/** Health dots for the transport segments. CTRL (when present) is the only
+ * witness to "HUD healthy but sticks dead"; FC is companion-clock derived,
+ * so it's immune to browser clock skew. */
 export function LinkIndicators({
   telemetryHealth,
   controlHealth,
@@ -32,11 +33,13 @@ export function LinkIndicators({
 }: LinkIndicatorsProps) {
   return (
     <div className="pointer-events-auto cursor-default flex gap-2 text-xs font-mono">
-      <HealthDot
-        label="CTRL"
-        state={controlHealth}
-        title="Control channel health"
-      />
+      {controlHealth && (
+        <HealthDot
+          label="CTRL"
+          state={controlHealth}
+          title="Control channel health"
+        />
+      )}
       <HealthDot
         label="FC"
         state={fcLinkHealth}
@@ -47,7 +50,11 @@ export function LinkIndicators({
         state={telemetryHealth}
         title="Telemetry feed health"
       />
-      <HealthDot label="VIDEO" state={videoHealth} title="Video stream health" />
+      <HealthDot
+        label="VIDEO"
+        state={videoHealth}
+        title="Video stream health"
+      />
     </div>
   )
 }

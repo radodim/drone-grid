@@ -1,7 +1,9 @@
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime
 
 from sqlmodel import Field, SQLModel
+
+from app.data.db.model.utils import get_utcnow
 
 
 class User(SQLModel, table=True):
@@ -13,5 +15,5 @@ class User(SQLModel, table=True):
     first_name: str | None = None
     last_name: str | None = None
     is_admin: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))  # type: ignore[call-overload]
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))  # type: ignore[call-overload]
+    creation_timestamp: datetime = Field(default_factory=get_utcnow)
+    update_timestamp: datetime = Field(default_factory=get_utcnow)

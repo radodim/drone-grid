@@ -8,7 +8,8 @@ import type { Gps, Telemetry } from "@/types/telemetry"
 interface TelemetryHudProps {
   telemetry: Telemetry | null
   droneState: DroneState
-  controlStatus: SocketStatus
+  /** Omitted for read-only share viewers — hides the CTRL chip. */
+  controlStatus?: SocketStatus
 }
 
 /**
@@ -38,7 +39,13 @@ export function TelemetryHud({
       <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
         <LinkIndicators
           telemetryHealth={droneState.telemetryHealth}
-          controlHealth={controlStatus === "open" ? "ok" : "down"}
+          controlHealth={
+            controlStatus === undefined
+              ? undefined
+              : controlStatus === "open"
+                ? "ok"
+                : "down"
+          }
           fcLinkHealth={droneState.fcLinkHealth}
           videoHealth={droneState.videoHealth}
         />

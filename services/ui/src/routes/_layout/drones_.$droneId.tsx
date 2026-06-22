@@ -5,6 +5,7 @@ import { toast } from "sonner"
 
 import "@/lib/mediamtx-reader"
 import { DroneControls } from "@/components/Drones/DroneControls"
+import { ShareDialog } from "@/components/Drones/ShareDialog"
 import { TelemetryHud } from "@/components/Drones/TelemetryHud"
 import { Button } from "@/components/ui/button"
 import { useControlInput } from "@/hooks/useControlInput"
@@ -122,10 +123,11 @@ function DroneStream() {
             <ArrowLeft className="size-4" />
           </Link>
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold tracking-tight">Live Stream</h1>
           <p className="text-muted-foreground font-mono text-sm">{droneId}</p>
         </div>
+        <ShareDialog droneId={droneId} />
       </div>
       <div
         ref={containerRef}

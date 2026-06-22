@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
+import { Route as ShareTokenRouteImport } from './routes/shares.$token'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutDronesRouteImport } from './routes/_layout/drones'
 import { Route as LayoutDronesDroneIdRouteImport } from './routes/_layout/drones_.$droneId'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShareTokenRoute = ShareTokenRouteImport.update({
+  id: '/shares/$token',
+  path: '/shares/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LayoutIndexRoute = LayoutIndexRouteImport.update({
@@ -38,11 +44,13 @@ export interface FileRoutesByFullPath {
   '/drones': typeof LayoutDronesRoute
   '/': typeof LayoutIndexRoute
   '/drones/$droneId': typeof LayoutDronesDroneIdRoute
+  '/shares/$token': typeof ShareTokenRoute
 }
 export interface FileRoutesByTo {
   '/drones': typeof LayoutDronesRoute
   '/': typeof LayoutIndexRoute
   '/drones/$droneId': typeof LayoutDronesDroneIdRoute
+  '/shares/$token': typeof ShareTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -50,17 +58,19 @@ export interface FileRoutesById {
   '/_layout/drones': typeof LayoutDronesRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/drones_/$droneId': typeof LayoutDronesDroneIdRoute
+  '/shares/$token': typeof ShareTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/drones' | '/' | '/drones/$droneId'
+  fullPaths: '/drones' | '/' | '/drones/$droneId' | '/shares/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/drones' | '/' | '/drones/$droneId'
-  id: '__root__' | '/_layout' | '/_layout/drones' | '/_layout/' | '/_layout/drones_/$droneId'
+  to: '/drones' | '/' | '/drones/$droneId' | '/shares/$token'
+  id: '__root__' | '/_layout' | '/_layout/drones' | '/_layout/' | '/_layout/drones_/$droneId' | '/shares/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   LayoutRoute: typeof LayoutRouteWithChildren
+  ShareTokenRoute: typeof ShareTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -93,6 +103,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutDronesDroneIdRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/shares/$token': {
+      id: '/shares/$token'
+      path: '/shares/$token'
+      fullPath: '/shares/$token'
+      preLoaderRoute: typeof ShareTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -113,6 +130,7 @@ const LayoutRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
+  ShareTokenRoute: ShareTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

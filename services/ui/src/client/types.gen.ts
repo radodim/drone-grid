@@ -18,18 +18,37 @@ export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
 
-export type MediaMtxAuthRequestModel = {
-    user: string;
-    password: string;
-    token: string;
-    action: 'publish' | 'read';
-    path: string;
-    protocol: 'rtsp' | 'webrtc';
+export type ShareCreate = {
+    label?: (string | null);
+    ttl_hours?: number;
 };
 
-export type action = 'publish' | 'read';
+/**
+ * Returned once at creation — the only time the plaintext token is exposed.
+ */
+export type ShareCreated = {
+    id: string;
+    token: string;
+    expires_at: string;
+};
 
-export type protocol = 'rtsp' | 'webrtc';
+/**
+ * Public resolve result — what a viewer needs to open the streams.
+ */
+export type ShareResolved = {
+    drone_id: string;
+    drone_name: string;
+};
+
+/**
+ * Metadata for an active share (no token — only its hash is stored).
+ */
+export type ShareSummary = {
+    id: string;
+    label: (string | null);
+    created_at: string;
+    expires_at: string;
+};
 
 export type User = {
     id?: string;
@@ -40,8 +59,8 @@ export type User = {
     first_name?: (string | null);
     last_name?: (string | null);
     is_admin?: boolean;
-    created_at?: string;
-    updated_at?: string;
+    creation_timestamp?: string;
+    update_timestamp?: string;
 };
 
 export type ValidationError = {
@@ -54,31 +73,62 @@ export type ValidationError = {
     };
 };
 
-export type DroneListDronesResponse = (Array<DroneResponse>);
+export type DronesListDronesResponse = (Array<DroneResponse>);
 
-export type DroneCreateDroneData = {
+export type DronesCreateDroneData = {
     requestBody: DroneCreate;
 };
 
-export type DroneCreateDroneResponse = (DroneResponse);
+export type DronesCreateDroneResponse = (DroneResponse);
 
-export type DroneGetDroneData = {
+export type DronesGetDroneData = {
     droneId: string;
 };
 
-export type DroneGetDroneResponse = (DroneResponse);
+export type DronesGetDroneResponse = (DroneResponse);
 
-export type DroneDeleteDroneData = {
+export type DronesDeleteDroneData = {
     droneId: string;
 };
 
-export type DroneDeleteDroneResponse = (void);
+export type DronesDeleteDroneResponse = (void);
 
-export type MediaMediaAuthData = {
-    requestBody: MediaMtxAuthRequestModel;
+export type DronesCreateShareData = {
+    droneId: string;
+    requestBody: ShareCreate;
 };
 
-export type MediaMediaAuthResponse = (unknown);
+export type DronesCreateShareResponse = (ShareCreated);
+
+export type DronesListSharesData = {
+    droneId: string;
+};
+
+export type DronesListSharesResponse = (Array<ShareSummary>);
+
+export type DronesGetShareData = {
+    droneId: string;
+    shareId: string;
+};
+
+export type DronesGetShareResponse = (ShareSummary);
+
+export type DronesRevokeShareData = {
+    droneId: string;
+    shareId: string;
+};
+
+export type DronesRevokeShareResponse = (void);
+
+export type HealthHealthResponse = ({
+    [key: string]: (string);
+});
+
+export type SharesResolveShareData = {
+    token: string;
+};
+
+export type SharesResolveShareResponse = (ShareResolved);
 
 export type UserListUsersResponse = (Array<User>);
 

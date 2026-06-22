@@ -73,38 +73,105 @@ export const HTTPValidationErrorSchema = {
     title: 'HTTPValidationError'
 } as const;
 
-export const MediaMtxAuthRequestModelSchema = {
+export const ShareCreateSchema = {
     properties: {
-        user: {
-            type: 'string',
-            title: 'User'
+        label: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Label'
         },
-        password: {
+        ttl_hours: {
+            type: 'integer',
+            maximum: 24,
+            minimum: 1,
+            title: 'Ttl Hours',
+            default: 2
+        }
+    },
+    type: 'object',
+    title: 'ShareCreate'
+} as const;
+
+export const ShareCreatedSchema = {
+    properties: {
+        id: {
             type: 'string',
-            title: 'Password'
+            format: 'uuid',
+            title: 'Id'
         },
         token: {
             type: 'string',
             title: 'Token'
         },
-        action: {
+        expires_at: {
             type: 'string',
-            enum: ['publish', 'read'],
-            title: 'Action'
-        },
-        path: {
-            type: 'string',
-            title: 'Path'
-        },
-        protocol: {
-            type: 'string',
-            enum: ['rtsp', 'webrtc'],
-            title: 'Protocol'
+            format: 'date-time',
+            title: 'Expires At'
         }
     },
     type: 'object',
-    required: ['user', 'password', 'token', 'action', 'path', 'protocol'],
-    title: 'MediaMtxAuthRequestModel'
+    required: ['id', 'token', 'expires_at'],
+    title: 'ShareCreated',
+    description: 'Returned once at creation — the only time the plaintext token is exposed.'
+} as const;
+
+export const ShareResolvedSchema = {
+    properties: {
+        drone_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Drone Id'
+        },
+        drone_name: {
+            type: 'string',
+            title: 'Drone Name'
+        }
+    },
+    type: 'object',
+    required: ['drone_id', 'drone_name'],
+    title: 'ShareResolved',
+    description: 'Public resolve result — what a viewer needs to open the streams.'
+} as const;
+
+export const ShareSummarySchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        label: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Label'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
+        expires_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Expires At'
+        }
+    },
+    type: 'object',
+    required: ['id', 'label', 'created_at', 'expires_at'],
+    title: 'ShareSummary',
+    description: 'Metadata for an active share (no token — only its hash is stored).'
 } as const;
 
 export const UserSchema = {
@@ -164,15 +231,15 @@ export const UserSchema = {
             title: 'Is Admin',
             default: false
         },
-        created_at: {
+        creation_timestamp: {
             type: 'string',
             format: 'date-time',
-            title: 'Created At'
+            title: 'Creation Timestamp'
         },
-        updated_at: {
+        update_timestamp: {
             type: 'string',
             format: 'date-time',
-            title: 'Updated At'
+            title: 'Update Timestamp'
         }
     },
     type: 'object',

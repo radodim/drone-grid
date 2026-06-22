@@ -5,7 +5,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type DroneCreate, DroneService } from "@/client"
+import { type DroneCreate, DronesService } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -52,7 +52,7 @@ const AddDrone = () => {
 
   const mutation = useMutation({
     mutationFn: (data: DroneCreate) =>
-      DroneService.createDrone({ requestBody: data }),
+      DronesService.createDrone({ requestBody: data }),
     onSuccess: () => {
       showSuccessToast("Drone created successfully")
       form.reset()

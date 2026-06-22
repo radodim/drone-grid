@@ -17,4 +17,14 @@ class DroneResponse(BaseModel):
 
     @classmethod
     def from_drone(cls, drone: Drone, stream_url: str | None = None) -> "DroneResponse":
-        return cls(**drone.model_dump(), stream_url=stream_url)
+        # Map the renamed model columns to the (currently unchanged) API names.
+        # A global API-vs-DB naming pass is the separate DTO-unification step.
+        return cls(
+            id=drone.id,
+            name=drone.name,
+            secret_key=drone.secret_key,
+            owner_id=drone.creation_user_id,
+            created_at=drone.creation_timestamp,
+            updated_at=drone.update_timestamp,
+            stream_url=stream_url,
+        )

@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { Search } from "lucide-react"
 import { Suspense } from "react"
 
-import { DroneService } from "@/client"
+import { DronesService } from "@/client"
 import { DataTable } from "@/components/Common/DataTable"
 import AddDrone from "@/components/Drones/AddDrone"
 import { columns } from "@/components/Drones/columns"
@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 // TODO: Explore websocket streaming of changes instead of polling
 function getDronesQueryOptions() {
   return {
-    queryFn: () => DroneService.listDrones(),
+    queryFn: () => DronesService.listDrones(),
     queryKey: ["drones"],
     refetchInterval: 5000,
   }
@@ -49,9 +49,7 @@ function DronesTableContent() {
         <div className="rounded-full bg-muted p-4 mb-4">
           <Search className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold">
-          You don't have any drones yet
-        </h3>
+        <h3 className="text-lg font-semibold">You don't have any drones yet</h3>
         <p className="text-muted-foreground">
           Register a new drone to get started
         </p>

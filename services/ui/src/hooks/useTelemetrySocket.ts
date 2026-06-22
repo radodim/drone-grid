@@ -17,9 +17,13 @@ export interface TelemetrySocketState {
 /**
  * Read-only socket to /api/v1/telemetry/{droneId} — the backend pushes a
  * Telemetry frame per companion publish (~2Hz); nothing is ever sent.
- * Reconnects with backoff until unmount.
+ * Reconnects with backoff until unmount. Pass an explicit `token` (a `dgs_`
+ * share token) for an unauthenticated viewer; defaults to the Keycloak JWT.
  */
-export function useTelemetrySocket(droneId: string): TelemetrySocketState {
+export function useTelemetrySocket(
+  droneId: string,
+  token?: string,
+): TelemetrySocketState {
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null)
   const [status, setStatus] = useState<SocketStatus>("connecting")
   const [lastMessageAt, setLastMessageAt] = useState<number | null>(null)
@@ -29,7 +33,7 @@ export function useTelemetrySocket(droneId: string): TelemetrySocketState {
     setLastMessageAt(null)
 
     const socket = openReconnectingSocket({
-      buildUrl: () => buildApiWsUrl(`/api/v1/telemetry/${droneId}`),
+      buildUrl: () => buildApiWsUrl(`/api/v1/telemetry/${droneId}`, token),
       onStatusChange: setStatus,
       onMessage: (event) => {
         try {
@@ -42,7 +46,7 @@ export function useTelemetrySocket(droneId: string): TelemetrySocketState {
     })
 
     return () => socket.close()
-  }, [droneId])
+  }, [droneId, token])
 
   return { telemetry, status, lastMessageAt }
 }

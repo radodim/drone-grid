@@ -4,7 +4,7 @@ from enum import Enum
 from pydantic import BaseModel
 
 # This schema is duplicated at services/companion/app/models.py.
-# If you change it here, change it there.
+# TODO: both must be kept in-sync for now, will standardize this in the future.
 
 
 class Position(BaseModel):

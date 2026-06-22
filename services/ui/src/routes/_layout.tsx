@@ -7,8 +7,17 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import keycloak from "@/keycloak"
 
 export const Route = createFileRoute("/_layout")({
+  // The app shell is sign-in-only. Public routes (e.g. /share/$token) live
+  // outside this layout and render without auth. login() is a full-page
+  // redirect to Keycloak; awaiting it halts loading until navigation.
+  beforeLoad: async () => {
+    if (!keycloak.authenticated) {
+      await keycloak.login()
+    }
+  },
   component: Layout,
 })
 

@@ -19,7 +19,9 @@ class DroneService:
 
     def get_drones_for_user(self, user_id: uuid.UUID) -> list[Drone]:
         return list(
-            self.__db_session.exec(select(Drone).where(Drone.owner_id == user_id)).all()
+            self.__db_session.exec(
+                select(Drone).where(Drone.creation_user_id == user_id)
+            ).all()
         )
 
     def get_drone(self, drone_id: uuid.UUID) -> Drone:
@@ -30,9 +32,7 @@ class DroneService:
         return drone
 
     def create_drone(self, drone_name: str, user_id: uuid.UUID) -> Drone:
-        drone = Drone(
-            name=drone_name, owner_id=user_id
-        )  # Rename this owner_id to user_id
+        drone = Drone(name=drone_name, creation_user_id=user_id)
         self.__db_session.add(drone)
         self.__db_session.commit()
         self.__db_session.refresh(drone)

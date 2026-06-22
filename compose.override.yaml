@@ -9,6 +9,10 @@
 # ============================================================
 
 services:
+  db:
+    ports:
+      - "5432:5432" # for DBeaver/local tools
+
   identity:
     command: start-dev --import-realm
     volumes:

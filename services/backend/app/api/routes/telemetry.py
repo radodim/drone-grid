@@ -7,6 +7,7 @@ from app.api.security.drone_access import authorize_drone_access
 from app.data.telemetry.model.telemetry import Telemetry
 from app.service.drone.drone_service import DroneServiceDep
 from app.service.messaging.messaging_service import MessagingServiceDep
+from app.service.share.share_service import ShareServiceDep
 from app.service.user.user_service import UserServiceDep
 
 router = APIRouter(prefix="/telemetry", tags=["telemetry"])
@@ -20,15 +21,19 @@ async def telemetry_socket(
     drone_id: UUID,
     user_service: UserServiceDep,
     drone_service: DroneServiceDep,
+    share_service: ShareServiceDep,
     messaging: MessagingServiceDep,
     # Browsers can't set headers on native WebSocket connections,
-    # so we accept the JWT as a query param.
+    # so we accept the JWT (or a dgs_ share token) as a query param.
     token: str = Query(),
 ):
-    user, _ = authorize_drone_access(token, drone_id, user_service, drone_service)
+    # Both VIEW (share link) and CONTROL (owner/admin) scopes may observe.
+    access = authorize_drone_access(
+        token, drone_id, user_service, drone_service, share_service
+    )
 
     await websocket.accept()
-    logger.info(f"Telemetry socket opened for drone {drone_id} by user {user.id}")
+    logger.info(f"Telemetry socket opened for drone {drone_id} by {access.subject}")
 
     async def _forward_telemetry(telemetry: Telemetry) -> None:
         try:
@@ -46,5 +51,5 @@ async def telemetry_socket(
                 await websocket.receive_text()
         except WebSocketDisconnect:
             logger.info(
-                f"Telemetry socket closed for drone {drone_id}, user: {user.id}"
+                f"Telemetry socket closed for drone {drone_id}, {access.subject}"
             )
