@@ -55,7 +55,6 @@ class DroneController:
         self,
         connection_url: str,
         fc_connect_timeout: float = 20.0,
-        # fc_health_all_ok_timeout: float = 120.0,
     ) -> None:
         self.__drone: System = System()
         self.__connection_url: str = connection_url
@@ -97,6 +96,7 @@ class DroneController:
             async with asyncio.timeout(self.__fc_connect_timeout):
                 async for state in self.__drone.core.connection_state():
                     if state.is_connected:
+                        self.__telemetry.link_connected = True
                         return
         except asyncio.TimeoutError:
             raise DroneInitializationException(
