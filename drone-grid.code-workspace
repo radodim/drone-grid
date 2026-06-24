@@ -1,0 +1,38 @@
+{
+  "folders": [
+    {
+      "name": "drone-grid",
+      "path": "."
+    },
+    {
+      "name": "Backend",
+      "path": "services/backend"
+    },
+    {
+      "name": "Companion",
+      "path": "services/companion"
+    }
+  ],
+  "settings": {
+    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+    "files.exclude": {
+      "**/__pycache__": true
+    },
+    "editor.formatOnSave": true,
+    "[python]": {
+      "editor.defaultFormatter": "charliermarsh.ruff",
+      "editor.codeActionsOnSave": {
+        "source.fixAll.ruff": "always",
+        "source.organizeImports.ruff": "always"
+      }
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "biomejs.biome"
+    }
+  }
+}

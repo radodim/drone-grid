@@ -47,6 +47,12 @@ class Settings(BaseSettings):
 
     ### Media server config ###
 
+    ### Messaging config ###
+
+    NATS_URL: str
+
+    ### Messaging config ###
+
     ### Deployment config ###
 
     ENVIRONMENT: str

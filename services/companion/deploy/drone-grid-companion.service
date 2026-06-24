@@ -1,0 +1,17 @@
+[Unit]
+Description=Drone Grid companion
+Documentation=https://github.com/radodim/drone-grid
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+# __RUN_USER__ and __COMPANION_DIR__ are substituted by deploy/install.sh.
+User=__RUN_USER__
+WorkingDirectory=__COMPANION_DIR__
+EnvironmentFile=/etc/drone-grid/companion.env
+ExecStart=__COMPANION_DIR__/.venv/bin/python -m app.main
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

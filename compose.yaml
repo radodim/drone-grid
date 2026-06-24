@@ -34,6 +34,13 @@ services:
       start_period: 30s
 
   # ============================================================
+  # Messaging (NATS) — internal only
+  # ============================================================
+  messaging:
+    image: nats:2.12.6
+    restart: unless-stopped
+
+  # ============================================================
   # Identity (Keycloak)
   # ============================================================
   identity:
@@ -88,6 +95,16 @@ services:
       identity:
         condition: service_started
     restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health').read()"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
     labels:
       - traefik.enable=true
       - traefik.constraint-label=traefik-public
@@ -142,13 +159,14 @@ services:
   # Streaming (MediaMTX)
   # ============================================================
   streaming:
-    image: bluenviron/mediamtx:latest
+    image: bluenviron/mediamtx:1.17.1
     depends_on:
       backend:
         condition: service_started
     restart: unless-stopped
     environment:
       MTX_RTSPTRANSPORTS: tcp
+      MTX_WEBRTCADDITIONALHOSTS: webrtc.${DOMAIN}
     ports:
       - "8189:8189/udp" # WebRTC media (UDP, can't go through Traefik)
     volumes:

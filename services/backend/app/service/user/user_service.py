@@ -1,4 +1,3 @@
-from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import Depends
@@ -6,6 +5,9 @@ from sqlmodel import select
 
 from app.data.db.model.user import User
 from app.data.db.session import DbSessionDep
+from app.utils import get_utcnow
+
+# TODO: refactor this class and align with conventions in the project
 
 
 class UserService:
@@ -54,7 +56,7 @@ class UserService:
         user.first_name = decoded_token.get("given_name")
         user.last_name = decoded_token.get("family_name")
         user.is_admin = self._has_admin_role(decoded_token)
-        user.updated_at = datetime.now(UTC)
+        user.update_timestamp = get_utcnow()
 
     @staticmethod
     def _has_admin_role(decoded_token: dict[str, Any]) -> bool:
