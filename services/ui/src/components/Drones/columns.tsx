@@ -12,7 +12,7 @@ function CopyId({ id }: { id: string }) {
   const isCopied = copiedText === id
 
   return (
-    <div className="flex items-center gap-1.5 group">
+    <div className="flex items-center gap-1.5 group whitespace-nowrap">
       <span className="font-mono text-xs text-muted-foreground">{id}</span>
       <Button
         variant="ghost"

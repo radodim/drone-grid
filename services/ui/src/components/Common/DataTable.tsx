@@ -53,7 +53,10 @@ export function DataTable<TData, TValue>({
             <TableRow key={headerGroup.id} className="hover:bg-transparent">
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    style={{ width: `${100 / columns.length}%` }}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(

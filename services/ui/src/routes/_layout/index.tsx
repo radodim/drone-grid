@@ -1,31 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 
-import useAuth from "@/hooks/useAuth"
-
+// No dashboard yet — land authenticated users straight on the drones list.
 export const Route = createFileRoute("/_layout/")({
-  component: Dashboard,
-  head: () => ({
-    meta: [
-      {
-        title: "Dashboard - Drone Grid",
-      },
-    ],
-  }),
+  beforeLoad: () => {
+    throw redirect({ to: "/drones" })
+  },
 })
-
-function Dashboard() {
-  const { user } = useAuth()
-
-  return (
-    <div>
-      <div>
-        <h1 className="text-2xl truncate max-w-sm">
-          Hi, {user?.full_name || user?.email}
-        </h1>
-        <p className="text-muted-foreground">
-          Welcome back, nice to see you again!
-        </p>
-      </div>
-    </div>
-  )
-}
