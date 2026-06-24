@@ -60,7 +60,6 @@ class DroneController:
         self.__fc_connect_timeout = fc_connect_timeout
 
         self.__initialized: bool = False
-        self.__fc_connected: asyncio.Event = asyncio.Event()
         self.__telemetry: TelemetryState = TelemetryState()
         self.__latest_input: tuple[ControlInput, float] | None = None
         self.__commands: asyncio.Queue[Arm | Disarm] = asyncio.Queue(maxsize=1)
@@ -71,15 +70,12 @@ class DroneController:
 
     @property
     def is_ready(self) -> bool:
-        return self.__initialized and self.__fc_connected.is_set()
+        return self.__initialized
 
     async def run(self) -> None:
         async with asyncio.TaskGroup() as task_group:
             await self.__drone.connect(system_address=self.__connection_url)
             logger.info("Waiting for flight controller connection...")
-            # Sole connection_state subscription, started before the wait so the connect
-            # transition isn't lost to a separate short-lived subscription.
-            task_group.create_task(self.__consume_connection_state())
             await self.__wait_for_flight_controller_connection()
 
             self.__start_telemetry_consumers(task_group)
@@ -94,7 +90,9 @@ class DroneController:
     async def __wait_for_flight_controller_connection(self) -> None:
         try:
             async with asyncio.timeout(self.__fc_connect_timeout):
-                await self.__fc_connected.wait()
+                async for state in self.__drone.core.connection_state():
+                    if state.is_connected:
+                        return
         except asyncio.TimeoutError:
             raise DroneInitializationException(
                 f"Companion failed to connect to flight controller in {self.__fc_connect_timeout}s"
@@ -121,15 +119,6 @@ class DroneController:
         async for value in stream:
             setattr(self.__telemetry, field, value)
             self.__telemetry.flight_controller_last_seen = datetime.now(UTC)
-
-    async def __consume_connection_state(self) -> None:
-        async for state in self.__drone.core.connection_state():
-            if state.is_connected:
-                self.__telemetry.flight_controller_last_seen = datetime.now(UTC)
-                self.__fc_connected.set()
-            else:
-                self.__fc_connected.clear()
-                logger.error("Flight controller link lost.")
 
     async def __consume_status_text(self) -> None:
         async for status_text in self.__drone.telemetry.status_text():
