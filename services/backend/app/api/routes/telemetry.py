@@ -23,11 +23,9 @@ async def telemetry_socket(
     drone_service: DroneServiceDep,
     share_service: ShareServiceDep,
     messaging: MessagingServiceDep,
-    # Browsers can't set headers on native WebSocket connections,
-    # so we accept the JWT (or a dgs_ share token) as a query param.
-    token: str = Query(),
+    token: str = Query(),  # JWT/share token passed as query param for websockets
 ):
-    # Both VIEW (share link) and CONTROL (owner/admin) scopes may observe.
+    # Both VIEW and CONTROL scopes can read telemetry
     access = authorize_drone_access(
         token, drone_id, user_service, drone_service, share_service
     )
@@ -35,7 +33,7 @@ async def telemetry_socket(
     await websocket.accept()
     logger.info(f"Telemetry socket opened for drone {drone_id} by {access.subject}")
 
-    async def _forward_telemetry(telemetry: Telemetry) -> None:
+    async def forward_telemetry(telemetry: Telemetry) -> None:
         try:
             await websocket.send_text(telemetry.model_dump_json())
         except Exception:
@@ -45,7 +43,7 @@ async def telemetry_socket(
                 f"Failed to forward telemetry to client for drone {drone_id}"
             )
 
-    async with messaging.subscribe_telemetry(str(drone_id), _forward_telemetry):
+    async with messaging.subscribe_telemetry(str(drone_id), forward_telemetry):
         try:
             while True:
                 await websocket.receive_text()

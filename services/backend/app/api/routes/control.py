@@ -32,15 +32,11 @@ async def control_socket(
     drone_service: DroneServiceDep,
     share_service: ShareServiceDep,
     messaging: MessagingServiceDep,
-    # Browsers can't set headers on native WebSocket connections,
-    # so we accept the JWT as a query param.
-    token: str = Query(),
+    token: str = Query(),  # JWT as quey param for websockets
 ):
     access = authorize_drone_access(
         token, drone_id, user_service, drone_service, share_service
     )
-    # Commanding requires CONTROL scope — share-link viewers (VIEW) are refused
-    # here, on top of never opening this socket from the viewer UI.
     if access.scope != AccessScope.CONTROL:
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
 
@@ -50,8 +46,8 @@ async def control_socket(
     try:
         while True:
             try:
-                raw = await websocket.receive_json()
-                message = ControlMessage.model_validate(raw)
+                json_line = await websocket.receive_json()
+                message = ControlMessage.model_validate(json_line)
             except (json.JSONDecodeError, ValidationError) as e:
                 logger.warning(
                     f"Dropping invalid control message from {access.subject} "

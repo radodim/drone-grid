@@ -17,7 +17,7 @@ from pydantic import ValidationError
 from app.data.control.model.message import ControlMessage
 from app.data.telemetry.model.telemetry import Telemetry
 from app.service.drone.drone_service import DroneServiceDep
-from app.service.exceptions import NonExistentDroneException
+from app.service.exceptions import NonExistentDroneError
 from app.service.messaging.messaging_service import MessagingServiceDep
 from app.utils import sha256_hex
 
@@ -39,7 +39,7 @@ async def companion_socket(
     await websocket.accept()
     logger.info(f"Companion socket opened for drone {drone_id}")
 
-    async def _forward_control(message: ControlMessage) -> None:
+    async def forward_control(message: ControlMessage) -> None:
         try:
             await websocket.send_bytes(message.model_dump_json().encode())
         except Exception:
@@ -49,7 +49,7 @@ async def companion_socket(
                 f"Failed to forward control message to companion for drone {drone_id}"
             )
 
-    async with messaging.subscribe_control(drone_id, _forward_control):
+    async with messaging.subscribe_control(drone_id, forward_control):
         try:
             while True:
                 try:
@@ -67,12 +67,7 @@ async def companion_socket(
 
 
 def __authenticate(websocket: WebSocket, drone_service):
-    """Validate HTTP Basic Auth credentials against the Drone record.
-
-    Any failure (missing header, malformed encoding, unknown drone, secret
-    mismatch) collapses to the same WS_1008_POLICY_VIOLATION close code —
-    we don't tell the client which check failed.
-    """
+    # TODO: refactor here, split logic into separate functions before making project public
     auth_header = websocket.headers.get("authorization", "")
     if not auth_header.lower().startswith("basic "):
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
@@ -89,7 +84,7 @@ def __authenticate(websocket: WebSocket, drone_service):
     try:
         drone_uuid = UUID(username)
         drone = drone_service.get_drone(drone_uuid)
-    except (ValueError, NonExistentDroneException):
+    except (ValueError, NonExistentDroneError):
         logger.warning(
             f"Companion socket auth rejected: unknown or malformed drone id '{username}'"
         )

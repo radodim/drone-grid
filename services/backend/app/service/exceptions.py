@@ -5,13 +5,13 @@ class AppException(Exception):
 
 
 # Media server
-class MediaServerException(AppException):
+class MediaServerError(AppException):
     def __init__(self, message: str):
         super().__init__(message)
 
 
 # Drone service
-class NonExistentDroneException(AppException):
+class NonExistentDroneError(AppException):
     def __init__(self, message: str):
         super().__init__(message)
 

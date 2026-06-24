@@ -7,6 +7,8 @@ from app.data.db.model.user import User
 from app.data.db.session import DbSessionDep
 from app.utils import get_utcnow
 
+# TODO: refactor this class and align with conventions in the project
+
 
 class UserService:
     def __init__(self, db_session: DbSessionDep) -> None:

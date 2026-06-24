@@ -7,7 +7,7 @@ from sqlmodel import select
 
 from app.data.db.model.drone import Drone
 from app.data.db.session import DbSessionDep
-from app.service.exceptions import NonExistentDroneException
+from app.service.exceptions import NonExistentDroneError
 from app.utils import get_utcnow, sha256_hex
 
 
@@ -29,7 +29,7 @@ class DroneService:
     def get_drone(self, drone_id: uuid.UUID) -> Drone:
         drone: Drone | None = self.__db_session.get(Drone, drone_id)
         if drone is None:
-            raise NonExistentDroneException(f"Drone with id {drone_id} does not exist.")
+            raise NonExistentDroneError(f"Drone with id {drone_id} does not exist.")
 
         return drone
 

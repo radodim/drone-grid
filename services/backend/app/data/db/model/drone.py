@@ -8,6 +8,8 @@ from app.utils import get_utcnow
 
 
 class Drone(SQLModel, table=True):
+    # TODO: set a MetaData naming_convention so constraint/index names are
+    # deterministic — simplifies Alembic migrations (this one is DB-auto-named).
     __table_args__ = (UniqueConstraint("name", "creation_user_id"),)
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)

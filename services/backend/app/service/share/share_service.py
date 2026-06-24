@@ -14,10 +14,6 @@ from app.utils import get_utcnow, sha256_hex
 SHARE_TOKEN_PREFIX = "dgs_"  # used to differentiate the share token from a JWT
 
 
-def hash_share_token(raw_token: str) -> str:
-    return sha256_hex(raw_token)
-
-
 class ShareService:
     def __init__(self, db_session: DbSessionDep) -> None:
         self.__db_session = db_session
@@ -33,7 +29,7 @@ class ShareService:
         raw_token = SHARE_TOKEN_PREFIX + secrets.token_urlsafe(32)
         share = DroneShare(
             drone_id=drone_id,
-            token_hash=hash_share_token(raw_token),
+            token_hash=sha256_hex(raw_token),
             label=label,
             creation_user_id=created_by,
             expiration_timestamp=get_utcnow() + timedelta(hours=ttl_hours),
@@ -46,9 +42,7 @@ class ShareService:
     def resolve(self, raw_token: str) -> DroneShare:
         """Return the live share for a token, or raise if invalid/expired/revoked."""
         share = self.__db_session.exec(
-            select(DroneShare).where(
-                DroneShare.token_hash == hash_share_token(raw_token)
-            )
+            select(DroneShare).where(DroneShare.token_hash == sha256_hex(raw_token))
         ).first()
         if (
             share is None

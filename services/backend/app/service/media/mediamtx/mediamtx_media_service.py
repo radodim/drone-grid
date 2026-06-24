@@ -1,11 +1,7 @@
-import logging
-
 import httpx
 
-from app.service.exceptions import MediaServerException
+from app.service.exceptions import MediaServerError
 from app.service.media.media_service import MediaService
-
-logger = logging.getLogger(__name__)
 
 
 class MediaMtxMediaService(MediaService):
@@ -28,9 +24,7 @@ class MediaMtxMediaService(MediaService):
             self.__active_streams = {
                 item["name"] for item in items if item.get("ready")
             }
-        except httpx.HTTPError:
-            msg = "Requested to mediamtx failed control API failed."
-            logger.error(msg)
-            raise MediaServerException(msg)
+        except httpx.HTTPError as e:
+            raise MediaServerError("MediaMTX control API request failed.") from e
 
         return self.__active_streams

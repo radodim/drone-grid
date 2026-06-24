@@ -17,6 +17,8 @@ from app.service.messaging.messaging_service import (
 
 logger = logging.getLogger(__name__)
 
+# TODO: refactor here before making project public
+
 
 class _NatsSubscription(Subscription):
     """Adapter wrapping a `nats.aio.subscription.Subscription` so the only

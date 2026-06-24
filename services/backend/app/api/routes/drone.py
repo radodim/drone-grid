@@ -10,7 +10,7 @@ from app.api.security.deps import CurrentUser
 from app.data.db.model.drone import Drone
 from app.data.db.model.user import User
 from app.service.drone.drone_service import DroneService, DroneServiceDep
-from app.service.exceptions import NonExistentDroneException
+from app.service.exceptions import NonExistentDroneError
 from app.service.media.media_service_factory import MediaServiceDep
 from app.service.share.share_service import ShareServiceDep
 
@@ -130,5 +130,5 @@ def __get_drone_if_authorized(
     drone = drone_service.get_drone(drone_id)
     # Don't leak that the drone exists by returning 403 to non-owners.
     if not user.is_admin and drone.creation_user_id != user.id:
-        raise NonExistentDroneException(f"Drone with id {drone_id} does not exist.")
+        raise NonExistentDroneError(f"Drone with id {drone_id} does not exist.")
     return drone

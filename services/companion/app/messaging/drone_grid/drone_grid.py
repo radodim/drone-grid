@@ -1,12 +1,12 @@
 import base64
 import logging
 
-from app.models import ControlMessage, Telemetry
 from pydantic import ValidationError
 from websockets.asyncio.client import ClientConnection, connect
 from websockets.exceptions import ConnectionClosed
 
 from app.messaging.client import MessageHandler, MessagingClient
+from app.models import ControlMessage, Telemetry
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +60,7 @@ class DroneGridMessagingClient(MessagingClient):
                 self.__ws = None
 
     async def __handle_inbound(self, raw: str | bytes) -> None:
-        handler = self.__handler
-        if handler is None:
+        if self.__handler is None:
             return
 
         try:
@@ -71,6 +70,6 @@ class DroneGridMessagingClient(MessagingClient):
             return
 
         try:
-            await handler(model)
+            await self.__handler(model)
         except Exception:
             logger.exception("Handler raised on inbound message")

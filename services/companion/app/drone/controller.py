@@ -60,7 +60,6 @@ class DroneController:
         self.__drone: System = System()
         self.__connection_url: str = connection_url
         self.__fc_connect_timeout = fc_connect_timeout
-        # self.__fc_health_all_ok_timeout = fc_health_all_ok_timeout
 
         self.__initialized: bool = False
         self.__telemetry: TelemetryState = TelemetryState()
@@ -83,12 +82,10 @@ class DroneController:
             task_group.create_task(self.__stream_manual_control())
             task_group.create_task(self.__process_commands())
 
-            # No health gate here: telemetry must flow precisely when health is
-            # bad, and armability is PX4's call (health.is_armable), enforced
-            # again in __arm and mirrored by the UI's derived gates.
-            # await self.__wait_for_health_all_ok()
             self.__initialized = True
-            logger.info("Flight controller connected. Streaming telemetry and accepting commands.")
+            logger.info(
+                "Flight controller connected. Streaming telemetry and accepting commands."
+            )
 
     async def __connect_to_flight_controller(self) -> None:
         await self.__drone.connect(system_address=self.__connection_url)
@@ -107,8 +104,6 @@ class DroneController:
             )
 
     def __start_telemetry_consumers(self, task_group: asyncio.TaskGroup) -> None:
-        # Streams must be created after connect() — mavsdk's telemetry plugin
-        # isn't initialized until the connection to mavsdk-server is up.
         # (rates may be tuned here, e.g. self.__drone.telemetry.set_rate_position(...))
         telemetry_streams = {
             "is_armed": self.__drone.telemetry.armed(),
@@ -142,19 +137,6 @@ class DroneController:
     async def __consume_status_text(self) -> None:
         async for status_text in self.__drone.telemetry.status_text():
             logger.info(f"Status text from flight controller: '{status_text}'")
-
-    # Retired as a startup barrier (blinded telemetry on real hardware while
-    # GPS/health converge). Kept for reference; see the note in run().
-    # async def __wait_for_health_all_ok(self) -> None:
-    #     try:
-    #         async with asyncio.timeout(self.__fc_health_all_ok_timeout):
-    #             async for ok in self.__drone.telemetry.health_all_ok():
-    #                 if ok:
-    #                     return
-    #     except asyncio.TimeoutError:
-    #         raise DroneInitializationException(
-    #             f"Did not receive 'health_all_ok' signal in {self.__fc_health_all_ok_timeout}s"
-    #         )
 
     async def dispatch(self, msg: ControlMessage) -> None:
         command = msg.root
