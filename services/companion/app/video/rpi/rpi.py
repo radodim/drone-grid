@@ -41,6 +41,10 @@ class RpicamVideoSource(VideoProcess):
             "--intra",
             "12",
             "--inline",
+            "--autofocus-mode",
+            "manual",
+            "--lens-position",
+            "default",
         ]
 
         if self.__vflip:

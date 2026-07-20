@@ -45,7 +45,6 @@ class TelemetryState:
     position: Position | None = None
     gps_info: GpsInfo | None = None
     health: Health | None = None
-    link_connected: bool | None = None
     flight_controller_last_seen: datetime | None = None
 
 
@@ -55,7 +54,6 @@ class DroneController:
         self,
         connection_url: str,
         fc_connect_timeout: float = 20.0,
-        # fc_health_all_ok_timeout: float = 120.0,
     ) -> None:
         self.__drone: System = System()
         self.__connection_url: str = connection_url
@@ -72,11 +70,13 @@ class DroneController:
 
     @property
     def is_ready(self) -> bool:
-        return self.__initialized and self.__telemetry.link_connected is True
+        return self.__initialized
 
     async def run(self) -> None:
         async with asyncio.TaskGroup() as task_group:
-            await self.__connect_to_flight_controller()
+            await self.__drone.connect(system_address=self.__connection_url)
+            logger.info("Waiting for flight controller connection...")
+            await self.__wait_for_flight_controller_connection()
 
             self.__start_telemetry_consumers(task_group)
             task_group.create_task(self.__stream_manual_control())
@@ -86,11 +86,6 @@ class DroneController:
             logger.info(
                 "Flight controller connected. Streaming telemetry and accepting commands."
             )
-
-    async def __connect_to_flight_controller(self) -> None:
-        await self.__drone.connect(system_address=self.__connection_url)
-        logger.info("Waiting for flight controller connection...")
-        await self.__wait_for_flight_controller_connection()
 
     async def __wait_for_flight_controller_connection(self) -> None:
         try:
@@ -116,7 +111,6 @@ class DroneController:
         }
         for field, stream in telemetry_streams.items():
             task_group.create_task(self.__consume_telemetry_attr(field, stream))
-        task_group.create_task(self.__consume_connection_state())
         task_group.create_task(self.__consume_status_text())
 
     async def __consume_telemetry_attr(
@@ -125,14 +119,6 @@ class DroneController:
         async for value in stream:
             setattr(self.__telemetry, field, value)
             self.__telemetry.flight_controller_last_seen = datetime.now(UTC)
-
-    async def __consume_connection_state(self) -> None:
-        async for state in self.__drone.core.connection_state():
-            self.__telemetry.link_connected = state.is_connected
-            if state.is_connected:
-                self.__telemetry.flight_controller_last_seen = datetime.now(UTC)
-            else:
-                logger.error("Flight controller link lost.")
 
     async def __consume_status_text(self) -> None:
         async for status_text in self.__drone.telemetry.status_text():
