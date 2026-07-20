@@ -75,9 +75,13 @@ export function HoldButton({
       onPointerDown={start}
       onPointerUp={stop}
       onPointerCancel={stop}
+      // The 2s stationary hold is exactly a system long-press: suppress the
+      // context menu / iOS callout it triggers, or the resulting pointercancel
+      // resets the ring mid-hold on touch devices.
+      onContextMenu={(e) => e.preventDefault()}
       className={cn(
         "pointer-events-auto relative size-16 rounded-full bg-black/60 text-white",
-        "text-[10px] font-mono select-none touch-none",
+        "text-[10px] font-mono select-none touch-none [-webkit-touch-callout:none]",
         disabled && "opacity-40",
       )}
     >
