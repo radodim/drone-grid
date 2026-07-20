@@ -179,3 +179,38 @@ Companion env: `CONTROL__CONNECTION_URL=udpin://0.0.0.0:14540`
 
 systemd is the whole-process supervisor (`Restart=always`); the app's internal
 loops handle subsystem (video/control) failures.
+
+### Persistent logs across reboots (optional, recommended)
+
+Raspberry Pi OS keeps the journal in RAM (`/run/log/journal`) — size-capped and
+wiped on every reboot — so companion logs from past flights are gone exactly when
+you want to debug them. Switch journald to disk-backed storage, bounded so it
+can't eat the SD card:
+
+```bash
+sudo mkdir -p /var/log/journal /etc/systemd/journald.conf.d
+sudo systemd-tmpfiles --create --prefix /var/log/journal   # fixes ownership/ACLs
+sudo tee /etc/systemd/journald.conf.d/persist.conf > /dev/null <<'EOF'
+[Journal]
+Storage=persistent
+SystemMaxUse=500M
+SystemKeepFree=1G
+MaxRetentionSec=60day
+EOF
+sudo systemctl restart systemd-journald
+sudo journalctl --flush    # move the current boot's RAM logs to disk now
+```
+
+Verify: `journalctl --disk-usage` now reports usage in `/var/log/journal`, and
+after the next reboot `journalctl --list-boots` lists more than one boot.
+
+Reading a past flight:
+
+```bash
+journalctl --list-boots                                   # pick the flight's boot
+journalctl -b -1 -u drone-grid-companion                  # previous boot
+journalctl -u drone-grid-companion --since "2026-07-14"   # or by time window
+```
+
+Flash wear is a non-issue at this log volume: journald compresses, rotates within
+the caps above, and batches non-critical writes (5 min sync interval).
