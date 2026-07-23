@@ -167,6 +167,10 @@ services:
     environment:
       MTX_RTSPTRANSPORTS: tcp
       MTX_WEBRTCADDITIONALHOSTS: webrtc.${DOMAIN}
+      # Docker-internal interface IPs are dead ends for every external peer;
+      # the WHIP publisher (ffmpeg) commits to the first candidate instead of
+      # racing them, so only the public hostname may be advertised.
+      MTX_WEBRTCIPSFROMINTERFACES: "false"
     ports:
       - "8189:8189/udp" # WebRTC media (UDP, can't go through Traefik)
     volumes:
