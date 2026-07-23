@@ -1,0 +1,40 @@
+# Drone Grid video service configuration (mediamtx).
+# Copied to /etc/drone-grid/mediamtx.yml by the install script.
+#
+# No secrets or per-drone values here: runOnReady runs through a shell that
+# inherits the container env, so $WHIP_URL/$DRONE_ID/$DRONE_SECRET expand at
+# spawn time from the systemd unit's -e passthrough (sourced from
+# /etc/drone-grid/companion.env).
+#
+# /usr/local/bin/ffmpeg-whip is the static WHIP-capable ffmpeg added by
+# Dockerfile.video (the image's apt ffmpeg predates the WHIP muxer).
+# Video-only publish needs ffmpeg 8.1+ (8.0 requires an audio track; if the
+# pinned build is ever downgraded, add a silent track back:
+#   -f lavfi -i anullsrc=r=48000:cl=stereo  and  -c:a libopus -b:a 16k
+# an audio track also makes browsers delay video behind the audio jitter
+# buffer, costing ~100ms of glass-to-glass latency).
+
+rtmp: no
+hls: no
+srt: no
+
+paths:
+  cam:
+    source: rpiCamera
+    rpiCameraWidth: 1280
+    rpiCameraHeight: 960
+    rpiCameraFPS: 30
+    rpiCameraBitrate: 5000000
+    rpiCameraVFlip: true
+    rpiCameraHFlip: true
+    rpiCameraAfMode: manual
+    rpiCameraIDRPeriod: 12
+    runOnReady: >
+      /usr/local/bin/ffmpeg-whip
+      -fflags nobuffer -probesize 32768
+      -i rtsp://localhost:8554/cam
+      -c:v copy
+      -f whip -ts_buffer_size 1000000
+      -authorization "$DRONE_ID:$DRONE_SECRET"
+      "$WHIP_URL/$DRONE_ID/whip"
+    runOnReadyRestart: yes
