@@ -271,6 +271,20 @@ Real flight over 4G: latency behavior on RF dips (old failure mode: lag ratchets
 and never drains), reboot recovery (unit + `runOnReadyRestart`), no
 control/telemetry regression. Rollback if needed per the standing procedure.
 
+## Prod ICE candidates (found at LTE bring-up, 2026-07-23)
+
+Prod showed the same DTLS-timeout signature as the LAN bench: mediamtx's default
+`webrtcIPsFromInterfaces: true` adds the container's Docker-bridge IP to the
+candidates, and ffmpeg's WHIP client commits to the first candidate instead of
+racing them (browsers race — which is why WHEP always worked). Fix mirrored to
+prod: `MTX_WEBRTCIPSFROMINTERFACES: "false"` on the streaming service in
+`compose.yaml`, leaving `webrtc.${DOMAIN}` as the only advertised host.
+
+Also seen at LTE bring-up: `not enough frames to estimate rate; consider
+increasing probesize` + `60 tbr` in the input dump — cosmetic consequence of the
+32 KB probe (fps guess only; `-c copy` forwards RTP timestamps untouched).
+Ignore, or set `-probesize 262144` if the log noise bothers.
+
 ## Deferred follow-ups (explicitly not blocking the flight)
 
 - **Glitch-to-picture budget (~8–9 s observed in the UI)** decomposes as:
