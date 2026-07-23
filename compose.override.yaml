@@ -45,6 +45,12 @@ services:
     ports:
       - "8554:8554" # RTSP direct (no TLS in dev)
       - "9997:9997" # MediaMTX API
+      - "8889:8889" # WebRTC signaling, direct — a LAN publisher can't Host-route via Traefik
+    environment:
+      # LAN WebRTC needs the host's LAN IP in the ICE candidates (inside Docker
+      # Desktop's VM, mediamtx only sees VM-internal interfaces). Launch with:
+      #   WEBRTC_ADDITIONAL_HOSTS="webrtc.localhost,$(ipconfig getifaddr en0)" docker compose up -d
+      MTX_WEBRTCADDITIONALHOSTS: ${WEBRTC_ADDITIONAL_HOSTS:-webrtc.localhost}
 
   proxy:
     command:

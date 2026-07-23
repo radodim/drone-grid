@@ -1,0 +1,18 @@
+# The stock mediamtx camera image plus one static WHIP-capable ffmpeg.
+# The image's apt ffmpeg (4.3.x, Bullseye) predates the WHIP muxer
+# (ffmpeg >= 8.0), and no Debian-packaged ffmpeg will include it for years.
+# lgpl build: no H.264 encoder on purpose — the publish leg is -c copy.
+FROM debian:trixie-slim AS ffmpeg
+ADD --checksum=sha256:6623c88d45274e2d71188ddcf6f35a341dc7c0710c87ca562a97301ccb656765 \
+    https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-07-21-13-38/ffmpeg-n8.1.2-29-g703dcc25b9-linuxarm64-lgpl-8.1.tar.xz \
+    /tmp/ffmpeg.tar.xz
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends xz-utils \
+    && mkdir /out \
+    && tar -xf /tmp/ffmpeg.tar.xz -C /tmp \
+    && cp /tmp/ffmpeg-n*/bin/ffmpeg /out/ffmpeg
+
+FROM bluenviron/mediamtx:1.18.1-ffmpeg-rpi
+# Distinct path: runOnReady invokes it absolutely; the stock /usr/bin/ffmpeg
+# stays untouched.
+COPY --from=ffmpeg /out/ffmpeg /usr/local/bin/ffmpeg-whip

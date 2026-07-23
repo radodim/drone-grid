@@ -33,12 +33,14 @@ git clone git@github.com:radodim/drone-grid.git
 # 3. Fill in secrets, then start:
 sudo nano /etc/drone-grid/companion.env    # DRONE_ID, DRONE_SECRET, URLs...
 sudo systemctl start drone-grid-companion
+sudo systemctl start drone-grid-video
 journalctl -u drone-grid-companion -f
 ```
 
-`install.sh` is idempotent — it installs uv + ffmpeg, syncs the 3.12 env, seeds
-`/etc/drone-grid/companion.env` from the template (only if absent), and installs
-+ enables the unit.
+`install.sh` is idempotent — it installs uv + ffmpeg + Docker, syncs the 3.12
+env, seeds `/etc/drone-grid/companion.env` and `/etc/drone-grid/mediamtx.yml`
+from the templates (only if absent), builds the video image, and installs +
+enables both units.
 
 ## Updating
 
@@ -49,6 +51,41 @@ sudo systemctl restart drone-grid-companion
 ```
 
 (Or just re-run `deploy/install.sh` — same effect; it won't touch your env file.)
+
+## Video service (mediamtx + WHIP)
+
+On real hardware, video does **not** run inside the companion: a mediamtx
+container owns the camera (`rpiCamera` source) and pushes WebRTC/WHIP to the
+cloud via `runOnReady` ffmpeg. WebRTC abandons late packets instead of
+retransmitting like RTSP-over-TCP, so video lag stays bounded on a lossy 4G
+link. The companion runs control-only — **remove the whole `VIDEO__*` block
+from `companion.env`** on the drone (two processes can't share the camera).
+The companion's built-in pipeline remains for SITL and as rollback.
+
+The image is built locally from `deploy/Dockerfile.video`: the stock
+`bluenviron/mediamtx:1.18.1-ffmpeg-rpi` plus one static WHIP-capable ffmpeg at
+`/usr/local/bin/ffmpeg-whip` (the image's apt ffmpeg 4.3.x predates the WHIP
+muxer, which needs ffmpeg >= 8.0; base tag and ffmpeg URL + sha256 are pinned
+in the Dockerfile).
+
+- Camera settings (resolution, fps, bitrate, flips, focus) live in
+  `/etc/drone-grid/mediamtx.yml` — not in `companion.env`.
+- No secrets or per-drone values in the yml: the unit forwards
+  `DRONE_ID`/`DRONE_SECRET`/`WHIP_URL` from `companion.env` into the container
+  (`-e`), where the `runOnReady` shell expands them. Pointing at a dev stack is
+  therefore just `WHIP_URL=http://<dev-box-ip>:8889` in `companion.env` — the
+  yml never changes.
+- Ops: `sudo systemctl start drone-grid-video` ·
+  `journalctl -u drone-grid-video -f`
+- Bench preview on the LAN, no cloud needed: `http://<pi-ip>:8889/cam`
+- The on-Pi mediamtx is auth-open on the LAN (fine behind CGNAT/home NAT).
+- Rollback: `sudo systemctl disable --now drone-grid-video`, restore the
+  `VIDEO__*` block, `sudo systemctl restart drone-grid-companion`.
+
+Boot chain: `docker.service` → `drone-grid-video.service` (foreground
+`docker run`, `Restart=always`, logs in journald). The unit is deliberately
+independent of `drone-grid-companion` — video keeps streaming when control is
+down, which is exactly when you need eyes on the drone.
 
 ## Pointing at a local dev stack (LAN, not prod)
 

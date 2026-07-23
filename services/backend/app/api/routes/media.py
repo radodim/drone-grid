@@ -27,7 +27,7 @@ def media_auth(
     user_service: UserServiceDep,
     share_service: ShareServiceDep,
 ):
-    if body.protocol == "rtsp" and body.action == "publish":
+    if body.protocol in ("rtsp", "webrtc") and body.action == "publish":
         return __validate_drone_publish(body, drone_service)
 
     if body.protocol == "webrtc" and body.action == "read":

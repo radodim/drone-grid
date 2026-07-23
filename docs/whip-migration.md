@@ -50,19 +50,28 @@ paths:
     rpiCameraAfMode: manual
     rpiCameraIDRPeriod: 12
     runOnReady: >
-      ffmpeg -i rtsp://localhost:8554/cam
+      /usr/local/bin/ffmpeg-whip -i rtsp://localhost:8554/cam
       -f lavfi -i anullsrc=r=48000:cl=stereo
       -c:v copy -c:a libopus -b:a 16k
-      -f whip -authorization "__DRONE_ID__:__DRONE_SECRET__"
-      https://webrtc.drone-grid.com/__DRONE_ID__/whip
+      -f whip -authorization "$DRONE_ID:$DRONE_SECRET"
+      "$WHIP_URL/$DRONE_ID/whip"
     runOnReadyRestart: yes
 ```
 
+No substitution at all: `runOnReady` runs through a shell that inherits the
+container env, so `$WHIP_URL`/`$DRONE_ID`/`$DRONE_SECRET` expand at spawn time
+from the `-e` passthrough in the unit (#3). The template ships verbatim;
+`companion.env` stays the single source of secrets AND the publish target
+(`WHIP_URL=https://webrtc.drone-grid.com` in prod,
+`http://<dev-box-ip>:8889` for a LAN dev stack — the yml never changes). `/usr/local/bin/ffmpeg-whip` is the static
+ffmpeg added by `Dockerfile.video` (#7) — absolute path, no PATH ambiguity with
+the stock 4.3.9.
+
 RTSP stays on (localhost read for `runOnReady`); WebRTC stays on (LAN bench
-preview). The silent Opus track satisfies FFmpeg 8.0's both-tracks requirement and
-is harmless on 7.1. Settings mirror the previous companion config: 1280×960 (4:3 —
-native aspect for Cam v2, full FoV), 30 fps, 5 Mbps, manual focus, IDR period 12
-(matches the old `--intra 12`).
+preview). The silent Opus track satisfies FFmpeg 8.0's both-tracks requirement
+(8.1 relaxed it; keep it for version-proofing). Settings mirror the previous
+companion config: 1280×960 (4:3 — native aspect for Cam v2, full FoV), 30 fps,
+5 Mbps, manual focus, IDR period 12 (matches the old `--intra 12`).
 
 ## #3 — Add `drone-grid-video.service` systemd unit
 
@@ -76,6 +85,7 @@ After=docker.service network-online.target
 Wants=network-online.target
 
 [Service]
+EnvironmentFile=/etc/drone-grid/companion.env
 ExecStartPre=-/usr/bin/docker rm -f drone-grid-video
 ExecStart=/usr/bin/docker run --rm --name drone-grid-video \
   --network=host \
@@ -83,13 +93,19 @@ ExecStart=/usr/bin/docker run --rm --name drone-grid-video \
   --tmpfs /dev/shm:exec \
   -v /run/udev:/run/udev:ro \
   -v /etc/drone-grid/mediamtx.yml:/mediamtx.yml:ro \
-  bluenviron/mediamtx:<pinned>-ffmpeg-rpi
+  -e DRONE_ID -e DRONE_SECRET -e WHIP_URL \
+  drone-grid-video:1.18.1
 Restart=always
 RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+`-e VAR` with no value forwards from the unit's environment (loaded from
+`companion.env`) into the container, where the `runOnReady` shell expands it.
+The image is the locally-built `drone-grid-video:1.18.1` (see #7), not a
+registry tag.
 
 - Foreground `docker run` → logs flow into journald (`journalctl -u
   drone-grid-video`, covered by the persistent journal).
@@ -106,10 +122,10 @@ dunder helpers, main guard):
 
 - Install Docker if absent (`curl -fsSL https://get.docker.com | sh` — enables
   `docker.service` at boot)
-- `docker pull` the pinned `-ffmpeg-rpi` image
-- Seed `/etc/drone-grid/mediamtx.yml` only-if-absent: substitute
-  `__DRONE_ID__`/`__DRONE_SECRET__` from `companion.env`; root-owned, `chmod 600`
-  (the secret lives in this file too)
+- `docker build -f Dockerfile.video -t drone-grid-video:1.18.1 .` (idempotent —
+  layer-cached; base tag + ffmpeg URL/sha256 pinned in the Dockerfile)
+- Seed `/etc/drone-grid/mediamtx.yml` only-if-absent, verbatim copy of the
+  template (no secrets in it — they arrive via env passthrough at runtime)
 - Install + `systemctl enable drone-grid-video`
 
 ## #5 — Document in deploy README
@@ -129,14 +145,29 @@ the reverse (telemetry up, video down): error toasts don't loop.
 Expected result: confirmation only, no new code — the reader mounts unconditionally
 (`drones_.$droneId.tsx`) and `useDroneState` fails safe.
 
-## #7 — Bench gate: image ffmpeg supports WHIP (go/no-go for everything)
+## #7 — Bench gate: image ffmpeg supports WHIP — RESOLVED (custom image)
 
-```bash
-docker run --rm --entrypoint ffmpeg bluenviron/mediamtx:<pinned>-ffmpeg-rpi -h muxer=whip
-```
+Gate result (2026-07-22): **stock images NO-GO.** Both `1.17.1-ffmpeg-rpi` and
+`1.18.1-ffmpeg-rpi` bundle apt ffmpeg `4.3.9` (RPi OS Bullseye userland). The
+WHIP muxer shipped in ffmpeg **8.0** (not 7.1 as earlier drafts claimed) and is
+never backported, so no Debian-packaged ffmpeg has it — official mediamtx images
+can't support WHIP until Debian ships ffmpeg 8.
 
-Must show the muxer and its `-authorization` option. Fallback if missing: derived
-Dockerfile (`FROM <tag>-rpi` + pinned static ffmpeg), or SRT as plan B.
+Resolution: `services/companion/deploy/Dockerfile.video` — multi-stage build,
+`FROM bluenviron/mediamtx:1.18.1-ffmpeg-rpi` + one static BtbN ffmpeg
+(`n8.1.2-29`, **lgpl** — no H.264 encoder, publish leg is `-c copy`; dated
+autobuild tag + sha256 pinned) copied to `/usr/local/bin/ffmpeg-whip`. The
+validated image is otherwise byte-for-byte intact.
+
+Verified on arm64 (Mac, 2026-07-22): image builds; `ffmpeg-whip -h muxer=whip`
+shows the muxer + `-authorization`; stock `/usr/bin/ffmpeg` untouched. Cloud
+mediamtx stays pinned `1.17.1` — no version coupling (WHIP is a standard
+protocol); the Pi yml schema tracks the Pi image's version (`1.18.1`).
+
+lgpl caveat for Tier-1 (Mac) smoke tests: `ffmpeg-whip` cannot encode H.264 —
+generate the test pattern with another ffmpeg (brew's, or the stock 4.3.9 in the
+image) and let `ffmpeg-whip` do the `-c copy` → WHIP leg, which matches the real
+pipeline shape anyway.
 
 ## #8 — Pi cutover
 
