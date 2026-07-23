@@ -8,7 +8,11 @@
 #
 # /usr/local/bin/ffmpeg-whip is the static WHIP-capable ffmpeg added by
 # Dockerfile.video (the image's apt ffmpeg predates the WHIP muxer).
-# The silent Opus track satisfies FFmpeg 8.0's video+audio requirement.
+# Video-only publish needs ffmpeg 8.1+ (8.0 requires an audio track; if the
+# pinned build is ever downgraded, add a silent track back:
+#   -f lavfi -i anullsrc=r=48000:cl=stereo  and  -c:a libopus -b:a 16k
+# an audio track also makes browsers delay video behind the audio jitter
+# buffer, costing ~100ms of glass-to-glass latency).
 
 rtmp: no
 hls: no
@@ -26,9 +30,11 @@ paths:
     rpiCameraAfMode: manual
     rpiCameraIDRPeriod: 12
     runOnReady: >
-      /usr/local/bin/ffmpeg-whip -i rtsp://localhost:8554/cam
-      -f lavfi -i anullsrc=r=48000:cl=stereo
-      -c:v copy -c:a libopus -b:a 16k
-      -f whip -authorization "$DRONE_ID:$DRONE_SECRET"
+      /usr/local/bin/ffmpeg-whip
+      -fflags nobuffer -probesize 32768
+      -i rtsp://localhost:8554/cam
+      -c:v copy
+      -f whip -ts_buffer_size 1000000
+      -authorization "$DRONE_ID:$DRONE_SECRET"
       "$WHIP_URL/$DRONE_ID/whip"
     runOnReadyRestart: yes

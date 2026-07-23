@@ -47,10 +47,15 @@ services:
       - "9997:9997" # MediaMTX API
       - "8889:8889" # WebRTC signaling, direct — a LAN publisher can't Host-route via Traefik
     environment:
-      # LAN WebRTC needs the host's LAN IP in the ICE candidates (inside Docker
-      # Desktop's VM, mediamtx only sees VM-internal interfaces). Launch with:
-      #   WEBRTC_ADDITIONAL_HOSTS="webrtc.localhost,$(ipconfig getifaddr en0)" docker compose up -d
+      # LAN WebRTC needs the host's LAN IP as the ONLY advertised ICE candidate:
+      # ffmpeg's WHIP client commits to the first candidate instead of racing
+      # them (browsers race, so they tolerate junk candidates). Interface-derived
+      # candidates are VM-internal in Docker Desktop and webrtc.localhost is
+      # loopback on any remote publisher — both are dead ends. Launch with:
+      #   WEBRTC_ADDITIONAL_HOSTS="$(ipconfig getifaddr en0)" docker compose up -d
+      # (browsers on this machine reach the LAN IP too, so WHEP keeps working)
       MTX_WEBRTCADDITIONALHOSTS: ${WEBRTC_ADDITIONAL_HOSTS:-webrtc.localhost}
+      MTX_WEBRTCIPSFROMINTERFACES: "false"
 
   proxy:
     command:

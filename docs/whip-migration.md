@@ -50,13 +50,41 @@ paths:
     rpiCameraAfMode: manual
     rpiCameraIDRPeriod: 12
     runOnReady: >
-      /usr/local/bin/ffmpeg-whip -i rtsp://localhost:8554/cam
-      -f lavfi -i anullsrc=r=48000:cl=stereo
-      -c:v copy -c:a libopus -b:a 16k
-      -f whip -authorization "$DRONE_ID:$DRONE_SECRET"
+      /usr/local/bin/ffmpeg-whip
+      -fflags nobuffer -probesize 32768
+      -i rtsp://localhost:8554/cam
+      -c:v copy
+      -f whip -ts_buffer_size 1000000
+      -authorization "$DRONE_ID:$DRONE_SECRET"
       "$WHIP_URL/$DRONE_ID/whip"
     runOnReadyRestart: yes
 ```
+
+Command tuning (bench-derived, 2026-07-23):
+- **Video-only** — needs ffmpeg 8.1+ (8.0 mandates an audio track: add back
+  `-f lavfi -i anullsrc=r=48000:cl=stereo` + `-c:a libopus -b:a 16k` if ever
+  downgraded). An audio track also makes browsers delay video behind the audio
+  jitter buffer (~100 ms of glass-to-glass) — dropping it is a latency win,
+  not just cleanup.
+- **`-fflags nobuffer -probesize 32768`** — cap input probing at ~32 KB
+  (≈50 ms of stream; safe because codec params come from the RTSP SDP) and
+  discard the probed packets instead of replaying them, starting at the live
+  edge. Paid per session start, so it speeds up every `runOnReadyRestart`
+  recovery. Bench-measured (Pi 3B, 2026-07-23, `pkill ffmpeg-whip` respawns):
+  probe 1138 ms → 161–236 ms; full respawn-to-live 2311 ms → 1314–1478 ms,
+  now dominated by a fixed ~1.0 s DTLS-handshake timer inside ffmpeg's WHIP
+  implementation (not tunable from our side). NOTE: `-analyzeduration 0`
+  from common low-latency recipes is inert — 0 is libavformat's "unset"
+  sentinel and resolves to the 5 s default; probesize is the binding cap.
+  (`-flags low_delay` from the legacy publisher was dropped: it only affects
+  decoders, and this pipeline is pure `-c copy` — it was always inert.)
+- **`-ts_buffer_size` 1 MB** — sizes the WHIP UDP send buffer (default ~4 KB
+  dies on the first IDR burst: ~100–200 KB every 0.4 s → EAGAIN → fatal).
+  1 MB holds ~5 keyframe bursts yet bounds buffer-induced lag to ~1.6 s at
+  5 Mbps; a longer link stall trips EAGAIN → clean restart instead of a
+  zombie stream dragging seconds of backlog. Requires `net.core.wmem_max`
+  raised (kernel silently clamps requests to ~208 KB otherwise):
+  `/etc/sysctl.d/99-drone-grid.conf` → `net.core.wmem_max=8388608`.
 
 No substitution at all: `runOnReady` runs through a shell that inherits the
 container env, so `$WHIP_URL`/`$DRONE_ID`/`$DRONE_SECRET` expand at spawn time
@@ -190,21 +218,79 @@ If focus is wrong on the bench, set `rpiCameraLensPosition` (0.0 = infinity).
 
 ## #9 — Acceptance test: bounded lag under impairment
 
-The criterion the migration exists for. While streaming over 4G:
+The criterion the migration exists for. While streaming, impair the uplink
+(`usb0` = 4G on the drone, `wlan0` on a WiFi bench Pi):
 
 ```bash
 sudo tc qdisc add dev usb0 root netem loss 3% delay 80ms 20ms
+# cleanup:
+sudo tc qdisc del dev usb0 root
 ```
 
 Film a stopwatch; confirm glass-to-glass lag stays bounded and recovers within ~an
 IDR (0.4 s). Run the same impairment against the old RTSPS path for before/after
-evidence. Clean up: `sudo tc qdisc del dev usb0 root`.
+evidence.
+
+**Why this one test demonstrates WebRTC > RTSPS-over-TCP for live piloting:**
+under random loss, TCP's throughput ceiling is ≈ MSS / (RTT × √loss) (Mathis) —
+at 100 ms RTT and 3% loss that's ~0.7 Mbps, far under the 5 Mbps stream, so
+TCP *cannot* carry it: retransmissions of already-stale frames consume the link,
+head-of-line blocking holds fresh frames behind lost ones, nothing in the chain
+drops, and lag ratchets seconds-per-second with no recovery path. WebRTC applies
+retransmission *with a deadline* (NACK/RTX only while a packet can still arrive
+in time), abandons what expired, and heals at the next IDR — the same impairment
+costs a bounded few-hundred-ms plateau that recovers when the link does (worst
+case a clean ~5 s session restart via `runOnReadyRestart`). Pilot-view frames
+expire in ~200 ms; a transport that guarantees delivery of expired data converts
+loss into unbounded lag, which is the failure mode this migration removes.
+
+**Bench result — PASSED (2026-07-23; Pi 3B → Mac mini dev stack over 2.4 GHz
+WiFi; netem `loss 3% delay 80ms 20ms`; 1280×960@30, 5 Mbps; glass-to-glass
+stopwatch, ms):**
+
+| Timeline                  | RTSPS (TCP) | WHIP |
+|---------------------------|-------------|------|
+| Baseline (clean link)     | 232         | 233  |
+| Impaired +10 s            | 9143        | 3027 |
+| Impaired +30 s            | 10939       | 1625 |
+| Recovery reading 1 (~60 s)| 8240        | 361  |
+| Recovery reading 2 (~90 s)| 2617        | 175  |
+
+Reading: parity on a clean link (the transport is free when nothing is lost);
+under impairment RTSPS ratchets to ~11 s and is still ~35× baseline half a
+minute *after* the link healed (TCP backlog drains only at surplus bandwidth),
+while WHIP bounds at ~3 s — the send buffer + jitter buffer absorbing the worst
+— improves *during* the impairment as expired data is abandoned, and returns to
+baseline within ~30 s of recovery. WHIP's ~3 s worst-case transient is the
+`-ts_buffer_size` trade-off dial: smaller bounds it tighter at the cost of more
+circuit-breaker restarts.
 
 ## #10 — Flight test
 
 Real flight over 4G: latency behavior on RF dips (old failure mode: lag ratchets
 and never drains), reboot recovery (unit + `runOnReadyRestart`), no
 control/telemetry regression. Rollback if needed per the standing procedure.
+
+## Deferred follow-ups (explicitly not blocking the flight)
+
+- **Glitch-to-picture budget (~8–9 s observed in the UI)** decomposes as:
+  ~5 s mediamtx `runOnReady` restart pause + ~1.4 s ffmpeg respawn (measured,
+  DTLS-floored) + 0–2 s viewer retry (`retryPause = 2000`,
+  `services/ui/src/lib/mediamtx-reader.js:37`) + ~1 s WHEP setup + ≤0.4 s IDR.
+  Biggest lever: wrap the runOnReady ffmpeg in a `sh -c 'while true; do
+  ffmpeg ...; sleep 1; done'` supervisor loop to bypass the 5 s pause
+  (mediamtx kills commands as a process group, so path teardown still stops
+  the loop). Second lever: reader `retryPause` 2000 → 1000. Expected combined:
+  ~4–5 s.
+- **`rpiCameraLensPosition` for the Cam 3 drone**: mediamtx manual-AF defaults
+  to infinity; the legacy pipeline used hyperfocal (`--lens-position default`).
+  `rpiCameraLensPosition: 1.0` approximates hyperfocal — judge sharpness on the
+  bench preview at cutover.
+- **H.264 Main profile playback on the tablet**: mediamtx encodes Main (legacy
+  pipeline forced baseline); verified in Chrome — confirm once on iPadOS
+  Safari, the pickiest WebRTC decoder in the fleet.
+- **Pi 5 note**: rpicam `--low-latency` has no mediamtx equivalent; irrelevant
+  on hw-encoder Pis (3B/4), revisit if a Pi 5 (software encode) joins.
 
 ## #11 — Post-cutover cleanup (after the flight passes)
 

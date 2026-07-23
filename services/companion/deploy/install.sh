@@ -22,6 +22,7 @@ function main() {
     install_docker
     build_video_image
     create_mediamtx_config
+    configure_video_sysctl
     install_video_unit
     print_next_steps
 }
@@ -100,6 +101,15 @@ function create_mediamtx_config() {
     sudo install -d -m 755 /etc/drone-grid
     sudo install -m 644 -o root -g root \
         "${COMPANION_DIR}/deploy/mediamtx.yml.example" "${MEDIAMTX_CONFIG}"
+}
+
+function configure_video_sysctl() {
+    # The kernel clamps SO_SNDBUF requests to net.core.wmem_max (~208 KB
+    # default) — too small for the WHIP publisher's IDR bursts (EAGAIN).
+    echo "[INFO] Raising net.core.wmem_max for the WHIP publisher..."
+    echo 'net.core.wmem_max=8388608' \
+        | sudo tee /etc/sysctl.d/99-drone-grid.conf >/dev/null
+    sudo sysctl --system >/dev/null
 }
 
 function install_video_unit() {
