@@ -16,6 +16,7 @@ ExecStart=/usr/bin/docker run --rm --name drone-grid-video \
   --privileged \
   --tmpfs /dev/shm:exec \
   -v /run/udev:/run/udev:ro \
+  -v /run/avahi-daemon:/run/avahi-daemon:ro \
   -v /etc/drone-grid/mediamtx.yml:/mediamtx.yml:ro \
   -e DRONE_ID -e DRONE_SECRET -e WHIP_URL \
   drone-grid-video:1.18.1

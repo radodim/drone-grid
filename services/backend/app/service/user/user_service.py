@@ -30,10 +30,7 @@ class UserService:
 
     def _find_by_token(self, decoded_token: dict[str, Any]) -> User | None:
         return self.__db_session.exec(
-            select(User).where(
-                User.sub == decoded_token["sub"],
-                User.issuer == decoded_token["iss"],
-            )
+            select(User).where(User.sub == decoded_token["sub"])
         ).first()
 
     def _create(self, decoded_token: dict[str, Any]) -> User:
@@ -51,6 +48,7 @@ class UserService:
         return user
 
     def _update(self, user: User, decoded_token: dict[str, Any]) -> None:
+        user.issuer = decoded_token["iss"]
         user.email = decoded_token["email"]
         user.username = decoded_token.get("preferred_username")
         user.first_name = decoded_token.get("given_name")
