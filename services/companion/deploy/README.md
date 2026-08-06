@@ -63,7 +63,7 @@ from `companion.env`** on the drone (two processes can't share the camera).
 The companion's built-in pipeline remains for SITL and as rollback.
 
 The image is built locally from `deploy/Dockerfile.video`: the stock
-`bluenviron/mediamtx:1.18.1-ffmpeg-rpi` plus one static WHIP-capable ffmpeg at
+`bluenviron/mediamtx:1.18.1-ffmpeg-rpi` plus one prebuilt WHIP-capable ffmpeg at
 `/usr/local/bin/ffmpeg-whip` (the image's apt ffmpeg 4.3.x predates the WHIP
 muxer, which needs ffmpeg >= 8.0; base tag and ffmpeg URL + sha256 are pinned
 in the Dockerfile).
@@ -73,8 +73,10 @@ in the Dockerfile).
 - No secrets or per-drone values in the yml: the unit forwards
   `DRONE_ID`/`DRONE_SECRET`/`WHIP_URL` from `companion.env` into the container
   (`-e`), where the `runOnReady` shell expands them. Pointing at a dev stack is
-  therefore just `WHIP_URL=http://<dev-box-ip>:8889` in `companion.env` — the
-  yml never changes.
+  therefore just `WHIP_URL=http://<dev-box>.local:8889` in `companion.env` —
+  the yml never changes and no IP needs hardcoding: the image ships nss-mdns
+  and the unit mounts the host's avahi socket, so ffmpeg resolves `.local`
+  names itself, re-resolving on every spawn. Prod DNS names are unaffected.
 - Ops: `sudo systemctl start drone-grid-video` ·
   `journalctl -u drone-grid-video -f`
 - Bench preview on the LAN, no cloud needed: `http://<pi-ip>:8889/cam`
@@ -133,8 +135,8 @@ Gotchas:
 
 ## Flight controller link (Ethernet, point-to-point)
 
-Pi `eth0` ↔ Pixhawk ETH port, direct cable, static IPs, no DHCP:
-Pi = `10.41.10.1/24`, FC = `10.41.10.2/24`.
+Pi `fc-link` (onboard NIC, renamed from `eth0`) ↔ Pixhawk ETH port, direct
+cable, static IPs, no DHCP: Pi = `10.41.10.1/24`, FC = `10.41.10.2/24`.
 
 ### Pi side — `/etc/netplan/01-network-manager-all.yaml`
 
@@ -143,7 +145,10 @@ network:
   version: 2
   renderer: NetworkManager
   ethernets:
-    eth0:
+    fc-link:
+      match:
+        macaddress: "d8:3a:dd:xx:xx:xx"   # cat /sys/class/net/eth0/address
+      set-name: fc-link
       dhcp4: false
       dhcp6: false
       optional: true
@@ -153,10 +158,12 @@ network:
 
 No gateway on purpose — the FC link must never win the default route.
 `optional: true` so boot doesn't block waiting on an unpowered FC.
+`set-name` renames udev-side at device add, so the first apply needs a reboot.
 
 ```bash
 sudo chmod 600 /etc/netplan/01-network-manager-all.yaml
 sudo netplan try    # auto-rollback protects the wlan0 SSH session
+sudo reboot         # one-time: rename only applies when the device (re)appears
 ping 10.41.10.2
 ```
 

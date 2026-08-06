@@ -15,11 +15,16 @@ services:
 
   identity:
     command: start-dev --import-realm
+    ports:
+      # replace the base file's 127.0.0.1 bind — LAN devices need Keycloak too
+      !override
+      - "8080:8080"
     volumes:
       - ./config/keycloak/${ENVIRONMENT}-realm.json:/opt/keycloak/data/import/realm.json:ro
     labels:
       # Override prod path restriction — allow all paths for admin console access in dev
       - traefik.http.routers.${STACK_NAME}-identity.rule=Host(`auth.${DOMAIN}`)
+      - traefik.http.routers.${STACK_NAME}-identity-secure.tls.certresolver=
 
   backend:
     command: bash -c "/src/scripts/prestart.sh && fastapi dev --host 0.0.0.0 app/main.py"
@@ -27,15 +32,28 @@ services:
       - "8000:8000" # direct backend access for a LAN companion (Pi), bypassing Traefik
     volumes:
       - ./services/backend/app:/src/app
+    environment:
+      CORS_ORIGINS: http://localhost,http://localhost:5173,http://${DEV_HOST}:5173,http://${DEV_HOST}
+      WEBRTC_BASE_URL: ${WEBRTC_URL}
+    labels:
+      - traefik.http.routers.${STACK_NAME}-backend-secure.tls.certresolver=
 
   ui:
     build:
       target: dev # stops at Vite stage, skips nginx
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: ${API_URL}
+      VITE_KEYCLOAK_URL: ${KEYCLOAK_URL}
+      VITE_WEBRTC_URL: ${WEBRTC_URL}
     volumes:
       - ./services/ui/src:/src/src
       - ./services/ui/index.html:/src/index.html
     labels:
       - traefik.http.services.${STACK_NAME}-ui.loadbalancer.server.port=5173
+      - traefik.http.routers.${STACK_NAME}-ui.rule=Host(`${DOMAIN}`) || Host(`${DEV_HOST}`)
+      - traefik.http.routers.${STACK_NAME}-ui-secure.tls.certresolver=
 
   messaging:
     ports:
@@ -56,6 +74,9 @@ services:
       # (browsers on this machine reach the LAN IP too, so WHEP keeps working)
       MTX_WEBRTCADDITIONALHOSTS: ${WEBRTC_ADDITIONAL_HOSTS:-webrtc.localhost}
       MTX_WEBRTCIPSFROMINTERFACES: "false"
+    labels:
+      - traefik.http.routers.${STACK_NAME}-webrtc-secure.tls.certresolver=
+      - traefik.tcp.routers.${STACK_NAME}-rtsp.tls.certresolver=
 
   proxy:
     command:
@@ -63,6 +84,7 @@ services:
       - --providers.docker.constraints=Label(`traefik.constraint-label`, `traefik-public`)
       - --providers.docker.exposedbydefault=false
       - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
       - --api.insecure=true
       - --accesslog
       - --log

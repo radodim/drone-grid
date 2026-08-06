@@ -65,17 +65,20 @@ def decode_jwt_token(jwt_token: str) -> dict[str, Any]:
             signing_key,
             algorithms=["RS256"],
             audience=GLOBAL_APP_SETTINGS.KEYCLOAK_AUDIENCE,
+            issuer=GLOBAL_APP_SETTINGS.KEYCLOAK_ISSUER,
         )
     except jwt.ExpiredSignatureError:
         raise InvalidTokenError("The token has expired.")
     except jwt.InvalidAudienceError:
         raise InvalidTokenError("The audience listed in the token is invalid.")
+    except jwt.InvalidIssuerError:
+        raise InvalidTokenError("The issuer listed in the token is invalid.")
     except jwt.InvalidSignatureError:
         raise InvalidTokenError("The token signature is invalid.")
     except jwt.DecodeError:
         raise InvalidTokenError("A malformed token has been provided.")
     except jwt.PyJWTError as e:
-        # Catch-all for remaining token-validation errors: InvalidIssuer,
-        # ImmatureSignature, MissingRequiredClaim, etc. Non-JWT exceptions
+        # Catch-all for remaining token-validation errors: ImmatureSignature,
+        # MissingRequiredClaim, etc. Non-JWT exceptions
         # propagate and become 500s — this is intentional (see docstring).
         raise InvalidTokenError(f"Invalid token: {e}")

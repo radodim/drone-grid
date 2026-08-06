@@ -1,4 +1,6 @@
-from pydantic import computed_field
+from typing import Self
+
+from pydantic import computed_field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -30,6 +32,7 @@ class Settings(BaseSettings):
     ### Identity server config ###
 
     KEYCLOAK_INTERNAL_URL: str
+    KEYCLOAK_URL: str | None = None  # public URL; single-sourced with KC_HOSTNAME
     KEYCLOAK_REALM: str
     KEYCLOAK_AUDIENCE: str
 
@@ -37,6 +40,21 @@ class Settings(BaseSettings):
     @property
     def KEYCLOAK_JWKS_URL(self) -> str:
         return f"{self.KEYCLOAK_INTERNAL_URL}/realms/{self.KEYCLOAK_REALM}/protocol/openid-connect/certs"
+
+    @computed_field
+    @property
+    def KEYCLOAK_ISSUER(self) -> str | None:
+        if not self.KEYCLOAK_URL:
+            return None
+
+        return f"{self.KEYCLOAK_URL}/realms/{self.KEYCLOAK_REALM}"
+
+    @model_validator(mode="after")
+    def __require_issuer_pin_outside_local(self) -> Self:
+        if self.ENVIRONMENT != "local" and self.KEYCLOAK_ISSUER is None:
+            raise ValueError("KEYCLOAK_URL must be set when ENVIRONMENT is NOT local.")
+
+        return self
 
     ### Identity server config ###
 

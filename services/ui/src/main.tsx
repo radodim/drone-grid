@@ -11,6 +11,7 @@ import { ApiError, OpenAPI } from "./client"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
 import "./index.css"
+import "./lib/insecure-context-shim"
 import keycloak from "./keycloak"
 import { routeTree } from "./routeTree.gen"
 
@@ -54,8 +55,13 @@ function App() {
     // check-sso (not login-required): the app renders for everyone, including
     // unauthenticated share-link viewers. App routes guard themselves via
     // _layout's beforeLoad, which redirects to Keycloak when not signed in.
+    // S256 needs crypto.subtle, which browsers disable on insecure origins
+    // (LAN dev over plain http) — prod https always gets PKCE.
     keycloak
-      .init({ onLoad: "check-sso", pkceMethod: "S256" })
+      .init({
+        onLoad: "check-sso",
+        pkceMethod: window.isSecureContext ? "S256" : false,
+      })
       .then(() => setLoading(false))
       .catch(() => setLoading(false))
   }, [])

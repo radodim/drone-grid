@@ -52,6 +52,7 @@ services:
       # Secrets — resolved from host env vars in prod via Github secrets, fall back to dev defaults locally
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-changethis}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-changethis}
+      KC_HOSTNAME: ${KEYCLOAK_URL}
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
@@ -126,15 +127,11 @@ services:
     build:
       context: ./services/ui
       args:
-        # VITE_ vars are baked into static JS at build time (prod only, via bun run build).
-        # Values come from .env (auto-loaded for YAML substitution).
-        # These duplicate services/ui/.env because Vite reads that file directly in dev,
-        # but Docker build args are the only way to inject them during the prod image build.
-        VITE_API_URL: ${VITE_API_URL}
-        VITE_KEYCLOAK_URL: ${VITE_KEYCLOAK_URL}
-        VITE_KEYCLOAK_REALM: ${VITE_KEYCLOAK_REALM}
-        VITE_KEYCLOAK_CLIENT_ID: ${VITE_KEYCLOAK_CLIENT_ID}
-        VITE_WEBRTC_URL: ${VITE_WEBRTC_URL}
+        VITE_API_URL: ${API_URL}
+        VITE_KEYCLOAK_URL: ${KEYCLOAK_URL}
+        VITE_KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+        VITE_KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
+        VITE_WEBRTC_URL: ${WEBRTC_URL}
     env_file:
       - .env
     depends_on:
@@ -167,7 +164,6 @@ services:
     environment:
       MTX_RTSPTRANSPORTS: tcp
       MTX_WEBRTCADDITIONALHOSTS: webrtc.${DOMAIN}
-      # Docker-internal interface IPs are dead ends for every external peer;
       # the WHIP publisher (ffmpeg) commits to the first candidate instead of
       # racing them, so only the public hostname may be advertised.
       MTX_WEBRTCIPSFROMINTERFACES: "false"
