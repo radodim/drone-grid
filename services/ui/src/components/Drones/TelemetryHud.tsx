@@ -15,7 +15,7 @@ interface TelemetryHudProps {
 /**
  * Flight-critical OSD, always over the video: armed + flight mode top-left,
  * battery top-right, altitude on the right edge. The video center stays
- * clear. On @2xl+ containers the top-right column also carries the
+ * clear. On @hud+ containers the top-right column also carries the
  * diagnostics; narrow layouts render those via TelemetryStrip below the
  * picture instead. Each element carries exactly one non-derivable fact and
  * renders dashes when data is missing. Companion state is deliberately not
@@ -39,7 +39,7 @@ export function TelemetryHud({
         )}
       </div>
       <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
-        <div className="hidden @2xl:block">
+        <div className="hidden @hud:block">
           <LinkIndicators
             telemetryHealth={droneState.telemetryHealth}
             controlHealth={controlHealthFrom(controlStatus)}
@@ -47,16 +47,17 @@ export function TelemetryHud({
             videoHealth={droneState.videoHealth}
           />
         </div>
-        <div className="hidden @2xl:block">
+        <div className="hidden @hud:block">
           <GpsReadout gps={mavlink?.gps ?? null} />
         </div>
         <BatteryReadout
           percentage={mavlink?.battery_percentage ?? null}
           flightTimeRemainingS={mavlink?.flight_time_remaining ?? null}
         />
-        {/* Narrow: altitude joins the corner stack — a lone chip floating
-            mid-edge is the most intrusive spot on a small picture. */}
-        <div className="bg-black/60 rounded px-2 py-1 @2xl:hidden flex items-baseline gap-1.5">
+        {/* Corner-stack altitude chip — the default. The instrument tile
+            takes over only when the viewport is wide AND tall enough for
+            its right-edge slot (see `tall` in index.css). */}
+        <div className="bg-black/60 rounded px-2 py-1 @hud:tall:hidden flex items-baseline gap-1.5">
           <span className="text-white/70">ALT</span>
           <span className="text-sm font-semibold tabular-nums">
             {mavlink?.position?.rel_alt != null
@@ -66,9 +67,10 @@ export function TelemetryHud({
           <span className="text-white/70">m</span>
         </div>
       </div>
-      {/* Wide: right-edge instrument slot (the altitude-tape convention),
-          raised above center so short-viewport landscape clears the pad. */}
-      <div className="hidden @2xl:block absolute right-4 top-[40%] -translate-y-1/2">
+      {/* Wide AND tall: right-edge instrument slot (the altitude-tape
+          convention). Below 400px of height a 55px tile has no valid
+          position between the diagnostics column and the gimbal pad. */}
+      <div className="hidden @hud:tall:block absolute right-4 top-[40%] -translate-y-1/2">
         <Altimeter relAltMeters={mavlink?.position?.rel_alt ?? null} />
       </div>
     </div>
@@ -77,7 +79,7 @@ export function TelemetryHud({
 
 /**
  * Diagnostics (link health + GPS) for narrow layouts, centered rows meant
- * to sit below the picture — hidden at @2xl+, where the overlay's
+ * to sit below the picture — hidden at @hud+, where the overlay's
  * top-right column shows them instead.
  */
 export function TelemetryStrip({
@@ -88,7 +90,7 @@ export function TelemetryStrip({
   const mavlink = telemetry?.mavlink_telemetry ?? null
 
   return (
-    <div className="@2xl:hidden flex flex-col items-center gap-1.5 px-3 pt-2 text-white text-xs font-mono">
+    <div className="@hud:hidden flex flex-col items-center gap-1.5 px-3 pt-2 text-white text-xs font-mono">
       <LinkIndicators
         telemetryHealth={droneState.telemetryHealth}
         controlHealth={controlHealthFrom(controlStatus)}
@@ -132,7 +134,7 @@ function GpsReadout({ gps }: { gps: Gps | null }) {
 
   return (
     // Narrow: lives on the control deck (black) — scrim would be invisible.
-    <div className="bg-white/5 @2xl:bg-black/60 rounded px-2 py-1 flex items-baseline gap-1.5">
+    <div className="bg-white/5 @hud:bg-black/60 rounded px-2 py-1 flex items-baseline gap-1.5">
       <span className="text-white/70">SAT</span>
       <span className="text-sm font-semibold tabular-nums">
         {gps?.num_satellites ?? "—"}

@@ -81,7 +81,7 @@ export function HoldButton({
       onContextMenu={(e) => e.preventDefault()}
       className={cn(
         // Narrow: lifted surface on the control deck; wide: scrim over video.
-        "pointer-events-auto relative size-16 rounded-full bg-white/10 @2xl:bg-black/60 text-white",
+        "pointer-events-auto relative size-16 rounded-full bg-white/10 @hud:bg-black/60 text-white",
         "text-[10px] font-mono select-none touch-none [-webkit-touch-callout:none]",
         disabled && "opacity-50",
       )}

@@ -24,9 +24,9 @@ export const Route = createFileRoute("/_layout/drones_/$droneId")({
   }),
 })
 
-/** Container width the control overlay needs — keep equal to the @2xl
- * container breakpoint used in DroneControls/TelemetryHud. */
-const OVERLAY_MIN_WIDTH_PX = 672
+/** Container width the control overlay needs — keep equal to the @hud
+ * container breakpoint (--container-hud in index.css). */
+const OVERLAY_MIN_WIDTH_PX = 640
 
 function DroneStream() {
   const { droneId } = Route.useParams()
@@ -231,9 +231,9 @@ function DroneStream() {
           </button>
         </div>
         {/* Narrow: the "control deck" — hairline seam + a one-step surface
-            lift so the console reads apart from the screen. @2xl:contents
+            lift so the console reads apart from the screen. @hud:contents
             dissolves the wrapper so DroneControls overlays the container. */}
-        <div className="border-t border-white/15 bg-white/[0.04] @2xl:contents">
+        <div className="border-t border-white/15 bg-white/4 @hud:contents">
           <TelemetryStrip
             telemetry={telemetry}
             droneState={droneState}

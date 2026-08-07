@@ -90,7 +90,7 @@ export function TouchGimbal({
         // Narrow: sits on the control deck (black), needs a lifted surface;
         // wide: overlays video, needs a dark scrim instead.
         "relative rounded-lg border border-white/15 bg-white/5 select-none",
-        "@2xl:border-white/30 @2xl:bg-black/40",
+        "@hud:border-white/30 @hud:bg-black/40",
         interactive
           ? "pointer-events-auto touch-none"
           : "pointer-events-none opacity-80",

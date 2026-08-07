@@ -3,6 +3,22 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Smallest supported viewport: 360x640 (portrait) / 640x360 (landscape) —
+   Android's 360-wide logical class and the iPhone SE class (375x667).
+   The HUD overlay is designed against 640x360; `tall` gates elements that
+   need more height than the landscape floor provides (e.g. the altimeter
+   tile, which cannot fit between the diagnostics column and the gimbal
+   pad below ~400px). */
+@custom-variant tall (@media (min-height: 400px));
+
+@theme {
+  /* Container width at which the FPV control overlay fits (pads + arm
+     cluster side by side ≈ 590px + breathing). 640 deliberately clears
+     iPhone SE-class landscape (667px). Keep OVERLAY_MIN_WIDTH_PX in the
+     drone stream route equal to this. */
+  --container-hud: 40rem;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
