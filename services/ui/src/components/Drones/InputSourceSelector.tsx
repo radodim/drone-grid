@@ -23,7 +23,7 @@ export function InputSourceSelector({
   onSelect,
 }: InputSourceSelectorProps) {
   return (
-    <div className="pointer-events-auto bg-black/60 rounded-full px-1 py-1 flex gap-1">
+    <div className="pointer-events-auto bg-white/10 @2xl:bg-black/60 rounded-full px-1 py-1 flex gap-1">
       {sources.map(({ kind, connected }) => {
         const Icon = ICON[kind]
         return (

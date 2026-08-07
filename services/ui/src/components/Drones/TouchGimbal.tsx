@@ -18,6 +18,12 @@ interface TouchGimbalProps {
 }
 
 const PAD_SIZE_PX = 144
+const KNOB_SIZE_PX = 36 // keep in sync with the knob's size-9
+// The knob stays inside the gate: full deflection means touching the edge,
+// never crossing it — otherwise it clips on container bounds and covers
+// the caption at sticky-100% throttle.
+const KNOB_INSET_PCT = (KNOB_SIZE_PX / 2 / PAD_SIZE_PX) * 100
+const KNOB_TRAVEL_PCT = 100 - 2 * KNOB_INSET_PCT
 
 /**
  * One square RC-style gimbal pad. Unlike a round joystick, X and Y clamp
@@ -81,7 +87,10 @@ export function TouchGimbal({
       onPointerCancel={interactive ? handleUp : undefined}
       style={{ width: PAD_SIZE_PX, height: PAD_SIZE_PX }}
       className={cn(
-        "relative rounded-lg border border-white/30 bg-black/40 select-none",
+        // Narrow: sits on the control deck (black), needs a lifted surface;
+        // wide: overlays video, needs a dark scrim instead.
+        "relative rounded-lg border border-white/15 bg-white/5 select-none",
+        "@2xl:border-white/30 @2xl:bg-black/40",
         interactive
           ? "pointer-events-auto touch-none"
           : "pointer-events-none opacity-80",
@@ -96,13 +105,14 @@ export function TouchGimbal({
           interactive && drag == null && "transition-[left,top] duration-150",
         )}
         style={{
-          left: `${((x + 1) / 2) * 100}%`,
-          top: `${((1 - y) / 2) * 100}%`,
+          left: `${KNOB_INSET_PCT + ((x + 1) / 2) * KNOB_TRAVEL_PCT}%`,
+          top: `${KNOB_INSET_PCT + ((1 - y) / 2) * KNOB_TRAVEL_PCT}%`,
           transform: "translate(-50%, -50%)",
         }}
       />
       {label && (
-        <div className="absolute -bottom-5 inset-x-0 text-center text-[10px] font-mono text-white/70">
+        // Below the pad — safe again now that the knob stays inside the gate.
+        <div className="absolute -bottom-5 inset-x-0 text-center text-[10px] font-mono text-white/50">
           {label}
         </div>
       )}

@@ -71,7 +71,9 @@ function HealthDot({
   return (
     <div
       title={title}
-      className="bg-black/60 text-white rounded px-2 py-1 flex items-center gap-2"
+      // Narrow: on the control deck (black), where a black scrim vanishes;
+      // wide: over video, where the scrim earns its keep.
+      className="bg-white/5 @2xl:bg-black/60 text-white rounded px-2 py-1 flex items-center gap-2"
     >
       <span
         className={cn("inline-block size-2 rounded-full", DOT_COLOR[state])}

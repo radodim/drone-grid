@@ -8,6 +8,7 @@
       "!**/node_modules/**/*",
       "!**/src/routeTree.gen.ts",
       "!**/src/client/**/*",
+      "!**/src/lib/mediamtx-reader.js",
       "!**/src/components/ui/**/*",
       "!**/playwright-report",
       "!**/playwright.config.ts"

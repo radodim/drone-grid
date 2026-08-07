@@ -95,7 +95,14 @@ export function ShareDialog({ droneId }: { droneId: string }) {
           Share
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      {/* Top-anchored below sm: a centered dialog ends up half-hidden behind
+          the soft keyboard (which shrinks only the visual viewport). Scroll
+          + max-height keep every control reachable while typing. No focus
+          on open, so the keyboard appears only when a field is tapped. */}
+      <DialogContent
+        className="top-8 translate-y-0 max-h-[calc(100dvh-4rem)] overflow-y-auto sm:top-[50%] sm:translate-y-[-50%] sm:max-w-lg"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Share live view</DialogTitle>
           <DialogDescription>
@@ -126,8 +133,8 @@ export function ShareDialog({ droneId }: { droneId: string }) {
           </div>
         )}
 
-        <div className="flex items-end gap-2">
-          <div className="flex-1 space-y-1">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-2">
+          <div className="sm:flex-1 space-y-1">
             <span className="text-sm">Label (optional)</span>
             <Input
               placeholder="e.g. for the client"
@@ -138,7 +145,7 @@ export function ShareDialog({ droneId }: { droneId: string }) {
           <div className="space-y-1">
             <span className="text-sm">Expires</span>
             <Select value={ttlHours} onValueChange={setTtlHours}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full sm:w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -151,6 +158,7 @@ export function ShareDialog({ droneId }: { droneId: string }) {
             </Select>
           </div>
           <LoadingButton
+            className="w-full sm:w-auto"
             loading={createMutation.isPending}
             onClick={() => createMutation.mutate()}
           >

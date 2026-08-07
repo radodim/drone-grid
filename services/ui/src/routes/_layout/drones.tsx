@@ -72,12 +72,7 @@ function Drones() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Drones</h1>
-          <p className="text-muted-foreground">
-            Register and manage your drones
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight">Drones</h1>
         <AddDrone />
       </div>
       <DronesTable />

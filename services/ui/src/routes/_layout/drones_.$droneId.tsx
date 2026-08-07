@@ -1,12 +1,14 @@
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { ArrowLeft, Maximize, Minimize } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import "@/lib/mediamtx-reader"
+import { DronesService } from "@/client"
 import { DroneControls } from "@/components/Drones/DroneControls"
 import { ShareDialog } from "@/components/Drones/ShareDialog"
-import { TelemetryHud } from "@/components/Drones/TelemetryHud"
+import { TelemetryHud, TelemetryStrip } from "@/components/Drones/TelemetryHud"
 import { Button } from "@/components/ui/button"
 import { useControlInput } from "@/hooks/useControlInput"
 import { useControlSocket } from "@/hooks/useControlSocket"
@@ -22,6 +24,10 @@ export const Route = createFileRoute("/_layout/drones_/$droneId")({
   }),
 })
 
+/** Container width the control overlay needs — keep equal to the @2xl
+ * container breakpoint used in DroneControls/TelemetryHud. */
+const OVERLAY_MIN_WIDTH_PX = 672
+
 function DroneStream() {
   const { droneId } = Route.useParams()
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -29,6 +35,16 @@ function DroneStream() {
   const readerRef = useRef<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  // The element must not assert a ratio the stream doesn't have (the Pi
+  // camera pushes 4:3) — track the real one; 16:9 is only the pre-metadata
+  // placeholder. WebRTC may change resolution mid-session ('resize' event).
+  const [streamAspect, setStreamAspect] = useState("16 / 9")
+  const updateStreamAspect = () => {
+    const video = videoRef.current
+    if (video && video.videoWidth > 0 && video.videoHeight > 0) {
+      setStreamAspect(`${video.videoWidth} / ${video.videoHeight}`)
+    }
+  }
   const {
     telemetry,
     status: telemetryStatus,
@@ -40,6 +56,13 @@ function DroneStream() {
   // Owned here (not in DroneControls) so the HUD's CTRL chip and the
   // command stream share one socket.
   const control = useControlSocket(droneId)
+  // Header identity: the drone's name beats a generic "Live Stream" label.
+  // Same key as the list page, so navigating from there hits cache.
+  const dronesQuery = useQuery({
+    queryKey: ["drones"],
+    queryFn: () => DronesService.listDrones(),
+  })
+  const droneName = dronesQuery.data?.find((d) => d.id === droneId)?.name
   const droneState = useDroneState({
     telemetry,
     lastMessageAt,
@@ -72,8 +95,17 @@ function DroneStream() {
   }, [droneState.telemetryHealth, droneState.fcLinkHealth])
 
   useEffect(() => {
-    const onFullscreenChange = () =>
-      setIsFullscreen(document.fullscreenElement === containerRef.current)
+    const onFullscreenChange = () => {
+      const active = document.fullscreenElement === containerRef.current
+      setIsFullscreen(active)
+      if (!active) {
+        try {
+          screen.orientation.unlock()
+        } catch {
+          // never locked, or unsupported (iOS/desktop)
+        }
+      }
+    }
     document.addEventListener("fullscreenchange", onFullscreenChange)
     return () =>
       document.removeEventListener("fullscreenchange", onFullscreenChange)
@@ -81,11 +113,27 @@ function DroneStream() {
 
   // Fullscreen the container (not the <video>) so the HUD and controls
   // stay visible.
-  const toggleFullscreen = () => {
+  const toggleFullscreen = async () => {
     if (document.fullscreenElement) {
       document.exitFullscreen()
-    } else {
-      containerRef.current?.requestFullscreen()
+      return
+    }
+    await containerRef.current?.requestFullscreen()
+    // Phones only (short side below the overlay threshold): rotating is the
+    // device's sole path to an overlay-capable width, and holding the lock
+    // keeps the control layout from reshuffling under the pilot's thumbs.
+    // Tablets are never locked — their portrait already fits the overlay.
+    // Unsupported (iOS/desktop) rejects and the width-gated layout applies.
+    if (Math.min(screen.width, screen.height) < OVERLAY_MIN_WIDTH_PX) {
+      try {
+        // lib.dom omits lock() (Firefox desktop lacks it) — feature-detect.
+        const orientation = screen.orientation as ScreenOrientation & {
+          lock?: (orientation: "landscape") => Promise<void>
+        }
+        await orientation.lock?.("landscape")
+      } catch {
+        // fall through to the stacked fullscreen layout
+      }
     }
   }
 
@@ -123,54 +171,80 @@ function DroneStream() {
             <ArrowLeft className="size-4" />
           </Link>
         </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">Live Stream</h1>
-          <p className="text-muted-foreground font-mono text-sm">{droneId}</p>
-        </div>
+        <h1 className="flex-1 truncate text-2xl font-bold tracking-tight">
+          {droneName ?? "Live Stream"}
+        </h1>
         <ShareDialog droneId={droneId} />
       </div>
+      {/* @container: the controls/HUD gate on THIS element's width, so the
+          inline card, fullscreen, and any sidebar-squeezed layout all
+          resolve correctly without media queries. */}
       <div
         ref={containerRef}
         className={cn(
-          "rounded-lg overflow-hidden border bg-black relative",
-          isFullscreen &&
-            "flex items-center justify-center rounded-none border-0",
+          "@container relative rounded-lg overflow-hidden border bg-black flex flex-col",
+          isFullscreen && "rounded-none border-0",
         )}
       >
-        <video
-          ref={videoRef}
-          muted
-          autoPlay
-          playsInline
-          className={cn("w-full aspect-video", isFullscreen && "max-h-full")}
-        />
-        {error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-            <p className="text-destructive text-sm">{error}</p>
-          </div>
-        )}
-        <TelemetryHud
-          telemetry={telemetry}
-          droneState={droneState}
-          controlStatus={control.status}
-        />
-        <DroneControls
-          droneState={droneState}
-          controlInput={controlInput}
-          control={control}
-        />
-        <button
-          type="button"
-          onClick={toggleFullscreen}
-          title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-          className="absolute bottom-4 right-4 rounded bg-black/60 p-2 text-white"
-        >
-          {isFullscreen ? (
-            <Minimize className="size-4" />
-          ) : (
-            <Maximize className="size-4" />
+        {/* HUD scopes to the video area; stacked controls flow below it. */}
+        <div
+          className={cn(
+            "relative",
+            isFullscreen && "flex-1 min-h-0 flex items-center justify-center",
           )}
-        </button>
+        >
+          <video
+            ref={videoRef}
+            muted
+            autoPlay
+            playsInline
+            onLoadedMetadata={updateStreamAspect}
+            onResize={updateStreamAspect}
+            style={{ aspectRatio: streamAspect }}
+            className={cn(
+              // block: inline videos add a phantom baseline gap below.
+              "block w-full",
+              isFullscreen && "max-h-full object-contain",
+            )}
+          />
+          {error && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+              <p className="text-destructive text-sm">{error}</p>
+            </div>
+          )}
+          <TelemetryHud
+            telemetry={telemetry}
+            droneState={droneState}
+            controlStatus={control.status}
+          />
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            className="absolute bottom-4 right-4 rounded bg-black/60 p-2 text-white"
+          >
+            {isFullscreen ? (
+              <Minimize className="size-4" />
+            ) : (
+              <Maximize className="size-4" />
+            )}
+          </button>
+        </div>
+        {/* Narrow: the "control deck" — hairline seam + a one-step surface
+            lift so the console reads apart from the screen. @2xl:contents
+            dissolves the wrapper so DroneControls overlays the container. */}
+        <div className="border-t border-white/15 bg-white/[0.04] @2xl:contents">
+          <TelemetryStrip
+            telemetry={telemetry}
+            droneState={droneState}
+            controlStatus={control.status}
+          />
+          <DroneControls
+            droneState={droneState}
+            controlInput={controlInput}
+            control={control}
+          />
+        </div>
       </div>
     </div>
   )

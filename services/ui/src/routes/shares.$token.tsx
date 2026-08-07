@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 
 import "@/lib/mediamtx-reader"
-import { TelemetryHud } from "@/components/Drones/TelemetryHud"
+import { TelemetryHud, TelemetryStrip } from "@/components/Drones/TelemetryHud"
 import { useDroneState } from "@/hooks/useDroneState"
 import { useTelemetrySocket } from "@/hooks/useTelemetrySocket"
 
@@ -82,7 +82,7 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
   }, [droneId, token])
 
   return (
-    <div className="relative h-screen w-screen bg-black">
+    <div className="@container relative h-screen w-screen bg-black">
       <video
         ref={videoRef}
         muted
@@ -97,6 +97,11 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
       )}
       {/* No controlStatus → CTRL chip hidden; no DroneControls mounted. */}
       <TelemetryHud telemetry={telemetry} droneState={droneState} />
+      {/* This video fills the screen — no below-the-picture flow — so the
+          narrow diagnostics strip pins to the bottom letterbox instead. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-4">
+        <TelemetryStrip telemetry={telemetry} droneState={droneState} />
+      </div>
     </div>
   )
 }

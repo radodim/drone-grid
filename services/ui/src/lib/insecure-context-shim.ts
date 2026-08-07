@@ -8,4 +8,4 @@ if (!window.isSecureContext && crypto.randomUUID === undefined) {
     ).join("")) as Crypto["randomUUID"]
 }
 
-export { }
+export {}

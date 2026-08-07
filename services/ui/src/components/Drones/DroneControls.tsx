@@ -49,9 +49,11 @@ export function DroneControls({
   }, [status, send, getAxes])
 
   return (
-    <>
-      <GimbalPads controlInput={controlInput} />
-      <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
+    // Width-gated: below @2xl the container can't fit pads + cluster side
+    // by side, so controls stack in normal flow under the video; at @2xl+
+    // they overlay it (the classic FPV arrangement).
+    <div className="pointer-events-none flex flex-col gap-2 px-3 pt-2 pb-3 @2xl:absolute @2xl:inset-0 @2xl:p-0">
+      <div className="flex items-center justify-center gap-4 @2xl:absolute @2xl:bottom-4 @2xl:left-1/2 @2xl:-translate-x-1/2">
         <HoldButton
           label="ARM"
           holdMs={2000}
@@ -78,7 +80,8 @@ export function DroneControls({
           }}
         />
       </div>
-    </>
+      <GimbalPads controlInput={controlInput} />
+    </div>
   )
 }
 
@@ -93,7 +96,8 @@ function GimbalPads({ controlInput }: { controlInput: ControlInputState }) {
   const axes = useLiveAxes(getAxes)
 
   return (
-    <div className="pointer-events-none absolute inset-x-4 bottom-16 flex justify-between">
+    // pb-5 reserves room for the pads' below-edge captions in stacked flow.
+    <div className="flex justify-between pb-5 @2xl:absolute @2xl:inset-x-4 @2xl:bottom-16 @2xl:pb-0">
       <TouchGimbal
         label={`THR ${Math.round(axes.throttle * 100)}% / YAW`}
         interactive={interactive}
