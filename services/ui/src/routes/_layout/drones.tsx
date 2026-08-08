@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { Search } from "lucide-react"
+import { Drone } from "lucide-react"
 import { Suspense } from "react"
 
 import { DronesService } from "@/client"
@@ -47,11 +47,11 @@ function DronesTableContent() {
     return (
       <div className="flex flex-col items-center justify-center text-center py-12">
         <div className="rounded-full bg-muted p-4 mb-4">
-          <Search className="h-8 w-8 text-muted-foreground" />
+          <Drone className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold">You don't have any drones yet</h3>
+        <h3 className="text-lg font-semibold">No drones yet</h3>
         <p className="text-muted-foreground">
-          Register a new drone to get started
+          Add a drone to get the credentials its companion needs
         </p>
       </div>
     )
@@ -69,15 +69,13 @@ function DronesTable() {
 }
 
 function Drones() {
+  // Narrower than the layout's max-w-7xl: a fleet list can't fill a video
+  // player's width — capping the column keeps the table's gaps modest and
+  // the whitespace at the page margins, where it reads as intended.
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Drones</h1>
-          <p className="text-muted-foreground">
-            Register and manage your drones
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight">Drones</h1>
         <AddDrone />
       </div>
       <DronesTable />

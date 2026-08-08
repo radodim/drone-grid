@@ -29,6 +29,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+// Columns opt into layout via meta.className, applied to both th and td —
+// e.g. responsive classes that gate a column to certain breakpoints.
+declare module "@tanstack/react-table" {
+  interface ColumnMeta<TData, TValue> {
+    className?: string
+  }
+}
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
@@ -55,7 +63,7 @@ export function DataTable<TData, TValue>({
                 return (
                   <TableHead
                     key={header.id}
-                    style={{ width: `${100 / columns.length}%` }}
+                    className={header.column.columnDef.meta?.className}
                   >
                     {header.isPlaceholder
                       ? null
@@ -74,7 +82,10 @@ export function DataTable<TData, TValue>({
             table.getRowModel().rows.map((row) => (
               <TableRow key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell
+                    key={cell.id}
+                    className={cell.column.columnDef.meta?.className}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

@@ -8,6 +8,7 @@ import { createRouter, RouterProvider } from "@tanstack/react-router"
 import { StrictMode, useEffect, useRef, useState } from "react"
 import ReactDOM from "react-dom/client"
 import { ApiError, OpenAPI } from "./client"
+import { BootScreen } from "./components/Common/BootScreen"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
 import "./index.css"
@@ -21,6 +22,23 @@ OpenAPI.TOKEN = async () => {
     await keycloak.updateToken(30)
   }
   return keycloak.token || ""
+}
+
+// Proactive refresh: REST refreshes lazily above, but a pilot parked on the
+// stream page generates no REST — without this, prod's 5-minute tokens go
+// stale and every socket/WHEP reconnect is rejected until a page reload.
+// A failed refresh means the SSO session itself ended: redirect to login,
+// same as handleApiError does for REST (never fires for share-link viewers,
+// who hold no Keycloak token).
+keycloak.onTokenExpired = () => {
+  keycloak.updateToken(30).catch(() => {
+    // Offline (field LTE blip coinciding with expiry): redirecting would
+    // swap the cockpit for an unreachable-Keycloak error page — wait
+    // instead; the reconnect paths refresh again once connectivity
+    // returns. Online + failed = the SSO session truly ended: re-login,
+    // same as REST's 401 handling.
+    if (navigator.onLine) keycloak.login()
+  })
 }
 
 const handleApiError = (error: Error) => {
@@ -61,17 +79,17 @@ function App() {
       .init({
         onLoad: "check-sso",
         pkceMethod: window.isSecureContext ? "S256" : false,
+        // The SSO-monitor iframe probes 3p-cookie access via
+        // requestStorageAccess, which insecure origins reject with console
+        // errors on every load — keep session monitoring to https.
+        checkLoginIframe: window.isSecureContext,
       })
       .then(() => setLoading(false))
       .catch(() => setLoading(false))
   }, [])
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-background text-muted-foreground">
-        Loading...
-      </div>
-    )
+    return <BootScreen message="connecting…" pulse />
   }
 
   return (

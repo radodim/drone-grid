@@ -39,7 +39,10 @@ type FormData = z.infer<typeof formSchema>
 
 const AddDrone = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const [createdSecret, setCreatedSecret] = useState<string | null>(null)
+  const [created, setCreated] = useState<{
+    id: string
+    secret: string
+  } | null>(null)
   const queryClient = useQueryClient()
   const { showErrorToast } = useCustomToast()
 
@@ -56,7 +59,7 @@ const AddDrone = () => {
     mutationFn: (data: DroneCreate) =>
       DronesService.createDrone({ requestBody: data }),
     onSuccess: (drone) => {
-      setCreatedSecret(drone.secret)
+      setCreated({ id: drone.id, secret: drone.secret })
       form.reset()
     },
     onError: handleError.bind(showErrorToast),
@@ -67,7 +70,7 @@ const AddDrone = () => {
 
   const close = () => {
     setIsOpen(false)
-    setCreatedSecret(null)
+    setCreated(null)
     form.reset()
   }
 
@@ -86,19 +89,25 @@ const AddDrone = () => {
           Add Drone
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      {/* Same soft-keyboard handling as ShareDialog: top-anchored below sm
+          so the keyboard can't hide the dialog, and no focus on open — the
+          keyboard appears only when the name field is tapped. */}
+      <DialogContent
+        className="top-8 translate-y-0 max-h-[calc(100dvh-4rem)] overflow-y-auto sm:top-[50%] sm:translate-y-[-50%] sm:max-w-md"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Add Drone</DialogTitle>
           <DialogDescription>
-            {createdSecret
-              ? "Your drone is registered. Save its secret below."
-              : "Register a new drone. A secret will be generated and shown once."}
+            {created
+              ? "Your drone is registered. Save its credentials below."
+              : "Register a new drone. Its credentials will be generated and shown once."}
           </DialogDescription>
         </DialogHeader>
 
-        {createdSecret ? (
+        {created ? (
           <div className="space-y-4">
-            <SecretReveal secret={createdSecret} />
+            <SecretReveal droneId={created.id} secret={created.secret} />
             <DialogFooter>
               <Button onClick={close}>Done</Button>
             </DialogFooter>

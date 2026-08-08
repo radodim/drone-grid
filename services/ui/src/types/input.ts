@@ -24,7 +24,7 @@ export interface InputSourceState {
   axesRef: React.RefObject<ControlAxes>
   /** Sticky sources (touch/keyboard throttle) accept throttle writes here —
    * zeroed on disarm so a held throttle can't carry into the next arm, and
-   * seeded from the previous source when switched to while armed. */
+   * seeded to hover (zero climb) when switched to while armed. */
   setThrottle?: (value: number) => void
 }
 

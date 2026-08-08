@@ -23,7 +23,7 @@ export function InputSourceSelector({
   onSelect,
 }: InputSourceSelectorProps) {
   return (
-    <div className="pointer-events-auto bg-black/60 rounded-full px-1 py-1 flex gap-1">
+    <div className="pointer-events-auto bg-white/10 @hud:bg-black/60 rounded-full px-1 py-1 flex gap-1">
       {sources.map(({ kind, connected }) => {
         const Icon = ICON[kind]
         return (
@@ -35,7 +35,9 @@ export function InputSourceSelector({
             aria-label={`Control with ${kind}`}
             onClick={() => onSelect(kind)}
             className={cn(
-              "rounded-full p-1.5 text-white",
+              // p-2.5 → ~36px touch target (44 would balloon the cluster).
+              "rounded-full p-2.5 text-white",
+              "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white/60",
               kind === activeKind && "bg-white/25",
               !connected && "opacity-40",
             )}

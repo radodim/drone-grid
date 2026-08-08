@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 import { HoldButton } from "@/components/Drones/HoldButton"
 import { InputSourceSelector } from "@/components/Drones/InputSourceSelector"
@@ -49,15 +50,18 @@ export function DroneControls({
   }, [status, send, getAxes])
 
   return (
-    <>
-      <GimbalPads controlInput={controlInput} />
-      <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
+    // Width-gated: below @hud the container can't fit pads + cluster side
+    // by side, so controls stack in normal flow under the video; at @hud+
+    // they overlay it (the classic FPV arrangement).
+    <div className="pointer-events-none flex flex-col gap-2 px-3 pt-2 pb-3 @hud:absolute @hud:inset-0 @hud:p-0">
+      <div className="flex items-center justify-center gap-4 @hud:absolute @hud:bottom-4 @hud:left-1/2 @hud:-translate-x-1/2">
         <HoldButton
           label="ARM"
           holdMs={2000}
           variant="arm"
           disabled={!droneState.canArm.enabled}
           disabledReason={droneState.canArm.reason}
+          onDisabledPress={explainDisabled("arm", droneState.canArm.reason)}
           onComplete={() => send(controlMessages.arm())}
         />
         <InputSourceSelector
@@ -71,6 +75,10 @@ export function DroneControls({
           variant="disarm"
           disabled={!droneState.canDisarm.enabled}
           disabledReason={droneState.canDisarm.reason}
+          onDisabledPress={explainDisabled(
+            "disarm",
+            droneState.canDisarm.reason,
+          )}
           onComplete={() => {
             send(controlMessages.disarm())
             // A sticky throttle must not carry into the next arm.
@@ -78,8 +86,20 @@ export function DroneControls({
           }}
         />
       </div>
-    </>
+      <GimbalPads controlInput={controlInput} />
+    </div>
   )
+}
+
+/** Pressing a disabled hold-button explains why it's inert — the only
+ * channel touch users have (title tooltips are hover-only). The stable id
+ * keeps repeat taps updating one toast instead of stacking. */
+function explainDisabled(action: string, reason: string | null): () => void {
+  return () =>
+    toast.warning(`Can't ${action}`, {
+      id: `hold-${action}`,
+      description: reason ?? undefined,
+    })
 }
 
 /** Mode-2 gimbal pads, always visible: interactive sticks when touch is the
@@ -93,7 +113,8 @@ function GimbalPads({ controlInput }: { controlInput: ControlInputState }) {
   const axes = useLiveAxes(getAxes)
 
   return (
-    <div className="pointer-events-none absolute inset-x-4 bottom-16 flex justify-between">
+    // pb-5 reserves room for the pads' below-edge captions in stacked flow.
+    <div className="flex justify-between pb-5 @hud:absolute @hud:inset-x-4 @hud:bottom-16 @hud:pb-0">
       <TouchGimbal
         label={`THR ${Math.round(axes.throttle * 100)}% / YAW`}
         interactive={interactive}

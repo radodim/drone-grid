@@ -1,46 +1,38 @@
 import { Link } from "@tanstack/react-router"
 import type { ColumnDef } from "@tanstack/react-table"
-import { Check, Circle, Copy } from "lucide-react"
+import { Circle } from "lucide-react"
 
 import type { DroneResponse } from "@/client"
-import { Button } from "@/components/ui/button"
-import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import { DroneActionsMenu } from "./DroneActionsMenu"
-
-function CopyId({ id }: { id: string }) {
-  const [copiedText, copy] = useCopyToClipboard()
-  const isCopied = copiedText === id
-
-  return (
-    <div className="flex items-center gap-1.5 group whitespace-nowrap">
-      <span className="font-mono text-xs text-muted-foreground">{id}</span>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-6 opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={() => copy(id)}
-      >
-        {isCopied ? (
-          <Check className="size-3 text-green-500" />
-        ) : (
-          <Copy className="size-3" />
-        )}
-        <span className="sr-only">Copy ID</span>
-      </Button>
-    </div>
-  )
-}
 
 export const columns: ColumnDef<DroneResponse>[] = [
   {
-    accessorKey: "id",
-    header: "ID",
-    cell: ({ row }) => <CopyId id={row.original.id} />,
-  },
-  {
     accessorKey: "name",
     header: "Name",
-    cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+    // Deliberately not a link: an offline drone's stream page is a wall of
+    // reconnect noise. Live (below) is the only stream door; share links
+    // are managed on the Shares page instead.
+    // block + max-w: cells are whitespace-nowrap, so an untruncated long
+    // name would force the whole table into horizontal scroll.
+    cell: ({ row }) => (
+      <span className="block max-w-[40ch] truncate font-medium">
+        {row.original.name}
+      </span>
+    ),
+  },
+  {
+    // Desktop-only: the UUID is what lands in companion.env, so seeing it
+    // beside the name has provisioning value where width allows. "Copy ID"
+    // in the actions menu stays the one-click path (and the only one on
+    // phones, where this column is hidden).
+    accessorKey: "id",
+    header: "ID",
+    meta: { className: "hidden lg:table-cell" },
+    cell: ({ row }) => (
+      <span className="font-mono text-xs text-muted-foreground">
+        {row.original.id}
+      </span>
+    ),
   },
   {
     accessorKey: "stream_url",

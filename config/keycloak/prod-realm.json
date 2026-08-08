@@ -1,7 +1,8 @@
 {
   "id": "8f3b0c36-bf72-47ac-a573-60d56a23b508",
   "realm": "drone-grid",
-  "displayName": "",
+  "displayName": "Drone Grid",
+  "loginTheme": "drone-grid",
   "displayNameHtml": "",
   "notBefore": 0,
   "defaultSignatureAlgorithm": "RS256",

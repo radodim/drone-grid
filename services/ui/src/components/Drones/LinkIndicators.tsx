@@ -1,14 +1,15 @@
+import { HudChip } from "@/components/Drones/HudChip"
 import type {
   FcLinkHealth,
   TelemetryHealth,
   VideoHealth,
 } from "@/hooks/useDroneState"
-import { cn } from "@/lib/utils"
 
 interface LinkIndicatorsProps {
   telemetryHealth: TelemetryHealth
-  /** Omitted for read-only share viewers — they hold no control channel. */
-  controlHealth?: "ok" | "down"
+  /** Omitted for read-only share viewers — they hold no control channel.
+   * "stale" = socket open but the drone is silent, so delivery is doubtful. */
+  controlHealth?: "ok" | "stale" | "down"
   fcLinkHealth: FcLinkHealth
   videoHealth: VideoHealth
 }
@@ -32,7 +33,9 @@ export function LinkIndicators({
   videoHealth,
 }: LinkIndicatorsProps) {
   return (
-    <div className="pointer-events-auto cursor-default flex gap-2 text-xs font-mono">
+    // wrap: on the very narrowest phones the four pills + the strip's toggle
+    // clearance don't fit one line — wrapping beats clipping.
+    <div className="pointer-events-auto cursor-default flex flex-wrap justify-center gap-2 text-xs font-mono">
       {controlHealth && (
         <HealthDot
           label="CTRL"
@@ -69,14 +72,13 @@ function HealthDot({
   title: string
 }) {
   return (
-    <div
+    <HudChip
+      variant="adaptive"
+      dot={DOT_COLOR[state]}
       title={title}
-      className="bg-black/60 text-white rounded px-2 py-1 flex items-center gap-2"
+      className="pointer-events-auto cursor-default"
     >
-      <span
-        className={cn("inline-block size-2 rounded-full", DOT_COLOR[state])}
-      />
       {label}
-    </div>
+    </HudChip>
   )
 }

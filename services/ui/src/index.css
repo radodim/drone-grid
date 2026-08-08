@@ -3,6 +3,22 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Smallest supported viewport: 360x640 (portrait) / 640x360 (landscape) —
+   Android's 360-wide logical class and the iPhone SE class (375x667).
+   The HUD overlay is designed against 640x360; `tall` gates elements that
+   need more height than the landscape floor provides (e.g. the altimeter
+   tile, which cannot fit between the diagnostics column and the gimbal
+   pad below ~400px). */
+@custom-variant tall (@media (min-height: 400px));
+
+@theme {
+  /* Container width at which the FPV control overlay fits (pads + arm
+     cluster side by side ≈ 590px + breathing). 640 deliberately clears
+     iPhone SE-class landscape (667px). Keep OVERLAY_MIN_WIDTH_PX in the
+     drone stream route equal to this. */
+  --container-hud: 40rem;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -49,7 +65,9 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.5982 0.10687 182.4689);
+  /* Brand: the cloud-quad logo's sky-blue family (favicon.svg). Light mode
+     uses the gradient's deep anchor #2E6CB8 — 5.3:1 on white text. */
+  --primary: oklch(0.5301 0.1355 255.26);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -60,7 +78,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.708 0.05 247);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -68,12 +86,12 @@
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.5982 0.10687 182.4689);
+  --sidebar-primary: oklch(0.5301 0.1355 255.26);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: oklch(0.708 0.05 247);
 }
 
 .dark {
@@ -83,8 +101,10 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.65 0.10687 182.4689);
-  --primary-foreground: oklch(0.985 0 0);
+  /* Dark mode flips the pairing: the logo's brighter arc blue #4C9FE8 as
+     the surface, near-black text on it (white fails contrast at 2.8:1). */
+  --primary: oklch(0.6832 0.135 247.79);
+  --primary-foreground: oklch(0.145 0.02 250);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -94,7 +114,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.556 0.06 247);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -102,12 +122,12 @@
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.65 0.10687 182.4689);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.6832 0.135 247.79);
+  --sidebar-primary-foreground: oklch(0.145 0.02 250);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.556 0.06 247);
 }
 
 @layer base {

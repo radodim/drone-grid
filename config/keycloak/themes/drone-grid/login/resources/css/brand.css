@@ -1,0 +1,36 @@
+/* Drone Grid login brand — layered after keycloak.v2's styles.css (see
+   theme.properties). Palette source: services/ui/public/favicon.svg. */
+
+:root {
+  --pf-v5-global--primary-color--100: #2e6cb8;
+  --pf-v5-global--primary-color--200: #24558f;
+  --pf-v5-global--link--Color: #2e6cb8;
+  --pf-v5-global--link--Color--hover: #24558f;
+}
+
+/* The wrapper's only child is the raw realm name text — zero it and
+   rebuild the lockup: cloud-quad mark above, proper wordmark below. */
+#kc-header-wrapper {
+  font-size: 0;
+  background: url(../img/logo.svg) no-repeat center top;
+  background-size: 96px 96px;
+  padding: 108px 0 0;
+}
+
+#kc-header-wrapper::after {
+  content: "Drone Grid";
+  display: block;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  background-color: #2e6cb8;
+}
+
+.pf-v5-c-button.pf-m-primary:hover,
+.pf-v5-c-button.pf-m-primary:focus {
+  background-color: #24558f;
+}

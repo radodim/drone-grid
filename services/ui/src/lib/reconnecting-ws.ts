@@ -8,8 +8,9 @@ export interface ReconnectingSocket {
 
 interface ReconnectingSocketOptions {
   /** Called per connection attempt, so each retry picks up a fresh URL
-   * (and with it the current Keycloak token). */
-  buildUrl: () => string
+   * (and with it the current Keycloak token). May be async — token refresh
+   * happens inside it. */
+  buildUrl: () => string | Promise<string>
   onMessage?: (event: MessageEvent) => void
   onStatusChange: (status: SocketStatus) => void
   baseDelayMs?: number
@@ -33,9 +34,11 @@ export function openReconnectingSocket({
   let timer: number | null = null
   let closed = false
 
-  const connect = () => {
+  const connect = async () => {
     onStatusChange(attempt === 0 ? "connecting" : "reconnecting")
-    ws = new WebSocket(buildUrl())
+    const url = await buildUrl()
+    if (closed) return // close() raced the async URL build
+    ws = new WebSocket(url)
     ws.addEventListener("open", () => {
       attempt = 0
       onStatusChange("open")
@@ -49,7 +52,7 @@ export function openReconnectingSocket({
       timer = window.setTimeout(connect, delay)
     })
   }
-  connect()
+  void connect()
 
   return {
     send: (data: string) => {

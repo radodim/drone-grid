@@ -55,6 +55,8 @@ services:
       KC_HOSTNAME: ${KEYCLOAK_URL}
     ports:
       - "127.0.0.1:8080:8080"
+    volumes:
+      - ./config/keycloak/themes:/opt/keycloak/themes:ro
     depends_on:
       db:
         condition: service_healthy

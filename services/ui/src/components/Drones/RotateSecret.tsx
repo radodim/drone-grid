@@ -72,7 +72,7 @@ const RotateSecret = ({ id, name, onSuccess }: RotateSecretProps) => {
 
         {newSecret ? (
           <div className="space-y-4">
-            <SecretReveal secret={newSecret} />
+            <SecretReveal droneId={id} secret={newSecret} />
             <DialogFooter>
               <Button onClick={close}>Done</Button>
             </DialogFooter>

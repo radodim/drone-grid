@@ -8,6 +8,9 @@ interface HoldButtonProps {
   onComplete: () => void
   disabled: boolean
   disabledReason: string | null
+  /** Fired when a disabled button is pressed — the touch-reachable channel
+   * for disabledReason (title tooltips don't exist on touch). */
+  onDisabledPress?: () => void
   variant: "arm" | "disarm"
 }
 
@@ -25,6 +28,7 @@ export function HoldButton({
   onComplete,
   disabled,
   disabledReason,
+  onDisabledPress,
   variant,
 }: HoldButtonProps) {
   const [progress, setProgress] = useState(0)
@@ -38,7 +42,11 @@ export function HoldButton({
   }
 
   const start = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (disabled || rafRef.current !== null) return
+    if (disabled) {
+      onDisabledPress?.()
+      return
+    }
+    if (rafRef.current !== null) return
     e.currentTarget.setPointerCapture(e.pointerId)
     firedRef.current = false
     const startedAt = performance.now()
@@ -68,9 +76,12 @@ export function HoldButton({
   const ringColor = variant === "arm" ? "stroke-red-500" : "stroke-amber-400"
 
   return (
+    // Deliberately pointer-only: a keyboard "hold" is a weaker safety
+    // gesture than a sustained physical press. aria-disabled (not disabled)
+    // keeps the button pressable so a press can explain WHY it's inert.
     <button
       type="button"
-      disabled={disabled}
+      aria-disabled={disabled}
       title={disabled ? (disabledReason ?? undefined) : `Hold to ${label}`}
       onPointerDown={start}
       onPointerUp={stop}
@@ -80,9 +91,11 @@ export function HoldButton({
       // resets the ring mid-hold on touch devices.
       onContextMenu={(e) => e.preventDefault()}
       className={cn(
-        "pointer-events-auto relative size-16 rounded-full bg-black/60 text-white",
+        // Narrow: lifted surface on the control deck; wide: scrim over video.
+        "pointer-events-auto relative size-16 rounded-full bg-white/10 @hud:bg-black/60 text-white",
         "text-[10px] font-mono select-none touch-none [-webkit-touch-callout:none]",
-        disabled && "opacity-40",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60",
+        disabled && "opacity-50",
       )}
     >
       <svg

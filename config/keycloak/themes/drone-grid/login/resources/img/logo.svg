@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="logoTitle logoDesc">
+  <title id="logoTitle">Cloud-quad logo</title>
+  <desc id="logoDesc">A quadcopter whose airframe is a cloud, in a sky-blue gradient, with abstract spin arcs at each rotor.</desc>
+  <defs>
+    <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8CC6F4"/>
+      <stop offset="1" stop-color="#2E6CB8"/>
+    </linearGradient>
+    <!-- Motor: mount disc + hub + spin arcs -->
+    <g id="rotor">
+      <circle r="13" fill="#DCEEFB" stroke="#8CC6F4" stroke-width="2"/>
+      <circle r="4.5" fill="#2B62A6"/>
+      <path d="M-14.6 -12.2 A19 19 0 0 0 -8 17.2 M14.6 12.2 A19 19 0 0 0 8 -17.2" fill="none" stroke="#4C9FE8" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </defs>
+  <!-- Arms -->
+  <path d="M84 98 42 44 M116 98 158 44 M84 118 42 166 M116 118 158 166" fill="none" stroke="#2B62A6" stroke-width="10" stroke-linecap="round"/>
+  <!-- Cloud airframe -->
+  <path d="M60 128 A20 20 0 0 1 63 90 A22 22 0 0 1 100 74 A24 24 0 0 1 140 88 A21 21 0 0 1 146 128 Z" fill="url(#gSky)"/>
+  <!-- Rotors -->
+  <use href="#rotor" x="42" y="44"/>
+  <use href="#rotor" x="158" y="44"/>
+  <use href="#rotor" x="42" y="166"/>
+  <use href="#rotor" x="158" y="166"/>
+</svg>

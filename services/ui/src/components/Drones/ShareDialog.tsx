@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Copy, Link2, Trash2 } from "lucide-react"
+import { Copy, Link2, Trash2, TriangleAlert } from "lucide-react"
 import { useState } from "react"
 
 import { DronesService } from "@/client"
@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import useCustomToast from "@/hooks/useCustomToast"
+import { copyText } from "@/lib/clipboard"
 import { handleError } from "@/utils"
 
 const TTL_OPTIONS = [
@@ -74,9 +75,12 @@ export function ShareDialog({ droneId }: { droneId: string }) {
     onSettled: invalidate,
   })
 
-  const copy = (url: string) => {
-    navigator.clipboard.writeText(url)
-    showSuccessToast("Link copied")
+  const copy = async (url: string) => {
+    if (await copyText(url)) {
+      showSuccessToast("Link copied")
+    } else {
+      showErrorToast("Copy failed — copy the link manually")
+    }
   }
 
   const activeShares = sharesQuery.data ?? []
@@ -95,7 +99,14 @@ export function ShareDialog({ droneId }: { droneId: string }) {
           Share
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      {/* Top-anchored below sm: a centered dialog ends up half-hidden behind
+          the soft keyboard (which shrinks only the visual viewport). Scroll
+          + max-height keep every control reachable while typing. No focus
+          on open, so the keyboard appears only when a field is tapped. */}
+      <DialogContent
+        className="top-8 translate-y-0 max-h-[calc(100dvh-4rem)] overflow-y-auto sm:top-[50%] sm:translate-y-[-50%] sm:max-w-lg"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Share live view</DialogTitle>
           <DialogDescription>
@@ -103,6 +114,15 @@ export function ShareDialog({ droneId }: { droneId: string }) {
             read-only, no control. Links expire and can be revoked.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Before the create controls, so it's read before a link exists. */}
+        <div className="flex gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" />
+          <p>
+            Respect other people's privacy and follow local laws and regulations
+            when sharing.
+          </p>
+        </div>
 
         {createdUrl && (
           <div className="rounded-md border p-3 space-y-2">
@@ -126,8 +146,8 @@ export function ShareDialog({ droneId }: { droneId: string }) {
           </div>
         )}
 
-        <div className="flex items-end gap-2">
-          <div className="flex-1 space-y-1">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-2">
+          <div className="sm:flex-1 space-y-1">
             <span className="text-sm">Label (optional)</span>
             <Input
               placeholder="e.g. for the client"
@@ -138,7 +158,7 @@ export function ShareDialog({ droneId }: { droneId: string }) {
           <div className="space-y-1">
             <span className="text-sm">Expires</span>
             <Select value={ttlHours} onValueChange={setTtlHours}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full sm:w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -151,6 +171,7 @@ export function ShareDialog({ droneId }: { droneId: string }) {
             </Select>
           </div>
           <LoadingButton
+            className="w-full sm:w-auto"
             loading={createMutation.isPending}
             onClick={() => createMutation.mutate()}
           >
@@ -190,7 +211,7 @@ export function ShareDialog({ droneId }: { droneId: string }) {
 }
 
 /** Backend serializes naive UTC; treat a tz-less string as UTC. */
-function formatExpiry(iso: string): string {
+export function formatExpiry(iso: string): string {
   const hasTz = /[Z+]|-\d{2}:\d{2}$/.test(iso)
   const date = new Date(hasTz ? iso : `${iso}Z`)
   return date.toLocaleString(undefined, {
