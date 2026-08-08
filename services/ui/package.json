@@ -9,9 +9,7 @@
     "lint": "biome check --write --unsafe --no-errors-on-unmatched --files-ignore-unknown=true ./",
     "preview": "vite preview",
     "generate-client": "openapi-ts",
-    "test": "bun test src",
-    "test:e2e": "bunx playwright test",
-    "test:e2e:ui": "bunx playwright test --ui"
+    "test": "bun test src"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -48,7 +46,6 @@
   "devDependencies": {
     "@biomejs/biome": "^2.3.14",
     "@hey-api/openapi-ts": "0.73.0",
-    "@playwright/test": "1.58.2",
     "@tanstack/router-devtools": "^1.166.7",
     "@tanstack/router-plugin": "^1.140.0",
     "@types/bun": "^1.2.0",

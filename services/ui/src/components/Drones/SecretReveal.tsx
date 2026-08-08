@@ -33,7 +33,10 @@ export function SecretReveal({
         secret won't be shown again.
       </p>
       <div className="flex items-start gap-2">
-        <pre className="flex-1 overflow-x-auto rounded bg-muted px-3 py-2 font-mono text-xs leading-relaxed">
+        {/* Wraps (break-all) instead of scrolling: the secret must be fully
+            visible for eyeball verification, and an unbreakable line would
+            otherwise inflate the dialog past its max-width. */}
+        <pre className="min-w-0 flex-1 whitespace-pre-wrap break-all rounded bg-muted px-3 py-2 font-mono text-xs leading-relaxed">
           {envBlock}
         </pre>
         <Button size="icon" variant="outline" onClick={copy}>

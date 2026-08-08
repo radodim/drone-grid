@@ -49,6 +49,7 @@ services:
       VITE_WEBRTC_URL: ${WEBRTC_URL}
     volumes:
       - ./services/ui/src:/src/src
+      - ./services/ui/public:/src/public
       - ./services/ui/index.html:/src/index.html
       - ./services/ui/biome.json:/src/biome.json
     labels:

@@ -1,4 +1,4 @@
-import { Link2, Plane } from "lucide-react"
+import { Drone, Link2 } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -13,7 +13,7 @@ import { type Item, Main } from "./Main"
 import { User } from "./User"
 
 const items: Item[] = [
-  { icon: Plane, title: "Drones", path: "/drones" },
+  { icon: Drone, title: "Drones", path: "/drones" },
   { icon: Link2, title: "Shares", path: "/shares" },
 ]
 

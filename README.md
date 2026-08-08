@@ -1,4 +1,12 @@
-# Drone Grid
+<p align="center">
+  <img src="services/ui/public/favicon.svg" width="140" alt="Drone Grid — a quadcopter whose airframe is a cloud" />
+</p>
+
+<h1 align="center">Drone Grid</h1>
+
+<p align="center"><em>Operate drones in near real-time over the internet — live WebRTC video, telemetry, and browser-based control.</em></p>
+
+---
 
 The purpose of this project is to create a system for operating drones in near real-time over the internet.
 This includes live video streaming from the drone to the web browser of the client as well as duplex communication for control and telemetry.

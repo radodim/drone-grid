@@ -3,9 +3,9 @@ import { TriangleAlert } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 /** The release-wide liability note for live stream views. Slim by design —
- * always visible without stealing attention from the HUD. Link to the
- * safety docs (recommended setup: kill switch, VLOS practices) here once
- * they exist. */
+ * always visible without stealing attention from the HUD.
+ * TODO(docs): wrap in an anchor to the safety docs (recommended setup:
+ * kill switch, VLOS practices) once they exist. */
 export function ExperimentalNotice({ className }: { className?: string }) {
   return (
     <div

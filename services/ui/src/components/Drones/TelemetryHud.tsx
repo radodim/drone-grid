@@ -36,11 +36,14 @@ export function TelemetryHud({
 
   return (
     <div className="pointer-events-none absolute inset-0 text-white text-xs font-mono">
-      <div className="absolute top-4 left-4 flex items-center gap-2">
+      {/* not-tall: on short overlay screens (phone landscape) the right
+          column otherwise descends into the gimbal pad's corner — tighten
+          the stack there only; both rows shift together to stay aligned. */}
+      <div className="absolute top-4 left-4 flex items-center gap-2 @hud:not-tall:top-2">
         <ArmedChip armed={droneState.armed} />
         {droneState.flightMode && <HudChip>{droneState.flightMode}</HudChip>}
       </div>
-      <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+      <div className="absolute top-4 right-4 flex flex-col items-end gap-2 @hud:not-tall:top-2 @hud:not-tall:gap-1">
         <div className="hidden @hud:block">
           <LinkIndicators
             telemetryHealth={droneState.telemetryHealth}

@@ -8,7 +8,7 @@ import { createRouter, RouterProvider } from "@tanstack/react-router"
 import { StrictMode, useEffect, useRef, useState } from "react"
 import ReactDOM from "react-dom/client"
 import { ApiError, OpenAPI } from "./client"
-import { Logo } from "./components/Common/Logo"
+import { BootScreen } from "./components/Common/BootScreen"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
 import "./index.css"
@@ -22,6 +22,23 @@ OpenAPI.TOKEN = async () => {
     await keycloak.updateToken(30)
   }
   return keycloak.token || ""
+}
+
+// Proactive refresh: REST refreshes lazily above, but a pilot parked on the
+// stream page generates no REST — without this, prod's 5-minute tokens go
+// stale and every socket/WHEP reconnect is rejected until a page reload.
+// A failed refresh means the SSO session itself ended: redirect to login,
+// same as handleApiError does for REST (never fires for share-link viewers,
+// who hold no Keycloak token).
+keycloak.onTokenExpired = () => {
+  keycloak.updateToken(30).catch(() => {
+    // Offline (field LTE blip coinciding with expiry): redirecting would
+    // swap the cockpit for an unreachable-Keycloak error page — wait
+    // instead; the reconnect paths refresh again once connectivity
+    // returns. Online + failed = the SSO session truly ended: re-login,
+    // same as REST's 401 handling.
+    if (navigator.onLine) keycloak.login()
+  })
 }
 
 const handleApiError = (error: Error) => {
@@ -72,16 +89,7 @@ function App() {
   }, [])
 
   if (loading) {
-    // First paint of the product (also the Keycloak-redirect holding screen
-    // and what share-link viewers see) — speak instrument, not template.
-    return (
-      <div className="flex h-screen flex-col items-center justify-center gap-3 bg-background">
-        <Logo variant="full" asLink={false} />
-        <p className="font-mono text-xs text-muted-foreground motion-safe:animate-pulse">
-          connecting…
-        </p>
-      </div>
-    )
+    return <BootScreen message="connecting…" pulse />
   }
 
   return (

@@ -4,9 +4,12 @@ import { toast } from "sonner"
 import "@/lib/mediamtx-reader"
 import keycloak from "@/keycloak"
 
-/** The vendored reader registers itself on window (plain-JS script). */
+/** The vendored reader registers itself on window (plain-JS script). It
+ * reads conf.token on every request it makes, so mutating conf keeps its
+ * endless retry loop authenticated without touching the vendored file. */
 interface MediaMtxReader {
   close: () => void
+  conf: { token: string }
 }
 interface MediaMtxReaderConstructor {
   new (conf: {
@@ -50,6 +53,19 @@ export function useWhepStream(
           id: "stream-error",
           description: err,
         })
+        // The reader captured its token at construction; the next retry
+        // (2s away) must not present an expired JWT. updateToken no-ops
+        // without a network call while the token is still fresh.
+        keycloak
+          .updateToken(30)
+          .then(() => {
+            if (readerRef.current) {
+              readerRef.current.conf.token = keycloak.token || ""
+            }
+          })
+          .catch(() => {
+            // Session gone — the expiry keepalive owns the login redirect.
+          })
       },
       // Every retry builds a fresh peer connection, so onTrack re-fires on
       // each successful reconnect — it doubles as the recovery signal.

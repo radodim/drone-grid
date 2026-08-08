@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 
-import "@/lib/mediamtx-reader"
+import { BootScreen } from "@/components/Common/BootScreen"
 import { ExperimentalNotice } from "@/components/Drones/ExperimentalNotice"
 import { FullscreenToggle } from "@/components/Drones/FullscreenToggle"
 import { TelemetryHud, TelemetryStrip } from "@/components/Drones/TelemetryHud"
 import { useDroneState } from "@/hooks/useDroneState"
 import { useFullscreenLandscapeLock } from "@/hooks/useFullscreenLandscapeLock"
 import { useTelemetrySocket } from "@/hooks/useTelemetrySocket"
+import "@/lib/mediamtx-reader"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/shares/$token")({
@@ -45,10 +46,10 @@ function SharedView() {
   }, [token])
 
   if (invalid) {
-    return <Centered>This share link is no longer active.</Centered>
+    return <BootScreen message="This share link is no longer active." />
   }
   if (!resolved) {
-    return <Centered>Loading…</Centered>
+    return <BootScreen message="connecting…" pulse />
   }
   return <Viewer token={token} droneId={resolved.drone_id} />
 }
@@ -58,6 +59,13 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const readerRef = useRef<{ close: () => void } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // False until the element reports rendering frames ('playing') — drives
+  // the "awaiting video" placeholder over the otherwise-black box. Reset on
+  // reader errors so recovery gaps are narrated too.
+  const [videoLive, setVideoLive] = useState(false)
+  useEffect(() => {
+    if (error) setVideoLive(false)
+  }, [error])
   // Fullscreen the whole view (notice included), same as the owner player.
   const { isFullscreen, toggleFullscreen } =
     useFullscreenLandscapeLock(containerRef)
@@ -112,8 +120,16 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
           muted
           autoPlay
           playsInline
+          onPlaying={() => setVideoLive(true)}
           className="h-full w-full object-contain"
         />
+        {!videoLive && !error && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="font-mono text-xs text-white/50 motion-safe:animate-pulse">
+              Awaiting video signal…
+            </p>
+          </div>
+        )}
         {error && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/80">
             <p className="text-destructive text-sm">
@@ -134,14 +150,6 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
           className="absolute bottom-4 right-4 bg-black/60"
         />
       </div>
-    </div>
-  )
-}
-
-function Centered({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex h-screen items-center justify-center bg-background text-muted-foreground">
-      {children}
     </div>
   )
 }

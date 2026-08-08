@@ -33,7 +33,9 @@ export function LinkIndicators({
   videoHealth,
 }: LinkIndicatorsProps) {
   return (
-    <div className="pointer-events-auto cursor-default flex gap-2 text-xs font-mono">
+    // wrap: on the very narrowest phones the four pills + the strip's toggle
+    // clearance don't fit one line — wrapping beats clipping.
+    <div className="pointer-events-auto cursor-default flex flex-wrap justify-center gap-2 text-xs font-mono">
       {controlHealth && (
         <HealthDot
           label="CTRL"

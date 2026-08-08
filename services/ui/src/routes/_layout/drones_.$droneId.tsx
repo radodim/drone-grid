@@ -46,6 +46,13 @@ function DroneStream() {
       setStreamAspect(`${video.videoWidth} / ${video.videoHeight}`)
     }
   }
+  // False until the element reports rendering frames ('playing') — drives
+  // the "awaiting video" placeholder over the otherwise-black box. Reset on
+  // reader errors so recovery gaps are narrated too.
+  const [videoLive, setVideoLive] = useState(false)
+  useEffect(() => {
+    if (error) setVideoLive(false)
+  }, [error])
   const {
     telemetry,
     status: telemetryStatus,
@@ -150,6 +157,7 @@ function DroneStream() {
             playsInline
             onLoadedMetadata={updateStreamAspect}
             onResize={updateStreamAspect}
+            onPlaying={() => setVideoLive(true)}
             style={{ aspectRatio: streamAspect }}
             className={cn(
               // block: inline videos add a phantom baseline gap below.
@@ -157,6 +165,13 @@ function DroneStream() {
               isFullscreen && "max-h-full object-contain",
             )}
           />
+          {!videoLive && !error && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p className="font-mono text-xs text-white/50 motion-safe:animate-pulse">
+                Awaiting video signal…
+              </p>
+            </div>
+          )}
           {error && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/80">
               <p className="text-destructive text-sm">
@@ -169,25 +184,17 @@ function DroneStream() {
             droneState={droneState}
             controlStatus={control.status}
           />
-          {/* Wide: conventional video-player corner. */}
+          {/* Conventional video-player corner, at every width. */}
           <FullscreenToggle
             isFullscreen={isFullscreen}
             onToggle={toggleFullscreen}
-            className="hidden @hud:block absolute bottom-4 right-4 bg-black/60"
+            className="absolute bottom-4 right-4 bg-black/60"
           />
         </div>
         {/* Narrow: the "control deck" — hairline seam + a one-step surface
             lift so the console reads apart from the screen. @hud:contents
             dissolves the wrapper so DroneControls overlays the container. */}
         <div className="relative border-t border-white/15 bg-white/4 @hud:contents">
-          {/* Narrow: the deck's right edge, on the diagnostics line — the
-              picture keeps zero interactive chrome, and the "go fly" button
-              stays clear of the ARM/DISARM cluster below. */}
-          <FullscreenToggle
-            isFullscreen={isFullscreen}
-            onToggle={toggleFullscreen}
-            className="@hud:hidden absolute top-1.5 right-3 bg-white/10"
-          />
           <TelemetryStrip
             telemetry={telemetry}
             droneState={droneState}
