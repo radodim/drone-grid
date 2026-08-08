@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 
 import "@/lib/mediamtx-reader"
+import { ExperimentalNotice } from "@/components/Drones/ExperimentalNotice"
 import { TelemetryHud, TelemetryStrip } from "@/components/Drones/TelemetryHud"
 import { useDroneState } from "@/hooks/useDroneState"
 import { useTelemetrySocket } from "@/hooks/useTelemetrySocket"
@@ -85,27 +86,33 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
   }, [droneId, token])
 
   return (
-    <div className="@container relative h-screen w-screen bg-black">
-      <video
-        ref={videoRef}
-        muted
-        autoPlay
-        playsInline
-        className="h-full w-full object-contain"
-      />
-      {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-          <p className="text-destructive text-sm">
-            Video stream error — {error}
-          </p>
+    <div className="@container flex h-screen w-screen flex-col bg-black">
+      {/* In-flow above the picture area, like the owner view — the HUD's
+          top chips keep their corner. Safe-area padding clears notches
+          (viewport-fit=cover). */}
+      <ExperimentalNotice className="pt-[calc(env(safe-area-inset-top)+0.375rem)]" />
+      <div className="relative min-h-0 flex-1">
+        <video
+          ref={videoRef}
+          muted
+          autoPlay
+          playsInline
+          className="h-full w-full object-contain"
+        />
+        {error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+            <p className="text-destructive text-sm">
+              Video stream error — {error}
+            </p>
+          </div>
+        )}
+        {/* No controlStatus → CTRL chip hidden; no DroneControls mounted. */}
+        <TelemetryHud telemetry={telemetry} droneState={droneState} />
+        {/* This video fills the picture area — no below-the-picture flow —
+            so the narrow diagnostics strip pins to the bottom letterbox. */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-4">
+          <TelemetryStrip telemetry={telemetry} droneState={droneState} />
         </div>
-      )}
-      {/* No controlStatus → CTRL chip hidden; no DroneControls mounted. */}
-      <TelemetryHud telemetry={telemetry} droneState={droneState} />
-      {/* This video fills the screen — no below-the-picture flow — so the
-          narrow diagnostics strip pins to the bottom letterbox instead. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-4">
-        <TelemetryStrip telemetry={telemetry} droneState={droneState} />
       </div>
     </div>
   )

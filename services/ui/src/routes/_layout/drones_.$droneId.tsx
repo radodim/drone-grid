@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { DronesService } from "@/client"
 import { DroneControls } from "@/components/Drones/DroneControls"
+import { ExperimentalNotice } from "@/components/Drones/ExperimentalNotice"
 import { ShareDialog } from "@/components/Drones/ShareDialog"
 import { TelemetryHud, TelemetryStrip } from "@/components/Drones/TelemetryHud"
 import { Button } from "@/components/ui/button"
@@ -163,6 +164,9 @@ function DroneStream() {
             "rounded-none border-0 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]",
         )}
       >
+        {/* In-flow above the picture: never covers video, and — being
+            inside the fullscreen container — stays visible in fullscreen. */}
+        <ExperimentalNotice />
         {/* HUD scopes to the video area; stacked controls flow below it. */}
         <div
           className={cn(

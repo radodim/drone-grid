@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Copy, Link2, Trash2 } from "lucide-react"
+import { Copy, Link2, Trash2, TriangleAlert } from "lucide-react"
 import { useState } from "react"
 
 import { DronesService } from "@/client"
@@ -114,6 +114,15 @@ export function ShareDialog({ droneId }: { droneId: string }) {
             read-only, no control. Links expire and can be revoked.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Before the create controls, so it's read before a link exists. */}
+        <div className="flex gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" />
+          <p>
+            Respect other people's privacy and follow local laws and regulations
+            when sharing.
+          </p>
+        </div>
 
         {createdUrl && (
           <div className="rounded-md border p-3 space-y-2">
