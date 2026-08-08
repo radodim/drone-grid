@@ -5,8 +5,6 @@ import { Circle } from "lucide-react"
 import type { DroneResponse } from "@/client"
 import { DroneActionsMenu } from "./DroneActionsMenu"
 
-// No ID column: the UUID is a copy-source, not a browsing datum — "Copy ID"
-// lives in the actions menu, and the full value renders on the stream page.
 export const columns: ColumnDef<DroneResponse>[] = [
   {
     accessorKey: "name",
@@ -14,7 +12,27 @@ export const columns: ColumnDef<DroneResponse>[] = [
     // Deliberately not a link: an offline drone's stream page is a wall of
     // reconnect noise. Live (below) is the only stream door; share links
     // are managed on the Shares page instead.
-    cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+    // block + max-w: cells are whitespace-nowrap, so an untruncated long
+    // name would force the whole table into horizontal scroll.
+    cell: ({ row }) => (
+      <span className="block max-w-[40ch] truncate font-medium">
+        {row.original.name}
+      </span>
+    ),
+  },
+  {
+    // Desktop-only: the UUID is what lands in companion.env, so seeing it
+    // beside the name has provisioning value where width allows. "Copy ID"
+    // in the actions menu stays the one-click path (and the only one on
+    // phones, where this column is hidden).
+    accessorKey: "id",
+    header: "ID",
+    meta: { className: "hidden lg:table-cell" },
+    cell: ({ row }) => (
+      <span className="font-mono text-xs text-muted-foreground">
+        {row.original.id}
+      </span>
+    ),
   },
   {
     accessorKey: "stream_url",

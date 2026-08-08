@@ -15,8 +15,9 @@ export const Route = createFileRoute("/_layout/shares")({
 })
 
 function Shares() {
+  // Same capped column as the Drones page — list pages share one width.
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Shares</h1>
         <p className="text-muted-foreground">

@@ -37,6 +37,6 @@ export async function copyText(text: string): Promise<boolean> {
   }
   selection.removeAllRanges()
   span.remove()
-  
+
   return copied
 }
