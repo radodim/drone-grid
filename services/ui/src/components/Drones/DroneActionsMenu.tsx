@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { copyText } from "@/lib/clipboard"
 import DeleteDrone from "./DeleteDrone"
 import RotateSecret from "./RotateSecret"
 
@@ -30,15 +31,15 @@ export const DroneActionsMenu = ({ drone }: DroneActionsMenuProps) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem
-          onClick={() => {
-            navigator.clipboard.writeText(drone.id)
+          onClick={async () => {
             // The toast doubles as the ID's display surface — there is no
-            // ID column to read it from.
-            toast.success("Drone ID copied", {
-              description: (
-                <span className="font-mono text-xs">{drone.id}</span>
-              ),
-            })
+            // ID column to read it from, so show it even when copy fails.
+            const id = <span className="font-mono text-xs">{drone.id}</span>
+            if (await copyText(drone.id)) {
+              toast.success("Drone ID copied", { description: id })
+            } else {
+              toast.error("Copy failed", { description: id })
+            }
           }}
         >
           <Copy />

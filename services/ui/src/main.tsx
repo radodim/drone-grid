@@ -62,6 +62,10 @@ function App() {
       .init({
         onLoad: "check-sso",
         pkceMethod: window.isSecureContext ? "S256" : false,
+        // The SSO-monitor iframe probes 3p-cookie access via
+        // requestStorageAccess, which insecure origins reject with console
+        // errors on every load — keep session monitoring to https.
+        checkLoginIframe: window.isSecureContext,
       })
       .then(() => setLoading(false))
       .catch(() => setLoading(false))

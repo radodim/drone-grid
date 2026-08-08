@@ -2,6 +2,7 @@ import { Copy } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import useCustomToast from "@/hooks/useCustomToast"
+import { copyText } from "@/lib/clipboard"
 
 /** One-time credentials display. The backend returns a drone's plaintext
  * secret only once (on create or rotate), so this is the single chance to
@@ -13,12 +14,15 @@ export function SecretReveal({
   droneId: string
   secret: string
 }) {
-  const { showSuccessToast } = useCustomToast()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
   const envBlock = `DRONE_ID=${droneId}\nDRONE_SECRET=${secret}`
 
-  const copy = () => {
-    navigator.clipboard.writeText(envBlock)
-    showSuccessToast("Credentials copied")
+  const copy = async () => {
+    if (await copyText(envBlock)) {
+      showSuccessToast("Credentials copied")
+    } else {
+      showErrorToast("Copy failed — copy the block manually")
+    }
   }
 
   return (

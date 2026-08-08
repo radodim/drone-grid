@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import useCustomToast from "@/hooks/useCustomToast"
+import { copyText } from "@/lib/clipboard"
 import { handleError } from "@/utils"
 
 const TTL_OPTIONS = [
@@ -74,9 +75,12 @@ export function ShareDialog({ droneId }: { droneId: string }) {
     onSettled: invalidate,
   })
 
-  const copy = (url: string) => {
-    navigator.clipboard.writeText(url)
-    showSuccessToast("Link copied")
+  const copy = async (url: string) => {
+    if (await copyText(url)) {
+      showSuccessToast("Link copied")
+    } else {
+      showErrorToast("Copy failed — copy the link manually")
+    }
   }
 
   const activeShares = sharesQuery.data ?? []
