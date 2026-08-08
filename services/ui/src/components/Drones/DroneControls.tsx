@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 import { HoldButton } from "@/components/Drones/HoldButton"
 import { InputSourceSelector } from "@/components/Drones/InputSourceSelector"
@@ -60,6 +61,7 @@ export function DroneControls({
           variant="arm"
           disabled={!droneState.canArm.enabled}
           disabledReason={droneState.canArm.reason}
+          onDisabledPress={explainDisabled("arm", droneState.canArm.reason)}
           onComplete={() => send(controlMessages.arm())}
         />
         <InputSourceSelector
@@ -73,6 +75,10 @@ export function DroneControls({
           variant="disarm"
           disabled={!droneState.canDisarm.enabled}
           disabledReason={droneState.canDisarm.reason}
+          onDisabledPress={explainDisabled(
+            "disarm",
+            droneState.canDisarm.reason,
+          )}
           onComplete={() => {
             send(controlMessages.disarm())
             // A sticky throttle must not carry into the next arm.
@@ -83,6 +89,17 @@ export function DroneControls({
       <GimbalPads controlInput={controlInput} />
     </div>
   )
+}
+
+/** Pressing a disabled hold-button explains why it's inert — the only
+ * channel touch users have (title tooltips are hover-only). The stable id
+ * keeps repeat taps updating one toast instead of stacking. */
+function explainDisabled(action: string, reason: string | null): () => void {
+  return () =>
+    toast.warning(`Can't ${action}`, {
+      id: `hold-${action}`,
+      description: reason ?? undefined,
+    })
 }
 
 /** Mode-2 gimbal pads, always visible: interactive sticks when touch is the

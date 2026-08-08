@@ -25,6 +25,18 @@ const KNOB_SIZE_PX = 36 // keep in sync with the knob's size-9
 const KNOB_INSET_PCT = (KNOB_SIZE_PX / 2 / PAD_SIZE_PX) * 100
 const KNOB_TRAVEL_PCT = 100 - 2 * KNOB_INSET_PCT
 
+/** Pure knob geometry — axis space [-1, 1] to pad-relative CSS percent,
+ * keeping the knob inside the gate. Exported for tests. */
+export function knobPositionPct(
+  x: number,
+  y: number,
+): { left: number; top: number } {
+  return {
+    left: KNOB_INSET_PCT + ((x + 1) / 2) * KNOB_TRAVEL_PCT,
+    top: KNOB_INSET_PCT + ((1 - y) / 2) * KNOB_TRAVEL_PCT,
+  }
+}
+
 /**
  * One square RC-style gimbal pad. Unlike a round joystick, X and Y clamp
  * independently — full deflection in both axes at once, like a real
@@ -102,11 +114,13 @@ export function TouchGimbal({
       <div
         className={cn(
           "absolute size-9 rounded-full bg-white/70 shadow",
-          interactive && drag == null && "transition-[left,top] duration-150",
+          interactive &&
+            drag == null &&
+            "transition-[left,top] duration-150 motion-reduce:transition-none",
         )}
         style={{
-          left: `${KNOB_INSET_PCT + ((x + 1) / 2) * KNOB_TRAVEL_PCT}%`,
-          top: `${KNOB_INSET_PCT + ((1 - y) / 2) * KNOB_TRAVEL_PCT}%`,
+          left: `${knobPositionPct(x, y).left}%`,
+          top: `${knobPositionPct(x, y).top}%`,
           transform: "translate(-50%, -50%)",
         }}
       />
@@ -120,6 +134,7 @@ export function TouchGimbal({
   )
 }
 
-function clamp(value: number): number {
+/** Exported for tests. */
+export function clamp(value: number): number {
   return Math.min(1, Math.max(-1, value))
 }

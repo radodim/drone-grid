@@ -11,6 +11,9 @@ export const columns: ColumnDef<DroneResponse>[] = [
   {
     accessorKey: "name",
     header: "Name",
+    // Deliberately not a link: an offline drone's stream page is a wall of
+    // reconnect noise. Live (below) is the only stream door; share links
+    // are managed on the Shares page instead.
     cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
   },
   {

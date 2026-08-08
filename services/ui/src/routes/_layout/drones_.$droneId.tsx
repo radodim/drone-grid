@@ -4,17 +4,18 @@ import { ArrowLeft, Maximize, Minimize } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
-import "@/lib/mediamtx-reader"
 import { DronesService } from "@/client"
 import { DroneControls } from "@/components/Drones/DroneControls"
 import { ShareDialog } from "@/components/Drones/ShareDialog"
 import { TelemetryHud, TelemetryStrip } from "@/components/Drones/TelemetryHud"
 import { Button } from "@/components/ui/button"
+import { useSidebar } from "@/components/ui/sidebar"
 import { useControlInput } from "@/hooks/useControlInput"
 import { useControlSocket } from "@/hooks/useControlSocket"
 import { useDroneState } from "@/hooks/useDroneState"
+import { useFullscreenLandscapeLock } from "@/hooks/useFullscreenLandscapeLock"
 import { useTelemetrySocket } from "@/hooks/useTelemetrySocket"
-import keycloak from "@/keycloak"
+import { useWhepStream } from "@/hooks/useWhepStream"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/_layout/drones_/$droneId")({
@@ -24,17 +25,47 @@ export const Route = createFileRoute("/_layout/drones_/$droneId")({
   }),
 })
 
-/** Container width the control overlay needs — keep equal to the @hud
- * container breakpoint (--container-hud in index.css). */
-const OVERLAY_MIN_WIDTH_PX = 640
+function FullscreenToggle({
+  isFullscreen,
+  onToggle,
+  className,
+}: {
+  isFullscreen: boolean
+  onToggle: () => void
+  className?: string
+}) {
+  const label = isFullscreen ? "Exit fullscreen" : "Fullscreen"
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      title={label}
+      aria-label={label}
+      className={cn(
+        "rounded p-2.5 text-white",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60",
+        className,
+      )}
+    >
+      {isFullscreen ? (
+        <Minimize className="size-4" />
+      ) : (
+        <Maximize className="size-4" />
+      )}
+    </button>
+  )
+}
 
 function DroneStream() {
   const { droneId } = Route.useParams()
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const readerRef = useRef<any>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isFullscreen, setIsFullscreen] = useState(false)
+  const { error } = useWhepStream(droneId, videoRef)
+  // Fullscreen the container (not the <video>) so the HUD and controls
+  // stay visible.
+  const { isFullscreen, toggleFullscreen } =
+    useFullscreenLandscapeLock(containerRef)
   // The element must not assert a ratio the stream doesn't have (the Pi
   // camera pushes 4:3) — track the real one; 16:9 is only the pre-metadata
   // placeholder. WebRTC may change resolution mid-session ('resize' event).
@@ -63,6 +94,18 @@ function DroneStream() {
     queryFn: () => DronesService.listDrones(),
   })
   const droneName = dronesQuery.data?.find((d) => d.id === droneId)?.name
+
+  // A cockpit wants canvas: enter with the sidebar collapsed (the rail and
+  // trigger stay available), restore the visitor's state on leave. This
+  // also keeps a nav toggle from shoving the player across the @hud
+  // threshold and restructuring the controls mid-glance.
+  const { open: sidebarOpen, setOpen: setSidebarOpen } = useSidebar()
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only — capture entry state, restore on leave
+  useEffect(() => {
+    const wasOpen = sidebarOpen
+    setSidebarOpen(false)
+    return () => setSidebarOpen(wasOpen)
+  }, [])
   const droneState = useDroneState({
     telemetry,
     lastMessageAt,
@@ -94,75 +137,6 @@ function DroneStream() {
     }
   }, [droneState.telemetryHealth, droneState.fcLinkHealth])
 
-  useEffect(() => {
-    const onFullscreenChange = () => {
-      const active = document.fullscreenElement === containerRef.current
-      setIsFullscreen(active)
-      if (!active) {
-        try {
-          screen.orientation.unlock()
-        } catch {
-          // never locked, or unsupported (iOS/desktop)
-        }
-      }
-    }
-    document.addEventListener("fullscreenchange", onFullscreenChange)
-    return () =>
-      document.removeEventListener("fullscreenchange", onFullscreenChange)
-  }, [])
-
-  // Fullscreen the container (not the <video>) so the HUD and controls
-  // stay visible.
-  const toggleFullscreen = async () => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen()
-      return
-    }
-    await containerRef.current?.requestFullscreen()
-    // Phones only (short side below the overlay threshold): rotating is the
-    // device's sole path to an overlay-capable width, and holding the lock
-    // keeps the control layout from reshuffling under the pilot's thumbs.
-    // Tablets are never locked — their portrait already fits the overlay.
-    // Unsupported (iOS/desktop) rejects and the width-gated layout applies.
-    if (Math.min(screen.width, screen.height) < OVERLAY_MIN_WIDTH_PX) {
-      try {
-        // lib.dom omits lock() (Firefox desktop lacks it) — feature-detect.
-        const orientation = screen.orientation as ScreenOrientation & {
-          lock?: (orientation: "landscape") => Promise<void>
-        }
-        await orientation.lock?.("landscape")
-      } catch {
-        // fall through to the stacked fullscreen layout
-      }
-    }
-  }
-
-  useEffect(() => {
-    const whepUrl = `${import.meta.env.VITE_WEBRTC_URL}/${droneId}/whep`
-
-    readerRef.current = new (window as any).MediaMTXWebRTCReader({
-      url: whepUrl,
-      token: keycloak.token || "",
-      onError: (err: string) => {
-        console.error("WebRTC reader error:", err)
-        setError(err)
-        toast.error("Stream error", { description: err })
-      },
-      onTrack: (evt: RTCTrackEvent) => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = evt.streams[0]
-        }
-      },
-    })
-
-    return () => {
-      if (readerRef.current) {
-        readerRef.current.close()
-        readerRef.current = null
-      }
-    }
-  }, [droneId])
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-4">
@@ -183,7 +157,10 @@ function DroneStream() {
         ref={containerRef}
         className={cn(
           "@container relative rounded-lg overflow-hidden border bg-black flex flex-col",
-          isFullscreen && "rounded-none border-0",
+          // Fullscreen owns the physical screen edges — keep controls clear
+          // of gesture bars and notches (env() needs viewport-fit=cover).
+          isFullscreen &&
+            "rounded-none border-0 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]",
         )}
       >
         {/* HUD scopes to the video area; stacked controls flow below it. */}
@@ -217,23 +194,25 @@ function DroneStream() {
             droneState={droneState}
             controlStatus={control.status}
           />
-          <button
-            type="button"
-            onClick={toggleFullscreen}
-            title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-            className="absolute bottom-4 right-4 rounded bg-black/60 p-2 text-white"
-          >
-            {isFullscreen ? (
-              <Minimize className="size-4" />
-            ) : (
-              <Maximize className="size-4" />
-            )}
-          </button>
+          {/* Wide: conventional video-player corner. */}
+          <FullscreenToggle
+            isFullscreen={isFullscreen}
+            onToggle={toggleFullscreen}
+            className="hidden @hud:block absolute bottom-4 right-4 bg-black/60"
+          />
         </div>
         {/* Narrow: the "control deck" — hairline seam + a one-step surface
             lift so the console reads apart from the screen. @hud:contents
             dissolves the wrapper so DroneControls overlays the container. */}
-        <div className="border-t border-white/15 bg-white/4 @hud:contents">
+        <div className="relative border-t border-white/15 bg-white/4 @hud:contents">
+          {/* Narrow: the deck's right edge, on the diagnostics line — the
+              picture keeps zero interactive chrome, and the "go fly" button
+              stays clear of the ARM/DISARM cluster below. */}
+          <FullscreenToggle
+            isFullscreen={isFullscreen}
+            onToggle={toggleFullscreen}
+            className="@hud:hidden absolute top-1.5 right-3 bg-white/10"
+          />
           <TelemetryStrip
             telemetry={telemetry}
             droneState={droneState}

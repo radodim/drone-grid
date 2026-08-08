@@ -1,5 +1,5 @@
-import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
+import { Link } from "@tanstack/react-router"
 
 const NotFound = () => {
   return (
@@ -7,23 +7,15 @@ const NotFound = () => {
       className="flex min-h-screen items-center justify-center flex-col p-4"
       data-testid="not-found"
     >
-      <div className="flex items-center z-10">
-        <div className="flex flex-col ml-4 items-center justify-center p-4">
-          <span className="text-6xl md:text-8xl font-bold leading-none mb-4">
-            404
-          </span>
-          <span className="text-2xl font-bold mb-2">Oops!</span>
-        </div>
-      </div>
-
-      <p className="text-lg text-muted-foreground mb-4 text-center z-10">
-        The page you are looking for was not found.
+      <span className="text-6xl md:text-8xl font-bold leading-none mb-4">
+        404
+      </span>
+      <p className="text-lg text-muted-foreground mb-4 text-center">
+        The requested page does not exist.
       </p>
-      <div className="z-10">
-        <Link to="/">
-          <Button className="mt-4">Go Back</Button>
-        </Link>
-      </div>
+      <Link to="/">
+        <Button className="mt-4">Go to drones</Button>
+      </Link>
     </div>
   )
 }

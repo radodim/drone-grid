@@ -198,7 +198,7 @@ export function ShareDialog({ droneId }: { droneId: string }) {
 }
 
 /** Backend serializes naive UTC; treat a tz-less string as UTC. */
-function formatExpiry(iso: string): string {
+export function formatExpiry(iso: string): string {
   const hasTz = /[Z+]|-\d{2}:\d{2}$/.test(iso)
   const date = new Date(hasTz ? iso : `${iso}Z`)
   return date.toLocaleString(undefined, {

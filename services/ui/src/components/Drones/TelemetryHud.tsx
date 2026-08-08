@@ -1,4 +1,5 @@
 import { Altimeter } from "@/components/Drones/Altimeter"
+import { HudChip } from "@/components/Drones/HudChip"
 import { LinkIndicators } from "@/components/Drones/LinkIndicators"
 import type { DroneState } from "@/hooks/useDroneState"
 import type { SocketStatus } from "@/lib/reconnecting-ws"
@@ -32,11 +33,7 @@ export function TelemetryHud({
     <div className="pointer-events-none absolute inset-0 text-white text-xs font-mono">
       <div className="absolute top-4 left-4 flex items-center gap-2">
         <ArmedChip armed={droneState.armed} />
-        {droneState.flightMode && (
-          <div className="bg-black/60 rounded px-2 py-1">
-            {droneState.flightMode}
-          </div>
-        )}
+        {droneState.flightMode && <HudChip>{droneState.flightMode}</HudChip>}
       </div>
       <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
         <div className="hidden @hud:block">
@@ -57,15 +54,16 @@ export function TelemetryHud({
         {/* Corner-stack altitude chip — the default. The instrument tile
             takes over only when the viewport is wide AND tall enough for
             its right-edge slot (see `tall` in index.css). */}
-        <div className="bg-black/60 rounded px-2 py-1 @hud:tall:hidden flex items-baseline gap-1.5">
-          <span className="text-white/70">ALT</span>
-          <span className="text-sm font-semibold tabular-nums">
-            {mavlink?.position?.rel_alt != null
+        <HudChip
+          className="@hud:tall:hidden"
+          label="ALT"
+          value={
+            mavlink?.position?.rel_alt != null
               ? mavlink.position.rel_alt.toFixed(1)
-              : "—"}
-          </span>
-          <span className="text-white/70">m</span>
-        </div>
+              : "—"
+          }
+          unit="m"
+        />
       </div>
       {/* Wide AND tall: right-edge instrument slot (the altitude-tape
           convention). Below 400px of height a 55px tile has no valid
@@ -113,19 +111,17 @@ function controlHealthFrom(
 /** Color = hazard level: armed (live props) is red, disarmed green. */
 function ArmedChip({ armed }: { armed: boolean | null }) {
   return (
-    <div className="bg-black/60 rounded px-2 py-1 flex items-center gap-2">
-      <span
-        className={cn(
-          "inline-block size-2 rounded-full",
-          armed == null ? "bg-zinc-500" : armed ? "bg-red-500" : "bg-green-500",
-        )}
-      />
+    <HudChip
+      dot={
+        armed == null ? "bg-zinc-500" : armed ? "bg-red-500" : "bg-green-500"
+      }
+    >
       {/* Armed is the one safety-critical state — the word carries the
           hazard color, not just the dot. */}
       <span className={cn(armed && "font-semibold text-red-400")}>
         {armed == null ? "—" : armed ? "ARMED" : "DISARMED"}
       </span>
-    </div>
+    </HudChip>
   )
 }
 
@@ -133,14 +129,9 @@ function GpsReadout({ gps }: { gps: Gps | null }) {
   const fix = gps?.fix_type ? gps.fix_type.replace("FIX_TYPE_", "") : null
 
   return (
-    // Narrow: lives on the control deck (black) — scrim would be invisible.
-    <div className="bg-white/5 @hud:bg-black/60 rounded px-2 py-1 flex items-baseline gap-1.5">
-      <span className="text-white/70">SAT</span>
-      <span className="text-sm font-semibold tabular-nums">
-        {gps?.num_satellites ?? "—"}
-      </span>
+    <HudChip variant="adaptive" label="SAT" value={gps?.num_satellites ?? "—"}>
       {fix && <span className="text-white/70">· {fix}</span>}
-    </div>
+    </HudChip>
   )
 }
 
@@ -154,23 +145,17 @@ function BatteryReadout({
   const pct = percentage != null ? formatBatteryPercent(percentage) : null
 
   return (
-    <div className="bg-black/60 rounded px-2 py-1 flex items-baseline gap-1.5">
-      <span
-        className={cn(
-          "self-center inline-block size-2 rounded-full",
-          batteryDotColor(pct),
-        )}
-      />
-      <span className="text-white/70">BAT</span>
-      <span className="text-sm font-semibold tabular-nums">
-        {pct != null ? `${pct}%` : "—"}
-      </span>
+    <HudChip
+      dot={batteryDotColor(pct)}
+      label="BAT"
+      value={pct != null ? `${pct}%` : "—"}
+    >
       {flightTimeRemainingS != null && (
         <span className="text-white/70 tabular-nums">
           · {formatDuration(flightTimeRemainingS)}
         </span>
       )}
-    </div>
+    </HudChip>
   )
 }
 

@@ -8,6 +8,7 @@ import { createRouter, RouterProvider } from "@tanstack/react-router"
 import { StrictMode, useEffect, useRef, useState } from "react"
 import ReactDOM from "react-dom/client"
 import { ApiError, OpenAPI } from "./client"
+import { Logo } from "./components/Common/Logo"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
 import "./index.css"
@@ -67,9 +68,14 @@ function App() {
   }, [])
 
   if (loading) {
+    // First paint of the product (also the Keycloak-redirect holding screen
+    // and what share-link viewers see) — speak instrument, not template.
     return (
-      <div className="flex justify-center items-center h-screen bg-background text-muted-foreground">
-        Loading...
+      <div className="flex h-screen flex-col items-center justify-center gap-3 bg-background">
+        <Logo variant="full" asLink={false} />
+        <p className="font-mono text-xs text-muted-foreground motion-safe:animate-pulse">
+          connecting…
+        </p>
       </div>
     )
   }
