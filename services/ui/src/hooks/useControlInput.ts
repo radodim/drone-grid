@@ -28,6 +28,8 @@ export interface ControlInputState {
 
 const STICKY_ARM_THROTTLE_MAX = 0.05
 const GAMEPAD_ARM_THROTTLE_MAX = 0.55
+/** POSCTL: throttle center = zero climb rate = hold altitude. */
+const HOVER_THROTTLE = 0.5
 
 /**
  * Coordinates the input sources behind one contract: exactly one source is
@@ -84,10 +86,13 @@ export function useControlInput(confirmedDisarmed: boolean): ControlInputState {
     }
   }, [])
 
-  // Throttle hand-off on source switch: a sticky source (keyboard/touch)
-  // inherits the previous source's throttle so switching mid-flight doesn't
-  // command a sudden descent; when the drone is confirmed disarmed it resets
-  // to 0 instead, keeping the arm gate naturally satisfied.
+  // Hand-off on source switch: the new sticky source (keyboard/touch) seeds
+  // at hover — POSCTL maps throttle 0.5 to zero climb rate, so an untouched
+  // stick means "hold altitude until the pilot takes it". When the drone is
+  // confirmed disarmed it seeds 0 instead, keeping the arm gate naturally
+  // satisfied. Nothing else survives a hand-off: the departing source's
+  // centering axes are zeroed, so a mid-drag orphan (a pad that never fired
+  // its release) can't resurface as a live deflection on switch-back.
   const confirmedDisarmedRef = useRef(confirmedDisarmed)
   confirmedDisarmedRef.current = confirmedDisarmed
   const prevActiveKindRef = useRef(activeKind)
@@ -97,8 +102,14 @@ export function useControlInput(confirmedDisarmed: boolean): ControlInputState {
     prevActiveKindRef.current = activeKind
 
     const previous = sourcesRef.current[prevKind]
+    previous.axesRef.current = {
+      ...previous.axesRef.current,
+      pitch: 0,
+      roll: 0,
+      yaw: 0,
+    }
     sourcesRef.current[activeKind].setThrottle?.(
-      confirmedDisarmedRef.current ? 0 : previous.axesRef.current.throttle,
+      confirmedDisarmedRef.current ? 0 : HOVER_THROTTLE,
     )
   }, [activeKind])
 
