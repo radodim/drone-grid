@@ -1,7 +1,7 @@
 import { Altimeter } from "@/components/Drones/Altimeter"
 import { HudChip } from "@/components/Drones/HudChip"
 import { LinkIndicators } from "@/components/Drones/LinkIndicators"
-import type { DroneState } from "@/hooks/useDroneState"
+import type { DroneState, TelemetryHealth } from "@/hooks/useDroneState"
 import type { SocketStatus } from "@/lib/reconnecting-ws"
 import { cn } from "@/lib/utils"
 import type { Gps, Telemetry } from "@/types/telemetry"
@@ -28,6 +28,11 @@ export function TelemetryHud({
   controlStatus,
 }: TelemetryHudProps) {
   const mavlink = telemetry?.mavlink_telemetry ?? null
+  // These readouts render the RAW last frame, which outlives the feed.
+  // Last-known values are worth keeping on screen (where was it, how much
+  // battery did it have) — but stale data must not wear live colors, so
+  // the chips dim and their dots go neutral until telemetry is live again.
+  const stale = droneState.telemetryHealth !== "live"
 
   return (
     <div className="pointer-events-none absolute inset-0 text-white text-xs font-mono">
@@ -39,23 +44,27 @@ export function TelemetryHud({
         <div className="hidden @hud:block">
           <LinkIndicators
             telemetryHealth={droneState.telemetryHealth}
-            controlHealth={controlHealthFrom(controlStatus)}
+            controlHealth={controlHealthFrom(
+              controlStatus,
+              droneState.telemetryHealth,
+            )}
             fcLinkHealth={droneState.fcLinkHealth}
             videoHealth={droneState.videoHealth}
           />
         </div>
         <div className="hidden @hud:block">
-          <GpsReadout gps={mavlink?.gps ?? null} />
+          <GpsReadout gps={mavlink?.gps ?? null} stale={stale} />
         </div>
         <BatteryReadout
           percentage={mavlink?.battery_percentage ?? null}
           flightTimeRemainingS={mavlink?.flight_time_remaining ?? null}
+          stale={stale}
         />
         {/* Corner-stack altitude chip — the default. The instrument tile
             takes over only when the viewport is wide AND tall enough for
             its right-edge slot (see `tall` in index.css). */}
         <HudChip
-          className="@hud:tall:hidden"
+          className={cn("@hud:tall:hidden", stale && "opacity-60")}
           label="ALT"
           value={
             mavlink?.position?.rel_alt != null
@@ -68,7 +77,12 @@ export function TelemetryHud({
       {/* Wide AND tall: right-edge instrument slot (the altitude-tape
           convention). Below 400px of height a 55px tile has no valid
           position between the diagnostics column and the gimbal pad. */}
-      <div className="hidden @hud:tall:block absolute right-4 top-[40%] -translate-y-1/2">
+      <div
+        className={cn(
+          "hidden @hud:tall:block absolute right-4 top-[40%] -translate-y-1/2",
+          stale && "opacity-60",
+        )}
+      >
         <Altimeter relAltMeters={mavlink?.position?.rel_alt ?? null} />
       </div>
     </div>
@@ -91,21 +105,31 @@ export function TelemetryStrip({
     <div className="@hud:hidden flex flex-col items-center gap-1.5 px-3 pt-2 text-white text-xs font-mono">
       <LinkIndicators
         telemetryHealth={droneState.telemetryHealth}
-        controlHealth={controlHealthFrom(controlStatus)}
+        controlHealth={controlHealthFrom(
+          controlStatus,
+          droneState.telemetryHealth,
+        )}
         fcLinkHealth={droneState.fcLinkHealth}
         videoHealth={droneState.videoHealth}
       />
-      <GpsReadout gps={mavlink?.gps ?? null} />
+      <GpsReadout
+        gps={mavlink?.gps ?? null}
+        stale={droneState.telemetryHealth !== "live"}
+      />
     </div>
   )
 }
 
 function controlHealthFrom(
   controlStatus: SocketStatus | undefined,
-): "ok" | "down" | undefined {
+  telemetryHealth: TelemetryHealth,
+): "ok" | "stale" | "down" | undefined {
   if (controlStatus === undefined) return undefined
+  if (controlStatus !== "open") return "down"
 
-  return controlStatus === "open" ? "ok" : "down"
+  // An open socket says nothing about delivery — with the drone silent,
+  // frames vanish into a subscriber-less relay. Green would overpromise.
+  return telemetryHealth === "live" ? "ok" : "stale"
 }
 
 /** Color = hazard level: armed (live props) is red, disarmed green. */
@@ -125,11 +149,16 @@ function ArmedChip({ armed }: { armed: boolean | null }) {
   )
 }
 
-function GpsReadout({ gps }: { gps: Gps | null }) {
+function GpsReadout({ gps, stale }: { gps: Gps | null; stale: boolean }) {
   const fix = gps?.fix_type ? gps.fix_type.replace("FIX_TYPE_", "") : null
 
   return (
-    <HudChip variant="adaptive" label="SAT" value={gps?.num_satellites ?? "—"}>
+    <HudChip
+      variant="adaptive"
+      label="SAT"
+      value={gps?.num_satellites ?? "—"}
+      className={cn(stale && "opacity-60")}
+    >
       {fix && <span className="text-white/70">· {fix}</span>}
     </HudChip>
   )
@@ -138,17 +167,20 @@ function GpsReadout({ gps }: { gps: Gps | null }) {
 function BatteryReadout({
   percentage,
   flightTimeRemainingS,
+  stale,
 }: {
   percentage: number | null
   flightTimeRemainingS: number | null
+  stale: boolean
 }) {
   const pct = percentage != null ? formatBatteryPercent(percentage) : null
 
   return (
     <HudChip
-      dot={batteryDotColor(pct)}
+      dot={stale ? "bg-zinc-500" : batteryDotColor(pct)}
       label="BAT"
       value={pct != null ? `${pct}%` : "—"}
+      className={cn(stale && "opacity-60")}
     >
       {flightTimeRemainingS != null && (
         <span className="text-white/70 tabular-nums">

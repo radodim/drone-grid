@@ -7,8 +7,9 @@ import type {
 
 interface LinkIndicatorsProps {
   telemetryHealth: TelemetryHealth
-  /** Omitted for read-only share viewers — they hold no control channel. */
-  controlHealth?: "ok" | "down"
+  /** Omitted for read-only share viewers — they hold no control channel.
+   * "stale" = socket open but the drone is silent, so delivery is doubtful. */
+  controlHealth?: "ok" | "stale" | "down"
   fcLinkHealth: FcLinkHealth
   videoHealth: VideoHealth
 }

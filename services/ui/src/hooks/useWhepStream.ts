@@ -44,9 +44,18 @@ export function useWhepStream(
       onError: (err) => {
         console.error("WebRTC reader error:", err)
         setError(err)
-        toast.error("Stream error", { description: err })
+        // Stable id: the reader retries every ~2s while down, and each
+        // attempt re-fires onError — update one toast instead of stacking.
+        toast.error("Video stream error", {
+          id: "stream-error",
+          description: err,
+        })
       },
+      // Every retry builds a fresh peer connection, so onTrack re-fires on
+      // each successful reconnect — it doubles as the recovery signal.
       onTrack: (evt) => {
+        setError(null)
+        toast.dismiss("stream-error")
         if (videoRef.current) {
           videoRef.current.srcObject = evt.streams[0]
         }

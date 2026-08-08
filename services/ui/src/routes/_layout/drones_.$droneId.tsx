@@ -186,7 +186,9 @@ function DroneStream() {
           />
           {error && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-              <p className="text-destructive text-sm">{error}</p>
+              <p className="text-destructive text-sm">
+                Video stream error — {error}
+              </p>
             </div>
           )}
           <TelemetryHud

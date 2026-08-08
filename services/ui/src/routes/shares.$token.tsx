@@ -71,7 +71,10 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
       url: whepUrl,
       token,
       onError: (err: string) => setError(err),
+      // onTrack re-fires on every reconnect (fresh peer connection per
+      // retry) — clear the stale error overlay on recovery.
       onTrack: (evt: RTCTrackEvent) => {
+        setError(null)
         if (videoRef.current) videoRef.current.srcObject = evt.streams[0]
       },
     })
@@ -92,7 +95,9 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
       />
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-          <p className="text-destructive text-sm">{error}</p>
+          <p className="text-destructive text-sm">
+            Video stream error — {error}
+          </p>
         </div>
       )}
       {/* No controlStatus → CTRL chip hidden; no DroneControls mounted. */}
