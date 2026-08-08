@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { ArrowLeft, Maximize, Minimize } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { DronesService } from "@/client"
 import { DroneControls } from "@/components/Drones/DroneControls"
 import { ExperimentalNotice } from "@/components/Drones/ExperimentalNotice"
+import { FullscreenToggle } from "@/components/Drones/FullscreenToggle"
 import { ShareDialog } from "@/components/Drones/ShareDialog"
 import { TelemetryHud, TelemetryStrip } from "@/components/Drones/TelemetryHud"
 import { Button } from "@/components/ui/button"
@@ -25,38 +26,6 @@ export const Route = createFileRoute("/_layout/drones_/$droneId")({
     meta: [{ title: "Live Stream - Drone Grid" }],
   }),
 })
-
-function FullscreenToggle({
-  isFullscreen,
-  onToggle,
-  className,
-}: {
-  isFullscreen: boolean
-  onToggle: () => void
-  className?: string
-}) {
-  const label = isFullscreen ? "Exit fullscreen" : "Fullscreen"
-
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      title={label}
-      aria-label={label}
-      className={cn(
-        "rounded p-2.5 text-white",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60",
-        className,
-      )}
-    >
-      {isFullscreen ? (
-        <Minimize className="size-4" />
-      ) : (
-        <Maximize className="size-4" />
-      )}
-    </button>
-  )
-}
 
 function DroneStream() {
   const { droneId } = Route.useParams()

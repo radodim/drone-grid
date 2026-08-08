@@ -3,9 +3,12 @@ import { useEffect, useRef, useState } from "react"
 
 import "@/lib/mediamtx-reader"
 import { ExperimentalNotice } from "@/components/Drones/ExperimentalNotice"
+import { FullscreenToggle } from "@/components/Drones/FullscreenToggle"
 import { TelemetryHud, TelemetryStrip } from "@/components/Drones/TelemetryHud"
 import { useDroneState } from "@/hooks/useDroneState"
+import { useFullscreenLandscapeLock } from "@/hooks/useFullscreenLandscapeLock"
 import { useTelemetrySocket } from "@/hooks/useTelemetrySocket"
+import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/shares/$token")({
   component: SharedView,
@@ -52,8 +55,12 @@ function SharedView() {
 
 function Viewer({ token, droneId }: { token: string; droneId: string }) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const readerRef = useRef<{ close: () => void } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Fullscreen the whole view (notice included), same as the owner player.
+  const { isFullscreen, toggleFullscreen } =
+    useFullscreenLandscapeLock(containerRef)
 
   const { telemetry, status, lastMessageAt } = useTelemetrySocket(
     droneId,
@@ -86,7 +93,15 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
   }, [droneId, token])
 
   return (
-    <div className="@container flex h-screen w-screen flex-col bg-black">
+    <div
+      ref={containerRef}
+      className={cn(
+        "@container flex h-screen w-screen flex-col bg-black",
+        // Fullscreen owns the physical screen edges — keep the bottom strip
+        // clear of gesture bars (env() needs viewport-fit=cover).
+        isFullscreen && "pb-[env(safe-area-inset-bottom)]",
+      )}
+    >
       {/* In-flow above the picture area, like the owner view — the HUD's
           top chips keep their corner. Safe-area padding clears notches
           (viewport-fit=cover). */}
@@ -113,6 +128,11 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
         <div className="pointer-events-none absolute inset-x-0 bottom-4">
           <TelemetryStrip telemetry={telemetry} droneState={droneState} />
         </div>
+        <FullscreenToggle
+          isFullscreen={isFullscreen}
+          onToggle={toggleFullscreen}
+          className="absolute bottom-4 right-4 bg-black/60"
+        />
       </div>
     </div>
   )

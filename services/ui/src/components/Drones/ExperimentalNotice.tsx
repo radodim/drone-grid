@@ -16,8 +16,7 @@ export function ExperimentalNotice({ className }: { className?: string }) {
     >
       <TriangleAlert className="size-3.5 shrink-0 text-amber-400" />
       <p className="text-[11px] leading-snug text-amber-100/90">
-        Experimental system — be careful and follow local
-        laws and regulations.
+        Experimental system — be careful and follow local laws and regulations.
       </p>
     </div>
   )
