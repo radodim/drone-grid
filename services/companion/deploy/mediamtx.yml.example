@@ -7,17 +7,17 @@ srt: no
 paths:
   cam:
     source: rpiCamera
-    rpiCameraWidth: 1280
-    rpiCameraHeight: 960
+    rpiCameraWidth: 960
+    rpiCameraHeight: 720
     rpiCameraFPS: 30
     rpiCameraBitrate: 5000000
     rpiCameraVFlip: true
     rpiCameraHFlip: true
     rpiCameraAfMode: manual
     rpiCameraIDRPeriod: 12
+    rpiCameraExposure: short
     runOnReady: >
       /usr/local/bin/ffmpeg-whip
-      -fflags nobuffer -probesize 32768
       -i rtsp://localhost:8554/cam
       -c:v copy
       -f whip -ts_buffer_size 1000000

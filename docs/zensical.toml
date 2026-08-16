@@ -1,0 +1,78 @@
+# Drone Grid documentation site — config and content live together in docs/.
+#   serve: cd docs && uv run --group docs zensical serve
+#   build: cd docs && uv run --group docs zensical build --strict
+# Default Zensical theme; only the logo is ours
+# (assets/logo.svg — canonical source: services/ui/public/favicon.svg).
+
+[project]
+site_name = "Drone Grid"
+site_description = "Operate drones in near real-time over the internet — live WebRTC video, telemetry, and browser-based control."
+site_url = "https://docs.drone-grid.com/"
+repo_url = "https://github.com/radodim/drone-grid"
+repo_name = "radodim/drone-grid"
+edit_uri = "edit/main/docs/content/"
+
+# Content lives in content/ — one level below this file — so the page tree
+# never picks up tooling files (this config, pyproject.toml, uv.lock).
+# Build output lands in docs/site (gitignored; Zensical requires site_dir
+# to stay within the config's directory).
+docs_dir = "content"
+site_dir = "site"
+
+# layout-only (header logo size); not brand theming
+extra_css = ["stylesheets/extra.css"]
+
+# gitignore-style. NOTE: inert in zensical 0.0.5x (verified — patterns are
+# ignored); kept for when the setting lands. The layout above is the real
+# guard against publishing tooling files.
+exclude_docs = """
+.*
+*.mp4
+*.drawio
+"""
+
+# Markdown extensions are Zensical's defaults, which cover everything this
+# site uses: admonition, attr_list, def_list, md_in_html, toc permalinks,
+# details, highlight, inlinehilite, tabbed, tasklist, superfences + mermaid,
+# and emoji. Link validation is on by default and enforced by build --strict.
+
+[project.theme]
+name = "zensical"
+logo = "assets/logo.svg"
+favicon = "assets/logo.svg"
+features = [
+  "navigation.tabs",
+  "navigation.instant",
+  "navigation.instant.progress",
+  "navigation.tracking",
+  "navigation.sections",
+  "navigation.indexes",
+  "navigation.top",
+  "navigation.footer",
+  "search.suggest",
+  "search.highlight",
+  "content.code.copy",
+  "content.code.annotate",
+  "content.tabs.link",
+  "toc.follow",
+]
+
+[[project.nav]]
+Home = "index.md"
+
+[[project.nav]]
+Architecture = [
+  "architecture/index.md",
+]
+
+[[project.nav]]
+Hardware = [
+  "hardware/index.md",
+  { "X650 with Raspberry Pi 3B" = [
+    "hardware/x650-raspberry-pi/index.md",
+    { "Drone setup" = "hardware/x650-raspberry-pi/drone-setup.md" },
+    { "Companion setup" = "hardware/x650-raspberry-pi/companion-setup.md" },
+    { "Safety recommendations" = "hardware/x650-raspberry-pi/safety-recommendations.md" },
+  ] },
+]
+
