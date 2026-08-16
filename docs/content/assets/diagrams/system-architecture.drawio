@@ -1,0 +1,312 @@
+<mxfile host="Electron" agent="drone-grid docs">
+  <diagram id="dg-system-architecture" name="System architecture">
+    <mxGraphModel dx="1178" dy="708" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Courier New;fontSize=18;fontColor=#1A1D21;" value="&lt;b&gt;Drone Grid — system architecture&lt;/b&gt;" vertex="1">
+          <mxGeometry height="30" width="520" x="196" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="zoneBrowser" parent="1" style="rounded=1;arcSize=6;fillColor=#F5F9FD;strokeColor=#D7DEE8;container=1;collapsible=0;verticalAlign=top;align=left;spacingLeft=10;spacingTop=4;fontSize=11;fontStyle=1;fontColor=#5B6572;fontFamily=Courier New;html=1;" value="BROWSER" vertex="1">
+          <mxGeometry height="88" width="170" x="190" y="172" as="geometry" />
+        </mxCell>
+        <mxCell id="browserSub" parent="zoneBrowser" style="text;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=10;fontColor=#5B6572;" value="&lt;div&gt;&lt;br&gt;&lt;/div&gt;pilot · share viewer" vertex="1">
+          <mxGeometry height="11.733333333333334" width="141.66666666666669" x="8.5" y="17.6" as="geometry" />
+        </mxCell>
+        <mxCell id="zoneVPS" parent="1" style="rounded=1;arcSize=6;fillColor=#F5F9FD;strokeColor=#D7DEE8;container=1;collapsible=0;verticalAlign=top;align=left;spacingLeft=10;spacingTop=4;fontSize=11;fontStyle=1;fontColor=#5B6572;fontFamily=Courier New;html=1;" value="&amp;nbsp; VPS" vertex="1">
+          <mxGeometry height="680" width="660" x="400" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="dockerBox" parent="zoneVPS" style="rounded=1;arcSize=4;fillColor=none;strokeColor=#D7DEE8;dashed=1;dashPattern=5 4;container=1;collapsible=0;verticalAlign=top;align=left;spacingLeft=10;spacingTop=2;fontSize=10;fontColor=#5B6572;fontFamily=Courier New;html=1;" value="Docker compose" vertex="1">
+          <mxGeometry height="410" width="628" x="10" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="traefik" parent="dockerBox" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;div&gt;&lt;font&gt;&lt;b&gt;proxy&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;color: light-dark(rgb(91, 101, 114), rgb(143, 152, 163)); font-size: 9.5px; background-color: transparent;&quot;&gt;Traefik · TLS&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;font color=&quot;#5B6572&quot; style=&quot;font-size: 9.5px;&quot;&gt;:80 → :443 redirect&lt;br&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="65" width="170" x="214" y="32" as="geometry" />
+        </mxCell>
+        <mxCell id="ui" parent="dockerBox" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;div&gt;&lt;font&gt;&lt;b&gt;ui&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font color=&quot;#5B6572&quot; style=&quot;font-size: 9.5px;&quot;&gt;nginx&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="36" width="56" x="14" y="32" as="geometry" />
+        </mxCell>
+        <mxCell id="backend" parent="dockerBox" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;div&gt;&lt;font&gt;&lt;b&gt;backend&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font color=&quot;#5B6572&quot; style=&quot;font-size: 9.5px;&quot;&gt;FastAPI&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="106" x="337" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="identity" parent="dockerBox" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;b&gt;identity&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#5B6572&#39; style=&#39;font-size:9.5px&#39;&gt;Keycloak&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="130" x="490" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="dbms" parent="dockerBox" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;container=1;collapsible=0;align=left;verticalAlign=bottom;spacingLeft=10;spacingBottom=4;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;b&gt;db&lt;/b&gt;&amp;nbsp;&amp;nbsp;&lt;font color=&quot;#5B6572&quot; style=&quot;font-size: 9.5px;&quot;&gt;Postgres&lt;/font&gt;" vertex="1">
+          <mxGeometry height="94" width="150" x="464" y="296" as="geometry" />
+        </mxCell>
+        <mxCell id="H8idfcWYxenexvIIpmCY-20" connectable="0" parent="dbms" style="group" value="" vertex="1">
+          <mxGeometry height="46" width="130" x="12" y="14" as="geometry" />
+        </mxCell>
+        <mxCell id="cylApp" parent="H8idfcWYxenexvIIpmCY-20" style="shape=cylinder3;size=6;fillColor=#F5F9FD;strokeColor=#D7DEE8;fontSize=9;fontColor=#5B6572;fontFamily=Courier New;verticalAlign=middle;html=1;" value="app" vertex="1">
+          <mxGeometry height="46" width="56" as="geometry" />
+        </mxCell>
+        <mxCell id="cylKC" parent="H8idfcWYxenexvIIpmCY-20" style="shape=cylinder3;size=6;fillColor=#F5F9FD;strokeColor=#D7DEE8;fontSize=9;fontColor=#5B6572;fontFamily=Courier New;verticalAlign=middle;html=1;" value="keycloak" vertex="1">
+          <mxGeometry height="46" width="64" x="66" as="geometry" />
+        </mxCell>
+        <mxCell id="messaging" parent="dockerBox" style="rounded=1;arcSize=14;fillColor=#FFFFFF;strokeColor=#D7DEE8;container=0;collapsible=0;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;b&gt;messaging&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#5B6572&#39; style=&#39;font-size:9.5px&#39;&gt;NATS&lt;/font&gt;" vertex="1">
+          <mxGeometry height="88" width="150" x="14" y="264" as="geometry" />
+        </mxCell>
+        <mxCell id="streaming" parent="dockerBox" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;b&gt;streaming (media server)&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#5B6572&#39; style=&#39;font-size:9.5px&#39;&gt;Mediamtx&lt;br&gt;auth: delegated to backend&lt;/font&gt;" vertex="1">
+          <mxGeometry height="74" width="200" x="14" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="eHook" edge="1" parent="dockerBox" source="streaming" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8A94A3;fontColor=#5B6572;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=1;exitY=0.568;entryX=0;entryY=0.2;" target="backend" value="&amp;nbsp;Auth&amp;nbsp;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ePoll" edge="1" parent="dockerBox" source="backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8A94A3;fontColor=#5B6572;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=0;exitY=0.6;entryX=1;entryY=0.892;" target="streaming" value="&amp;nbsp;Control API&amp;nbsp;">
+          <mxGeometry relative="1" x="-0.0012" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="H8idfcWYxenexvIIpmCY-17" connectable="0" parent="dockerBox" style="group" value="" vertex="1">
+          <mxGeometry height="36" width="130" x="24" y="302" as="geometry" />
+        </mxCell>
+        <mxCell id="lane1" parent="H8idfcWYxenexvIIpmCY-17" style="rounded=1;arcSize=50;fillColor=#F5F9FD;strokeColor=#D7DEE8;fontSize=9;fontColor=#5B6572;fontFamily=Courier New;html=1;" value="drone.&amp;lt;id&amp;gt;.control" vertex="1">
+          <mxGeometry height="16" width="130" as="geometry" />
+        </mxCell>
+        <mxCell id="lane2" parent="H8idfcWYxenexvIIpmCY-17" style="rounded=1;arcSize=50;fillColor=#F5F9FD;strokeColor=#D7DEE8;fontSize=9;fontColor=#5B6572;fontFamily=Courier New;html=1;" value="drone.&amp;lt;id&amp;gt;.telemetry" vertex="1">
+          <mxGeometry height="16" width="129" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="eSqlApp" edge="1" parent="dockerBox" source="backend" style="edgeStyle=none;rounded=0;html=1;strokeColor=#8A94A3;fontColor=#5B6572;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=0.5;exitY=1;entryX=0;entryY=0.5;exitDx=0;exitDy=0;entryDx=0;entryDy=0;entryPerimeter=0;curved=0;" target="cylApp" value="">
+          <mxGeometry relative="1" x="-0.1295" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="390" y="333" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eNats" edge="1" parent="dockerBox" source="backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8A94A3;fontColor=#5B6572;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;startArrow=block;startSize=4;startFill=1;entryX=1;entryY=0.3;" target="messaging" value="Control and telemetry">
+          <mxGeometry relative="1" x="0.1182" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="360" y="290.41999999999996" />
+            </Array>
+            <mxPoint x="360" y="250" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="runner" parent="zoneVPS" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;b&gt;GitHub Actions runner&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#5B6572&quot; style=&quot;font-size: 9.5px;&quot;&gt;self-hosted · systemd&lt;br&gt;&lt;br&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="50" width="190" x="35" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="eSig" edge="1" parent="1" source="traefik" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8A94A3;fontColor=#5B6572;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=0.25;exitY=1;entryX=0.48;entryY=0;exitDx=0;exitDy=0;" target="streaming" value="webrtc.drone-grid.com&amp;nbsp;">
+          <mxGeometry relative="1" x="0.747" y="4" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="666.52" y="360" />
+              <mxPoint x="520" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="zoneDrone" parent="1" style="rounded=1;arcSize=6;fillColor=#F5F9FD;strokeColor=#D7DEE8;container=0;collapsible=0;verticalAlign=top;align=left;spacingLeft=10;spacingTop=4;fontSize=11;fontStyle=1;fontColor=#5B6572;fontFamily=Courier New;html=1;" value="DRONE" vertex="1">
+          <mxGeometry height="470" width="350" x="1190" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="zoneGround" parent="1" style="rounded=1;arcSize=6;fillColor=#F5F9FD;strokeColor=#D7DEE8;container=1;collapsible=0;verticalAlign=top;align=left;spacingLeft=10;spacingTop=4;fontSize=11;fontStyle=1;fontColor=#5B6572;fontFamily=Courier New;html=1;" value="BACKUP RADIO TRANSMITTER (TX)" vertex="1">
+          <mxGeometry height="38" width="210" x="1216.55" y="628" as="geometry" />
+        </mxCell>
+        <mxCell id="github" parent="1" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;b&gt;GitHub — radodim/drone-grid&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#5B6572&#39; style=&#39;font-size:9.5px&#39;&gt;release-triggered deploy&lt;/font&gt;" vertex="1">
+          <mxGeometry height="50" width="240" x="410" y="830" as="geometry" />
+        </mxCell>
+        <mxCell id="eOidc" edge="1" parent="1" source="zoneBrowser" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2E6CB8;fontColor=#2E6CB8;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=1.013;exitY=0.288;entryX=0.799;entryY=0.024;entryDx=0;entryDy=0;entryPerimeter=0;exitDx=0;exitDy=0;exitPerimeter=0;" target="traefik" value="OIDC · auth.drone-grid.com">
+          <mxGeometry relative="1" x="-0.2153" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="360" y="197.29" />
+              <mxPoint x="360" y="196" />
+              <mxPoint x="759.81" y="196" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eRest" edge="1" parent="1" source="zoneBrowser" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2E6CB8;fontColor=#2E6CB8;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;startArrow=block;startSize=4;startFill=1;exitX=1;exitY=0.45;" target="traefik" value="REST · WSS control/telemetry · api.drone-grid.com">
+          <mxGeometry relative="1" x="-0.1325" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eWhep" edge="1" parent="1" source="zoneBrowser" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2E6CB8;fontColor=#2E6CB8;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=1;exitY=0.7;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" target="traefik" value="WHEP signaling · webrtc.drone-grid.com">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eSrtpB" edge="1" parent="1" source="zoneBrowser" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0F8A6C;fontColor=#0F8A6C;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;startArrow=block;startSize=4;startFill=1;exitX=0.5;exitY=1;entryX=0;entryY=0.5;" target="streaming" value="SRTP ⇄ UDP">
+          <mxGeometry relative="1" x="-0.3976" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="275" y="443" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eWss" edge="1" parent="1" source="companion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2E6CB8;fontColor=#2E6CB8;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;startArrow=block;startSize=4;startFill=1;exitX=0;exitY=0.375;entryX=1;entryY=0.15;" target="traefik" value="WSS · api.drone-grid.com">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="850" y="214.5" />
+              <mxPoint x="850" y="291.83" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eRtsps" edge="1" parent="1" source="companion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7A8CA6;fontColor=#7A8CA6;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;dashed=1;dashPattern=6 4;endArrow=block;endSize=4;exitX=0;exitY=0.688;entryX=1;entryY=0.45;" target="traefik" value="RTSPS · media.drone-grid.com">
+          <mxGeometry relative="1" x="-0.4517" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="880" y="233.33" />
+              <mxPoint x="880" y="311.33" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eWhip" edge="1" parent="1" source="video" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2E6CB8;fontColor=#2E6CB8;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=0;exitY=0.346;entryX=1;entryY=0.75;" target="traefik" value="WHIP publish · webrtc.drone-grid.com">
+          <mxGeometry relative="1" x="0.1932" y="-1" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1120" y="293" />
+              <mxPoint x="1120" y="331" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eSrtpD" edge="1" parent="1" source="video" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0F8A6C;fontColor=#0F8A6C;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;startArrow=block;startSize=4;startFill=1;exitX=0;exitY=0.5;entryX=0;entryY=0.77;" target="streaming" value="SRTP ⇄ UDP">
+          <mxGeometry relative="1" x="-0.829" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1146" y="301" />
+              <mxPoint x="1146" y="890" />
+              <mxPoint x="370" y="890" />
+              <mxPoint x="370" y="463" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eUi" edge="1" parent="1" source="traefik" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8A94A3;fontColor=#5B6572;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=0;exitY=0.25;entryX=1;entryY=0.45;" target="ui" value="drone-grid.com">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eBe" edge="1" parent="1" source="traefik" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8A94A3;fontColor=#5B6572;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=0.5;exitY=1;entryX=0.367;entryY=-0.004;entryDx=0;entryDy=0;entryPerimeter=0;" target="backend" value="api.drone-grid.com">
+          <mxGeometry relative="1" x="-0.3602" y="1" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="710" y="347" />
+              <mxPoint x="710" y="410" />
+              <mxPoint x="785.92" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eId" edge="1" parent="1" source="traefik" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8A94A3;fontColor=#5B6572;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=0.92;exitY=1.013;entryX=0.5;entryY=0;exitDx=0;exitDy=0;exitPerimeter=0;" target="identity" value="auth.drone-grid.com">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="780.42" y="390" />
+              <mxPoint x="965" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eRtspInt" edge="1" parent="1" source="traefik" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7A8CA6;fontColor=#7A8CA6;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;dashed=1;dashPattern=6 4;endArrow=block;endSize=4;exitX=-0.002;exitY=0.572;entryX=0.08;entryY=0;labelAutoRotate=1;entryDx=0;entryDy=0;entryPerimeter=0;exitDx=0;exitDy=0;exitPerimeter=0;" target="streaming" value="&amp;nbsp;RTSP media.drone-grid.com">
+          <mxGeometry relative="1" x="-0.0054" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="623.71" y="330" />
+              <mxPoint x="440" y="330" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eJwks" edge="1" parent="1" source="backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8A94A3;fontColor=#5B6572;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=1;exitY=0.333;entryX=0;entryY=0.333;" target="identity" value="JWKS">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eSqlKc" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8A94A3;fontColor=#5B6572;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;entryX=0.5;entryY=0;" target="cylKC" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="984" y="496" />
+            </Array>
+            <mxPoint x="984" y="496" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eSbus" edge="1" parent="1" source="rx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7C5CD6;fontColor=#7C5CD6;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" target="esp32" value="SBUS">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1279.56" y="490" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eRf" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7C5CD6;fontColor=#7C5CD6;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;dashed=1;dashPattern=6 4;endArrow=block;endSize=4;entryX=0.45;entryY=1;" target="rx" value="SEND KILL SWITCH SIGNAL/RC control">
+          <mxGeometry relative="1" x="-0.4527" y="-20" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1280.58" y="628" />
+            </Array>
+            <mxPoint x="1280" y="630" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eGhRunner" edge="1" parent="1" source="github" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5B6572;fontColor=#5B6572;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;dashed=1;dashPattern=1 3;endArrow=block;endSize=4;exitX=0.5;exitY=0;entryX=0.5;entryY=1;exitDx=0;exitDy=0;" target="runner" value="release">
+          <mxGeometry relative="1" x="0.2" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eCompose" edge="1" parent="1" source="runner" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5B6572;fontColor=#5B6572;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;dashed=1;dashPattern=1 3;endArrow=block;endSize=4;exitX=0.5;exitY=0;entryX=0.191;entryY=1.002;entryDx=0;entryDy=0;entryPerimeter=0;" target="dockerBox" value="">
+          <mxGeometry relative="1" x="-0.0476" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="droneSub" parent="1" style="text;html=1;align=left;verticalAlign=top;fontFamily=Courier New;fontSize=10;fontColor=#5B6572;" value="5G/4G USB modem or Wi-Fi hotspot onboard" vertex="1">
+          <mxGeometry height="16" width="300" x="1202" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="compBox" parent="1" style="rounded=1;arcSize=4;fillColor=none;strokeColor=#D7DEE8;dashed=1;dashPattern=5 4;container=0;collapsible=0;verticalAlign=top;align=left;spacingLeft=10;spacingTop=2;fontSize=10;fontColor=#5B6572;fontFamily=Courier New;html=1;" value="companion computer" vertex="1">
+          <mxGeometry height="184" width="264" x="1206" y="166" as="geometry" />
+        </mxCell>
+        <mxCell id="fc" parent="1" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;b&gt;Flight Controller&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#5B6572&#39; style=&#39;font-size:9.5px&#39;&gt;Pixhawk · running PX4&lt;/font&gt;" vertex="1">
+          <mxGeometry height="52" width="150" x="1364" y="384" as="geometry" />
+        </mxCell>
+        <mxCell id="esp32" parent="1" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;b&gt;ESP32&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#5B6572&#39; style=&#39;font-size:9.5px&#39;&gt;kill switch · WIP&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="124" x="1217.55" y="388" as="geometry" />
+        </mxCell>
+        <mxCell id="H8idfcWYxenexvIIpmCY-11" edge="1" parent="1" source="rx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7C5CD6;fontColor=#7C5CD6;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" target="fc">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1439" y="505" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rx" parent="1" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;font&gt;&lt;b&gt;RADIO RECEIVER (RX)&lt;/b&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="140" x="1217.55" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="companion" parent="1" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;b&gt;drone-grid-companion&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#5B6572&#39; style=&#39;font-size:9.5px&#39;&gt;systemd&lt;br&gt;control &amp;amp; telemetry&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="160" x="1217.55" y="192" as="geometry" />
+        </mxCell>
+        <mxCell id="video" parent="1" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=top;spacingLeft=10;spacingTop=2;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;b&gt;drone-grid-video&lt;/b&gt;&lt;br&gt;&lt;font color=&#39;#5B6572&#39; style=&#39;font-size:9.5px&#39;&gt;systemd&lt;/font&gt;" vertex="1">
+          <mxGeometry height="50" width="160" x="1217.55" y="276" as="geometry" />
+        </mxCell>
+        <mxCell id="camera" parent="1" style="rounded=1;arcSize=8;fillColor=#FFFFFF;strokeColor=#D7DEE8;align=left;verticalAlign=middle;spacingLeft=10;fontSize=11;fontColor=#1A1D21;fontFamily=Courier New;html=1;" value="&lt;b&gt;Camera&lt;/b&gt;" vertex="1">
+          <mxGeometry height="26" width="64" x="1400" y="288" as="geometry" />
+        </mxCell>
+        <mxCell id="eCam" edge="1" parent="1" source="video" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8A94A3;strokeWidth=1.6;endArrow=block;endSize=4;exitX=1;exitY=0.5;entryX=0;entryY=0.5;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" target="camera">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eMav" edge="1" parent="1" source="companion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#B07508;fontColor=#B07508;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;startArrow=block;startSize=4;startFill=1;labelAutoRotate=1;exitX=1;exitY=0.5;entryX=0.907;entryY=0;" target="fc" value="MAVLink (Ethernet)">
+          <mxGeometry relative="1" x="0.3393" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1500" y="222" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="H8idfcWYxenexvIIpmCY-8" edge="1" parent="1" source="esp32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7C5CD6;fontColor=#7C5CD6;strokeWidth=1.6;fontFamily=Courier New;fontSize=10;endArrow=block;endSize=4;exitX=0.5;exitY=0;entryX=0.277;entryY=0.996;" target="compBox" value="GPIO trigger shutdown">
+          <mxGeometry relative="1" x="0.0226" y="9" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="H8idfcWYxenexvIIpmCY-14" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="16" width="1208" x="196" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" parent="H8idfcWYxenexvIIpmCY-14" style="text;html=1;align=left;fontFamily=Courier New;fontSize=10;fontColor=#2E6CB8;" value="— TLS · HTTPS/WSS" vertex="1">
+          <mxGeometry height="16" width="150" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" parent="H8idfcWYxenexvIIpmCY-14" style="text;html=1;align=left;fontFamily=Courier New;fontSize=10;fontColor=#0F8A6C;" value="— WebRTC media · SRTP/UDP" vertex="1">
+          <mxGeometry height="16" width="200" x="156" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" parent="H8idfcWYxenexvIIpmCY-14" style="text;html=1;align=left;fontFamily=Courier New;fontSize=10;fontColor=#B07508;" value="— MAVLink · UDP" vertex="1">
+          <mxGeometry height="16" width="130" x="364" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" parent="H8idfcWYxenexvIIpmCY-14" style="text;html=1;align=left;fontFamily=Courier New;fontSize=10;fontColor=#8A94A3;" value="— internal · Docker network" vertex="1">
+          <mxGeometry height="16" width="200" x="500" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" parent="H8idfcWYxenexvIIpmCY-14" style="text;html=1;align=left;fontFamily=Courier New;fontSize=10;fontColor=#7A8CA6;" value="- - legacy / rollback" vertex="1">
+          <mxGeometry height="16" width="160" x="706" as="geometry" />
+        </mxCell>
+        <mxCell id="leg6" parent="H8idfcWYxenexvIIpmCY-14" style="text;html=1;align=left;fontFamily=Courier New;fontSize=10;fontColor=#7C5CD6;" value="- - kill-switch RF" vertex="1">
+          <mxGeometry height="16" width="140" x="872" as="geometry" />
+        </mxCell>
+        <mxCell id="leg7" parent="H8idfcWYxenexvIIpmCY-14" style="text;html=1;align=left;fontFamily=Courier New;fontSize=10;fontColor=#5B6572;" value="· · deploy / provisioning" vertex="1">
+          <mxGeometry height="16" width="190" x="1018" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

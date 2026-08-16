@@ -1,0 +1,14 @@
+/* Layout-only tweaks — no theming (palette/fonts stay Zensical defaults). */
+
+/* Header logo: the default ~24px slot renders the mark barely visible */
+.md-header__button.md-logo img,
+.md-nav__button.md-logo img {
+  height: 2rem;
+  width: auto;
+}
+
+/* Hide the auto-generated page title on pages without a markdown H1
+   (id __skip only appears on generated titles; slugged ids otherwise) */
+h1#__skip {
+  display: none;
+}
