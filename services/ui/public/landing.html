@@ -1,0 +1,753 @@
+<!--
+  Drone Grid — landing page (canonical source).
+  Served by nginx at "/" in production (exact-match location in nginx.conf);
+  media is referenced relatively (media/...) so the page also works via
+  Vite dev at /landing.html or opened straight from the filesystem.
+  The claude.ai artifact preview is derived from this file: the head/body
+  wrapper is stripped and media srcs become base64 data URIs.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#2E6CB8">
+  <title>Drone Grid</title>
+  <meta name="description" content="Fly a drone from anywhere — live video, telemetry, and manual control over the internet. Open-source and self-funded.">
+  <meta property="og:title" content="Drone Grid">
+  <meta property="og:description" content="Fly a drone from anywhere — live video, telemetry, and manual control over the internet. Open-source and self-funded.">
+  <meta property="og:image" content="https://drone-grid.com/media/landing-demo-poster.jpg">
+  <meta property="og:url" content="https://drone-grid.com/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+<style>
+  :root {
+    --radius: 0.625rem;
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.5301 0.1355 255.26);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --border: oklch(0.922 0 0);
+    --ring: oklch(0.708 0.05 247);
+    --grid-line: oklch(0.145 0 0 / 5%);
+    --chip-live: oklch(0.62 0.17 148);
+    --warning: oklch(0.55 0.12 75);
+
+    /* Console, photo frame, and contributor panel are screens:
+       committed dark in both themes. */
+    --screen: oklch(0.17 0.012 250);
+    --screen-border: oklch(0.32 0.02 250);
+    --screen-fg: oklch(0.9 0.015 250);
+    --screen-muted: oklch(0.68 0.02 250);
+    --screen-brand: oklch(0.6832 0.135 247.79);
+    --screen-live: oklch(0.75 0.19 148);
+    --screen-grid-line: oklch(1 0 0 / 5%);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --background: oklch(0.145 0 0);
+      --foreground: oklch(0.985 0 0);
+      --card: oklch(0.205 0 0);
+      --card-foreground: oklch(0.985 0 0);
+      --primary: oklch(0.6832 0.135 247.79);
+      --primary-foreground: oklch(0.145 0.02 250);
+      --secondary: oklch(0.269 0 0);
+      --secondary-foreground: oklch(0.985 0 0);
+      --muted: oklch(0.269 0 0);
+      --muted-foreground: oklch(0.708 0 0);
+      --accent: oklch(0.269 0 0);
+      --accent-foreground: oklch(0.985 0 0);
+      --border: oklch(1 0 0 / 10%);
+      --ring: oklch(0.556 0.06 247);
+      --grid-line: oklch(1 0 0 / 6%);
+      --chip-live: oklch(0.72 0.17 148);
+      --warning: oklch(0.79 0.13 80);
+    }
+  }
+  :root[data-theme="dark"] {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.6832 0.135 247.79);
+    --primary-foreground: oklch(0.145 0.02 250);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --border: oklch(1 0 0 / 10%);
+    --ring: oklch(0.556 0.06 247);
+    --grid-line: oklch(1 0 0 / 6%);
+    --chip-live: oklch(0.72 0.17 148);
+    --warning: oklch(0.79 0.13 80);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  a { color: inherit; }
+  :is(a, button, summary):focus-visible {
+    outline: 3px solid color-mix(in oklab, var(--ring) 50%, transparent);
+    outline-offset: 2px;
+    border-radius: calc(var(--radius) - 4px);
+  }
+  .wrap { max-width: 68rem; margin-inline: auto; padding-inline: 1.25rem; }
+  section { padding-block: 4.5rem 0; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+  p { margin: 0; }
+
+  .eyebrow {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  /* ── Buttons (mirrors ui/button.tsx) ─────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    height: 2.5rem; padding-inline: 1.25rem;
+    border-radius: calc(var(--radius) - 2px);
+    font-size: 0.875rem; font-weight: 500; line-height: 1;
+    text-decoration: none; white-space: nowrap;
+    border: 1px solid transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  .btn svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+  .btn-primary { background: var(--primary); color: var(--primary-foreground); }
+  .btn-primary:hover { background: color-mix(in oklab, var(--primary) 90%, transparent); }
+  .btn-outline { border-color: var(--border); background: var(--background); color: var(--foreground); }
+  .btn-outline:hover { background: var(--accent); }
+  /* Buttons on committed-dark panels — constant across themes */
+  .btn-screen { background: var(--screen-brand); color: oklch(0.145 0.02 250); }
+  .btn-screen:hover { background: color-mix(in oklab, var(--screen-brand) 88%, white); }
+  .btn-screen-outline { border-color: oklch(1 0 0 / 25%); color: var(--screen-fg); background: transparent; }
+  .btn-screen-outline:hover { background: oklch(1 0 0 / 8%); }
+
+  /* ── Nav ─────────────────────────────────────────────────── */
+  header.site {
+    border-bottom: 1px solid var(--border);
+    background: var(--background);
+  }
+  .nav {
+    display: flex; align-items: center; gap: 1.5rem;
+    height: 5rem;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 0.75rem;
+    font-weight: 600; font-size: 1.1875rem; text-decoration: none;
+    margin-right: auto;
+  }
+  .brand svg { width: 2.75rem; height: 2.75rem; }
+  .nav-links { display: flex; gap: 1.375rem; }
+  .nav-links a {
+    font-size: 0.875rem; color: var(--muted-foreground); text-decoration: none;
+  }
+  .nav-links a:hover { color: var(--foreground); }
+  .nav-cta { display: flex; gap: 0.625rem; }
+  .nav-cta .btn { height: 2.25rem; padding-inline: 0.875rem; }
+  @media (max-width: 44rem) {
+    .nav-links { display: none; }
+  }
+  @media (max-width: 30rem) {
+    .nav-cta .btn-outline { display: none; }
+  }
+
+  /* ── Hero ────────────────────────────────────────────────── */
+  .hero { position: relative; padding-block: 2rem 0; }
+  .hero-grid {
+    position: absolute; inset: 0; z-index: -1;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 3rem 3rem;
+    mask-image: radial-gradient(ellipse 90% 80% at 50% 35%, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 35%, black 30%, transparent 75%);
+  }
+  .hero h1 {
+    font-size: clamp(2.25rem, 1.2rem + 4.2vw, 3.75rem);
+    line-height: 1.08;
+    font-weight: 650;
+    letter-spacing: -0.025em;
+    max-width: 46rem;
+    margin-top: 1rem;
+  }
+  .hero-sub {
+    max-width: 42rem;
+    margin-top: 1.375rem;
+    font-size: 1.125rem;
+    color: var(--muted-foreground);
+  }
+  .hero-sub a { color: var(--primary); text-underline-offset: 4px; }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
+
+  /* ── Console (demo video) ────────────────────────────────── */
+  .console-frame {
+    margin-top: 2.5rem;
+    margin-inline: auto;
+    /* On shorter viewports, narrow the frame so the whole video fits the
+       first screen; ~24rem is the chrome above it (nav + hero text). */
+    max-width: clamp(40rem, calc((100vh - 24rem) * 2.2222), 100%);
+  }
+  @media (max-width: 44rem) {
+    .hero-cta { margin-top: 1.5rem; }
+    .console-frame { margin-top: 2rem; }
+  }
+  .console {
+    position: relative;
+    aspect-ratio: 1280 / 576; /* matches the landing-demo rendition */
+    border-radius: calc(var(--radius) + 4px);
+    border: 1px solid var(--screen-border);
+    background: var(--screen);
+    overflow: hidden;
+  }
+  .console video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+  }
+  .caption {
+    margin-top: 0.875rem;
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+    text-align: center;
+  }
+  .caption-safety {
+    margin-top: 0.375rem;
+    font-size: 0.75rem;
+  }
+  .caption-safety a { color: inherit; text-underline-offset: 3px; }
+  .caption-safety a:hover { color: var(--foreground); }
+
+  /* ── Section headers ─────────────────────────────────────── */
+  .section-head { max-width: 42rem; }
+  .section-head h2 {
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.125rem);
+    font-weight: 650; letter-spacing: -0.02em;
+    margin-top: 0.875rem;
+  }
+  .section-head p { margin-top: 0.875rem; color: var(--muted-foreground); }
+
+  /* ── Features ────────────────────────────────────────────── */
+  .feature-grid {
+    display: grid; gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 2rem;
+  }
+  @media (max-width: 56rem) { .feature-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 36rem) { .feature-grid { grid-template-columns: 1fr; } }
+  .feature {
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) + 4px);
+    background: var(--card);
+    color: var(--card-foreground);
+    padding: 1.375rem 1.375rem 1.5rem;
+    display: flex; flex-direction: column; gap: 0.75rem;
+  }
+  .feature svg { width: 1.25rem; height: 1.25rem; color: var(--primary); }
+  .feature h3 { font-size: 0.9375rem; font-weight: 600; }
+  .feature p { font-size: 0.875rem; color: var(--muted-foreground); }
+  .warn {
+    display: flex; gap: 0.5rem; align-items: flex-start;
+    font-size: 0.75rem; line-height: 1.5;
+    color: var(--warning);
+  }
+  .warn svg { width: 0.875rem; height: 0.875rem; flex-shrink: 0; margin-top: 0.15em; color: var(--warning); }
+
+  /* ── Hardware ────────────────────────────────────────────── */
+  .hardware {
+    display: grid; gap: 2.5rem;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: center;
+    margin-top: 2.5rem;
+  }
+  @media (max-width: 56rem) { .hardware { grid-template-columns: 1fr; gap: 1.75rem; } }
+  .photo {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: calc(var(--radius) + 4px);
+    border: 1px solid var(--screen-border);
+    background-color: var(--screen);
+    background-image:
+      linear-gradient(var(--screen-grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--screen-grid-line) 1px, transparent 1px);
+    background-size: 2.5rem 2.5rem;
+    overflow: hidden;
+    color: var(--screen-fg);
+  }
+  .hud-bracket { position: absolute; z-index: 1; pointer-events: none; width: 2.75%; aspect-ratio: 1; border: 0 solid oklch(1 0 0 / 22%); }
+  .hud-bracket.tl { top: 6%; left: 4.5%; border-top-width: 2px; border-left-width: 2px; }
+  .hud-bracket.tr { top: 6%; right: 4.5%; border-top-width: 2px; border-right-width: 2px; }
+  .hud-bracket.bl { bottom: 6%; left: 4.5%; border-bottom-width: 2px; border-left-width: 2px; }
+  .hud-bracket.br { bottom: 6%; right: 4.5%; border-bottom-width: 2px; border-right-width: 2px; }
+  .photo .slide {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+  }
+  .photo .slide.is-active { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    .photo .slide { transition: none; }
+  }
+  .ph-nav {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+    width: 2.25rem; height: 2.25rem; border-radius: 50%;
+    border: 1px solid oklch(1 0 0 / 25%);
+    background: oklch(0.12 0.01 250 / 55%);
+    color: var(--screen-fg);
+    display: grid; place-items: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .ph-nav:hover { background: oklch(0.12 0.01 250 / 80%); }
+  .ph-nav.prev { left: 0.75rem; }
+  .ph-nav.next { right: 0.75rem; }
+  .ph-nav svg { width: 1rem; height: 1rem; }
+  .ph-dots {
+    position: absolute; bottom: 0.75rem; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 0.4rem; z-index: 2;
+  }
+  .ph-dots span {
+    width: 0.4rem; height: 0.4rem; border-radius: 50%;
+    background: oklch(1 0 0 / 30%);
+  }
+  .ph-dots span.on { background: var(--screen-brand); }
+  .kit { list-style: none; margin: 1.75rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.875rem; }
+  .kit li { display: flex; gap: 0.875rem; font-size: 0.9375rem; }
+  .kit .k {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.6875rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--primary); padding-top: 0.2em; min-width: 6.5rem; flex-shrink: 0;
+  }
+  .kit .v { color: var(--muted-foreground); }
+  .kit .v b { color: var(--foreground); font-weight: 600; }
+
+  /* ── Roadmap ─────────────────────────────────────────────── */
+  .roadmap {
+    display: grid; gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 2.5rem;
+  }
+  @media (max-width: 56rem) { .roadmap { grid-template-columns: 1fr; } }
+  .stage {
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) + 4px);
+    background: var(--card);
+    padding: 1.375rem;
+  }
+  .stage-tag {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-size: 0.6875rem; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0.3rem 0.7rem; border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted-foreground);
+  }
+  .stage-tag.now {
+    color: var(--primary);
+    border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+    background: color-mix(in oklab, var(--primary) 8%, transparent);
+  }
+  .stage ul { list-style: none; margin: 1.125rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.625rem; }
+  .stage li {
+    font-size: 0.875rem; color: var(--card-foreground);
+    padding-left: 1.125rem; position: relative;
+  }
+  .stage li::before {
+    content: ""; position: absolute; left: 0; top: 0.55em;
+    width: 0.375rem; height: 0.375rem; border-radius: 50%;
+    background: var(--border);
+  }
+  .stage.now li::before { background: var(--chip-live); }
+  .stage li a { color: var(--primary); text-underline-offset: 3px; }
+  .stage li .warn { margin-top: 0.5rem; }
+
+  /* ── Let's build together ────────────────────────────────── */
+  .build {
+    position: relative;
+    border-radius: calc(var(--radius) + 4px);
+    border: 1px solid var(--screen-border);
+    background-color: var(--screen);
+    background-image:
+      radial-gradient(ellipse 100% 120% at 85% 0%, oklch(0.6832 0.135 247.79 / 10%), transparent 55%),
+      linear-gradient(var(--screen-grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--screen-grid-line) 1px, transparent 1px);
+    background-size: auto, 3rem 3rem, 3rem 3rem;
+    color: var(--screen-fg);
+    padding: 3rem 2.5rem 3.25rem;
+    overflow: hidden;
+    margin-top: 2.5rem;
+  }
+  @media (max-width: 44rem) { .build { padding: 2.25rem 1.5rem 2.5rem; } }
+  .build-logo {
+    position: absolute; right: -2.5rem; bottom: -3.5rem;
+    width: 17rem; height: 17rem; opacity: 0.08;
+    pointer-events: none;
+  }
+  @media (max-width: 44rem) { .build-logo { display: none; } }
+  .build-inner { position: relative; max-width: 38rem; }
+  .build-chip {
+    display: inline-block; max-width: 100%;
+    text-align: center; line-height: 1.6;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.6875rem; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0.35em 0.9em;
+    border: 1px solid oklch(1 0 0 / 18%);
+    border-radius: 999px;
+    background: oklch(0.12 0.01 250 / 55%);
+  }
+  .build-chip .dot {
+    display: inline-block; vertical-align: middle;
+    width: 0.5em; height: 0.5em; border-radius: 50%;
+    margin-right: 0.55em; margin-top: -0.15em;
+    background: var(--screen-live);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .build-chip .dot { animation: blink 2.2s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0.25; } }
+  }
+  .build h2 {
+    font-size: clamp(1.75rem, 1.2rem + 2.4vw, 2.5rem);
+    font-weight: 650; letter-spacing: -0.02em;
+    margin-top: 1.125rem;
+  }
+  .build p { margin-top: 1rem; color: var(--screen-muted); font-size: 1rem; }
+  .build p b { color: var(--screen-fg); font-weight: 600; }
+  .build p a { color: var(--screen-brand); text-underline-offset: 4px; }
+  .build-cta { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.75rem; }
+  .build-tags {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem;
+    margin-top: 1.5rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--screen-muted);
+  }
+
+  /* ── Footer ──────────────────────────────────────────────── */
+  footer.site {
+    margin-top: 5rem;
+    border-top: 1px solid var(--border);
+    padding-block: 2.25rem 2.75rem;
+  }
+  .foot {
+    display: flex; flex-wrap: wrap; gap: 1rem 2rem;
+    align-items: center; justify-content: space-between;
+    font-size: 0.8125rem; color: var(--muted-foreground);
+  }
+  .foot-brand { display: flex; align-items: center; gap: 0.625rem; font-weight: 600; color: var(--foreground); }
+  .foot-brand svg { width: 1.625rem; height: 1.625rem; }
+  .foot nav { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+  .foot a { text-decoration: none; color: var(--muted-foreground); }
+  .foot a:hover { color: var(--foreground); }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="#">
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#8CC6F4"/><stop offset="1" stop-color="#2E6CB8"/>
+          </linearGradient>
+          <g id="rotor">
+            <circle r="13" fill="#DCEEFB" stroke="#8CC6F4" stroke-width="2"/>
+            <circle r="4.5" fill="#2B62A6"/>
+            <path d="M-14.6 -12.2 A19 19 0 0 0 -8 17.2 M14.6 12.2 A19 19 0 0 0 8 -17.2" fill="none" stroke="#4C9FE8" stroke-width="4" stroke-linecap="round"/>
+          </g>
+          <g id="quad">
+            <path d="M84 98 42 44 M116 98 158 44 M84 118 42 166 M116 118 158 166" fill="none" stroke="#2B62A6" stroke-width="10" stroke-linecap="round"/>
+            <path d="M60 128 A20 20 0 0 1 63 90 A22 22 0 0 1 100 74 A24 24 0 0 1 140 88 A21 21 0 0 1 146 128 Z" fill="url(#gSky)"/>
+            <use href="#rotor" x="42" y="44"/><use href="#rotor" x="158" y="44"/>
+            <use href="#rotor" x="42" y="166"/><use href="#rotor" x="158" y="166"/>
+          </g>
+        </defs>
+        <use href="#quad"/>
+      </svg>
+      Drone Grid
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#hardware">Hardware</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#build">Contribute</a>
+      <a href="https://docs.drone-grid.com">Docs</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-outline" href="https://github.com/radodim/drone-grid">GitHub</a>
+      <a class="btn btn-primary" href="/drones">Login / Register</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ── Hero ─────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="wrap">
+      <p class="eyebrow">Open-source drone platform</p>
+      <h1>Fly a drone from anywhere.</h1>
+      <p class="hero-sub">
+        Today, Drone Grid is a cloud system for operating multirotor UAVs.
+        Its ambitions are far greater than that — see the
+        <a href="#roadmap">roadmap</a>.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="/drones">Try Drone Grid</a>
+        <a class="btn btn-outline" href="https://github.com/radodim/drone-grid">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.17c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.75 2.69 1.25 3.34.95.1-.74.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.7 5.38-5.26 5.66.41.35.77 1.05.77 2.12v3.15c0 .3.21.66.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+          View source
+        </a>
+      </div>
+
+      <div class="console-frame">
+        <div class="console">
+          <video src="media/landing-demo.mp4" poster="media/landing-demo-poster.jpg"
+                 autoplay muted loop playsinline controls
+                 aria-label="Screen recording of the Drone Grid control interface during a real flight"></video>
+        </div>
+        <p class="caption">The pilot could have been 8,000 km away.</p>
+        <p class="caption caption-safety">
+          Follow your local laws and regulations. Read the
+          <a href="https://docs.drone-grid.com">documentation</a> and, most importantly,
+          the <a href="https://docs.drone-grid.com/hardware/x650-raspberry-pi/safety-recommendations/">safety recommendations</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Features ─────────────────────────────────────────── -->
+  <section id="features">
+    <div class="wrap">
+      <p class="eyebrow">Features</p>
+      <div class="feature-grid">
+        <div class="feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.152A4 4 0 0 0 17.32 5z"/></svg>
+          <h3>Controls</h3>
+          <p>Fly with the virtual joysticks, a keyboard, or any gamepad supported by the Gamepad API (a joystick from an old console works).</p>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+          <h3>Telemetry HUD</h3>
+          <p>Altitude, flight mode, link health, battery, GPS — all displayed in real time.</p>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m22 8-6 4 6 4V8z"/></svg>
+          <h3>Low-latency live video stream</h3>
+          <p>~250 ms glass-to-glass on average over mobile network.</p>
+          <span class="warn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            Very dependent on the mobile network and on the distance between you, the drone, and the compute infrastructure.
+          </span>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <h3>Share a flight</h3>
+          <p>Hand anyone a link to watch your live video stream and telemetry — view-only, revocable, no account needed.</p>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+          <h3>Self-registration</h3>
+          <p>User and drone registration are entirely self-managed.</p>
+        </div>
+        <div class="feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>
+          <h3>Any device with a browser</h3>
+          <p>If it runs a modern browser, you can fly through it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Hardware ─────────────────────────────────────────── -->
+  <section id="hardware">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Tested hardware</p>
+        <h2>The first Drone Grid drone</h2>
+      </div>
+      <div class="hardware">
+        <div>
+          <div class="photo" role="group" aria-roledescription="carousel" aria-label="Photos of the Holybro X650 build">
+            <div class="hud-bracket tl"></div><div class="hud-bracket tr"></div>
+            <div class="hud-bracket bl"></div><div class="hud-bracket br"></div>
+            <img class="slide is-active" src="media/x650/front.jpg" alt="Holybro X650 — front view">
+            <img class="slide" src="media/x650/side.jpg" alt="Holybro X650 — side view">
+            <img class="slide" src="media/x650/other_side.jpg" alt="Holybro X650 — opposite side">
+            <img class="slide" src="media/x650/back.jpg" alt="Holybro X650 — rear view">
+            <img class="slide" src="media/x650/side_top.jpg" alt="Holybro X650 — top-side view">
+            <img class="slide" src="media/x650/side_close.jpg" alt="Holybro X650 — side close-up">
+            <img class="slide" src="media/x650/other_side_close.jpg" alt="Holybro X650 — close-up of the opposite side">
+            <img class="slide" src="media/x650/other_side_full_stack.jpg" alt="Holybro X650 — the full electronics stack">
+            <button type="button" class="ph-nav prev" aria-label="Previous photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button type="button" class="ph-nav next" aria-label="Next photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="ph-dots" aria-hidden="true">
+              <span class="on"></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <p class="caption">Ain't she a beauty?</p>
+        </div>
+        <div>
+          <ul class="kit">
+            <li><span class="k">Airframe</span><span class="v"><b>Holybro X650</b> development kit</span></li>
+            <li><span class="k">Flight ctrl</span><span class="v"><b>Pixhawk 6X</b> running PX4</span></li>
+            <li><span class="k">Companion</span><span class="v"><b>Raspberry Pi</b> with a camera module</span></li>
+            <li><span class="k">Link</span><span class="v"><b>5G/4G USB modem</b> (or an old phone as a Wi-Fi hotspot) with a data plan</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Roadmap ──────────────────────────────────────────── -->
+  <section id="roadmap">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Roadmap</p>
+        <h2>Where this is headed</h2>
+      </div>
+      <div class="roadmap">
+        <div class="stage now">
+          <span class="stage-tag now">Flying today</span>
+          <ul>
+            <li>Several successful manual flights through Drone Grid</li>
+            <li>BVLOS flight enablement
+              <span class="warn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                Drone laws vary by country and region. You are solely responsible for operating in compliance with all applicable aviation regulations.
+              </span>
+            </li>
+            <li>Link sharing service — share your live stream and telemetry with others</li>
+            <li>Self-registration of users and drones</li>
+          </ul>
+        </div>
+        <div class="stage">
+          <span class="stage-tag">Next up</span>
+          <ul>
+            <li>Autonomous mission planning and execution (GIS, geofencing)</li>
+            <li>Flight telemetry aggregation and visualization</li>
+            <li>Onboard and offboard computer vision</li>
+            <li>Tests with fixed-wing and VTOL UAVs</li>
+            <li>Drone Grid flight via satellite internet</li>
+            <li>Expanding hardware and software support — ArduPilot, more flight controllers and companion computers</li>
+            <li>Simulation as a service — currently, simulation is supported only locally</li>
+            <li>Continuous system refinement and optimization</li>
+          </ul>
+        </div>
+        <div class="stage">
+          <span class="stage-tag">Exploring</span>
+          <ul>
+            <li>Natural language interface to the drone</li>
+            <li>Beyond UAVs — other unmanned systems: rovers, boats, submarines</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Let's build together ─────────────────────────────── -->
+  <section id="build">
+    <div class="wrap">
+      <div class="build">
+        <svg class="build-logo" viewBox="0 0 200 200" aria-hidden="true">
+          <use href="#quad"/>
+        </svg>
+        <div class="build-inner">
+          <span class="build-chip"><span class="dot"></span>Open to contributors and opportunities</span>
+          <h2>Let's build together.</h2>
+          <p>
+            Drone Grid is <b>self-funded and open-source</b> — created for
+            the love of the game, and a lot of fun to work on. If flying drones
+            through an open-source cloud system sounds like fun — let's connect.
+          </p>
+          <p><b>Feedback, opportunities, and contributions are all welcome.</b></p>
+          <div class="build-cta">
+            <a class="btn btn-screen" href="https://github.com/radodim/drone-grid">Contribute on GitHub</a>
+            <a class="btn btn-screen-outline mono" href="mailto:hello@drone-grid.com">hello@drone-grid.com</a>
+          </div>
+          <div class="build-tags" aria-label="Ways to contribute">
+            <span>pull requests</span><span>flight testing</span><span>docs</span><span>ideas</span><span>opportunities</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap foot">
+    <span class="foot-brand">
+      <svg viewBox="0 0 200 200" aria-hidden="true"><use href="#quad"/></svg>
+      Drone Grid
+    </span>
+    <nav aria-label="Footer">
+      <a href="https://github.com/radodim/drone-grid">GitHub</a>
+      <a href="https://docs.drone-grid.com">Docs</a>
+      <a href="mailto:hello@drone-grid.com">Contact</a>
+      <a href="/drones">Log in</a>
+    </nav>
+    <span>Open source · <a href="https://github.com/radodim/drone-grid/blob/main/LICENSE">MIT License</a></span>
+  </div>
+</footer>
+
+<script>
+  (() => {
+    const root = document.querySelector(".photo");
+    if (!root) return;
+    const slides = [...root.querySelectorAll(".slide")];
+    const dots = [...root.querySelectorAll(".ph-dots span")];
+    let i = 0;
+    let timer = null;
+    const show = (n) => {
+      i = (n + slides.length) % slides.length;
+      slides.forEach((s, k) => s.classList.toggle("is-active", k === i));
+      dots.forEach((d, k) => d.classList.toggle("on", k === i));
+    };
+    const stop = () => { clearInterval(timer); timer = null; };
+    root.querySelector(".prev").addEventListener("click", () => { stop(); show(i - 1); });
+    root.querySelector(".next").addEventListener("click", () => { stop(); show(i + 1); });
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      timer = setInterval(() => { if (!document.hidden) show(i + 1); }, 4000);
+    }
+  })();
+</script>
+</body>
+</html>
