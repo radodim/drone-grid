@@ -1,0 +1,138 @@
+# Drone Grid — Terms of Service
+
+**Version:** `tos-2026-08` · **Effective:** 16 August 2026
+
+> **Plain-language summary.** This summary is for readability only — the numbered sections below are what you agree to.
+>
+> - Drone Grid is a **free, open-source, experimental community project**, built and operated by one person out of love for software and aviation. It is not a commercial product and you pay nothing for it.
+> - **You are the pilot.** You alone operate your aircraft and you alone are responsible for flying legally and safely.
+> - **Never depend on Drone Grid to keep an aircraft safe.** Internet connections lag, drop, and fail without warning. You must always keep an independent way to control, override, or stop your drone.
+> - The Service comes **as-is, with no warranties**, and our liability to you is limited to the maximum extent the law allows.
+> - Fly decently: no illegal flying, no spying on people, nothing dangerous.
+
+## 1. Who we are and what these Terms cover
+
+1.1 These Terms of Service ("**Terms**") are an agreement between you and the operator of the hosted Drone Grid platform (the "**Operator**", "we", "us") — presently an individual maintainer of the Drone Grid project, whose identity and contact details are stated in the [Privacy Policy](/privacy) — and govern your use of the platform available at `drone-grid.com` and its subdomains (including `auth.`, `api.`, `webrtc.` and `media.drone-grid.com`) (the "**Service**").
+
+1.2 The Service is provided **free of charge** as a hobby and community project. It is not offered in the course of a trade or business, and no commercial relationship is created by your use of it.
+
+1.3 **The Service is not the Software.** The Drone Grid source code (the "**Software**") is published as open source and is governed **solely by the open-source license distributed with the source code repository** (github.com/radodim/drone-grid). These Terms do not apply to the Software. If you run your own instance of the Software ("self-hosting"), you do so entirely under the open-source license, at your own risk, and **no service relationship of any kind exists between you and the Operator** in respect of that instance.
+
+1.4 You accept these Terms by ticking the acceptance checkbox when creating an account. The version identifier of the Terms you accepted (currently `tos-2026-08`) is recorded with your account.
+
+## 2. Nature of the Service
+
+2.1 The Service is **experimental software under active development**. It may contain defects, behave unpredictably, or change without notice.
+
+2.2 We make **no commitment to availability, continuity, support, or maintenance**. We may modify, suspend, limit, or permanently discontinue the Service, in whole or in part, at any time. The Service may become unavailable, or your access may be suspended, at any moment — **including during an active flight**. This is one of the reasons Section 5 requires you to maintain an independent means of controlling your aircraft at all times.
+
+2.3 The Service consists, in essence, of a remote user interface and message relay: it forwards your control inputs to hardware **you** own and configure, and relays telemetry and video from that hardware back to you and to people you share streams with.
+
+2.4 The Service is **not certified aviation equipment**. It is not a U-space, UTM, or air-traffic service, and it provides **no airspace deconfliction, collision avoidance, geo-awareness, or terrain warning** of any kind.
+
+## 3. Eligibility and accounts
+
+3.1 You must be at least **18 years old**, legally capable of entering into these Terms, and you must also meet any remote-pilot age or competency requirements applicable in your jurisdiction.
+
+3.2 You must register with an email address you control and keep it current.
+
+3.3 You are responsible for everything done through your account and through devices you connect to it. Keep your password, your drone provisioning secrets, and your share links confidential; treat all of them as credentials. Revoke share links and rotate drone secrets promptly if you suspect they have leaked, and notify us of any suspected account compromise.
+
+## 4. You are the pilot in command
+
+4.1 **You, and only you, operate your aircraft.** The Service is a remote interface and data relay. The Operator does not operate, supervise, direct, or control any aircraft, has no knowledge of your flight environment, and exercises no judgment about any flight. For every purpose — legal, regulatory, and practical — **you are the operator and remote pilot in command of your unmanned aircraft at all times**.
+
+4.2 **Compliance with law is your responsibility alone.** This includes, without limitation: aviation and unmanned-aircraft regulations applicable where you fly (for example Regulation (EU) 2019/947 and related EU rules, or 14 CFR Part 107 and applicable recreational-flyer rules in the United States), operator and aircraft registration, Remote ID requirements, pilot competency certificates, insurance requirements, airspace rules and authorizations, altitude and distance limits, restrictions on flight over people and assemblies, and all privacy, data-protection, and nuisance laws protecting third parties on the ground.
+
+4.3 **Airworthiness is your responsibility.** You are responsible for the condition, configuration, maintenance, batteries, failsafe behavior, and fitness for flight of your aircraft and all connected hardware and companion software.
+
+## 5. Safety requirements — conditions of your use
+
+Your permission to use the Service is conditional on all of the following, at all times:
+
+5.1 You maintain an **independent means of controlling and stopping the aircraft** that does not depend on the Service or on any internet connection — such as an RC transmitter with manual override and a motor kill switch — and you keep it within reach and operational during every flight.
+
+5.2 Your aircraft is configured with **autonomous failsafe behavior** (for example return-to-launch or land on link loss) that does not depend on the Service.
+
+5.3 You maintain **visual line of sight** with the aircraft, or you hold a lawful authorization for operations beyond it.
+
+5.4 You **never rely on the Service as the sole, primary, or safety-critical means of controlling an aircraft**. You acknowledge that control inputs, telemetry, and video are carried over the public internet and **may be delayed, degraded, or interrupted at any moment, without warning**. You must plan every operation so that it remains safe when — not if — the connection fails.
+
+5.5 You do not use the Service for **safety-of-life applications, manned aviation, or any purpose where a malfunction, delay, or loss of connectivity could cause personal injury, death, or property damage** that your independent safeguards would not prevent.
+
+5.6 You stop using the Service with an aircraft immediately upon noticing any anomaly in control, telemetry, or video.
+
+5.7 The conditions in this Section are **minimum conditions of your use of the Service — not a complete or sufficient set of safety practices, and not aviation or safety advice**. Applicable law and good airmanship require more, and satisfying them remains solely your responsibility (Section 4).
+
+## 6. Assumption of risk
+
+Operating unmanned aircraft is an **inherently hazardous activity**. The Service is experimental. By using the Service you acknowledge these facts and **knowingly and voluntarily assume all risks** arising from or connected with your use of it, including risk of personal injury, death, damage to or loss of aircraft and other property, data loss, and regulatory penalties.
+
+## 7. Acceptable use
+
+You agree that you will not:
+
+- use the Service in violation of any law or regulation, or help anyone else do so;
+- fly in airspace, at times, or in ways you are not authorized for;
+- attach to, or operate via the Service, any aircraft carrying weapons or any device intended to cause harm, or use the Service to drop or discharge anything dangerous;
+- use the Service to surveil, harass, stalk, or intrude on the privacy of any person, or to record or stream people or private property in violation of applicable law;
+- probe, scan, overload, disrupt, or circumvent the security, rate limiting, or access controls of the Service, or access data of other users;
+- resell the Service or offer it to third parties as a service.
+
+**Share links.** You choose who receives your share links. You remain responsible for the streams you share — including what your camera captures and applicable third-party privacy rights — and for the conduct of the people you share links with. The acceptable-use and disclaimer provisions of these Terms (this Section 7 and Sections 10–11) apply to anyone viewing a shared stream.
+
+## 8. Your content and data
+
+8.1 Data you submit (such as drone names and share labels) and the streams you relay remain yours. You grant us the limited right to host, process, and relay them **solely to provide the Service**.
+
+8.2 Handling of personal data is described in the [Privacy Policy](/privacy).
+
+## 9. Open source, names, and feedback
+
+9.1 The Software is available under its open-source license — you are warmly encouraged to study it, self-host it, and contribute.
+
+9.2 The "Drone Grid" name and branding identify this project and the Service; do not use them in a way that suggests your instance, product, or service is operated or endorsed by the Operator.
+
+9.3 If you send feedback or suggestions, we may use them without obligation to you.
+
+## 10. Disclaimer of warranties
+
+**To the maximum extent permitted by applicable law, the Service is provided "AS IS" and "AS AVAILABLE", with all faults and without warranties of any kind**, whether express, implied, or statutory — including, without limitation, any warranties of merchantability, fitness for a particular purpose, non-infringement, availability, accuracy, or that the Service will be uninterrupted, timely, secure, or error-free. Nothing in the Service constitutes aviation, legal, or safety advice.
+
+## 11. Limitation of liability
+
+11.1 **To the maximum extent permitted by applicable law**, the Operator shall not be liable for any indirect, incidental, special, consequential, exemplary, or punitive damages, nor for loss of profits, revenue, data, goodwill, aircraft, or other property, arising out of or relating to the Service or these Terms, regardless of legal theory and even if advised of the possibility of such damages.
+
+11.2 To the maximum extent permitted by applicable law, the Operator's **aggregate liability** for all claims arising out of or relating to the Service shall not exceed the total amount you paid to the Operator for use of the Service in the twelve months immediately preceding the event giving rise to the claim.
+
+11.3 **What these Terms do not do:** nothing in these Terms excludes or limits any liability that cannot be excluded or limited under applicable law — including, where such limits are not permitted, liability for intent or gross negligence, or for death or personal injury caused by negligence — and nothing affects statutory rights that consumers in the EU/EEA or elsewhere are entitled to that cannot be waived by contract. Where applicable law does not permit limiting liability for simple negligence in the breach of essential contractual obligations, the Operator's liability for such a breach is limited to the foreseeable damage typical for a free service of this kind.
+
+11.4 You acknowledge that the allocations of risk in Sections 5, 6, 10, and 11 are a condition of the Service being offered free of charge, and that the Service would not be offered without them.
+
+## 12. Indemnification
+
+To the maximum extent permitted by applicable law, you agree to defend, indemnify, and hold harmless the Operator from and against any third-party claims, liabilities, damages, fines, and costs (including reasonable legal fees) arising out of or relating to: (a) your operation of any aircraft; (b) your violation of law or of these Terms; or (c) content you relay or share through the Service.
+
+## 13. Suspension and termination
+
+13.1 We may suspend, restrict, or terminate your access — or any account, drone, or share link — at any time, with or without notice, in particular where we believe there is a risk to safety, to third parties, to the Service, or of legal violation.
+
+13.2 You may stop using the Service at any time and may request deletion of your account and data as described in the Privacy Policy.
+
+13.3 Sections 4–12 and 14–16 survive termination.
+
+## 14. Changes to the Service or these Terms
+
+We may update these Terms. Each version carries an identifier and effective date at the top. For material changes, you will be asked to accept the new version at your next sign-in before continuing to use the Service; the version you accepted is recorded with your account.
+
+## 15. Disputes and mandatory protections
+
+Nothing in these Terms displaces legal protections that cannot be waived by contract. If you are a consumer, you retain the protection of any mandatory provisions of the law of your country of habitual residence and any right to bring proceedings there.
+
+## 16. General
+
+If any provision of these Terms is held invalid or unenforceable, it shall be enforced to the maximum extent permissible and, if necessary, replaced by a valid provision coming closest to its intent; the remainder stays in force. Our not enforcing a provision is not a waiver of it. You may not assign these Terms; we may assign them to a successor maintainer or legal entity continuing the project.
+
+## 17. Contact
+
+Questions and support: **support@drone-grid.com** · General: **admin@drone-grid.com** · Privacy: **privacy@drone-grid.com**

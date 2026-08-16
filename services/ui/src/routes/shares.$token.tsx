@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 
 import { BootScreen } from "@/components/Common/BootScreen"
@@ -114,6 +114,18 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
           top chips keep their corner. Safe-area padding clears notches
           (viewport-fit=cover). */}
       <ExperimentalNotice className="pt-[calc(env(safe-area-inset-top)+0.375rem)]" />
+      {/* Share viewers have no account — this line is what puts the
+          acceptable-use terms and privacy policy in front of them. */}
+      <p className="border-b border-amber-500/20 bg-amber-500/5 px-3 py-1 text-[10px] leading-snug text-amber-100/60">
+        By viewing this stream you agree to the acceptable-use terms —{" "}
+        <Link to="/terms" className="underline underline-offset-2">
+          Terms
+        </Link>{" "}
+        ·{" "}
+        <Link to="/privacy" className="underline underline-offset-2">
+          Privacy
+        </Link>
+      </p>
       <div className="relative min-h-0 flex-1">
         <video
           ref={videoRef}
