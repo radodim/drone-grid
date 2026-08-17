@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 
 import { BootScreen } from "@/components/Common/BootScreen"
@@ -118,13 +118,13 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
           acceptable-use terms and privacy policy in front of them. */}
       <p className="border-b border-amber-500/20 bg-amber-500/5 px-3 py-1 text-[10px] leading-snug text-amber-100/60">
         By viewing this stream you agree to the acceptable-use terms —{" "}
-        <Link to="/terms" className="underline underline-offset-2">
+        <a href="/terms" className="underline underline-offset-2">
           Terms
-        </Link>{" "}
+        </a>{" "}
         ·{" "}
-        <Link to="/privacy" className="underline underline-offset-2">
+        <a href="/privacy" className="underline underline-offset-2">
           Privacy
-        </Link>
+        </a>
       </p>
       <div className="relative min-h-0 flex-1">
         <video

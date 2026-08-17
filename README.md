@@ -40,13 +40,7 @@ http://<HOSTNAME_OF_YOUR_MACHINE>.local
 ```
 
 You may then register a user within the system and proceed with configuring your first drone.
-Local registration asks for email verification — the message lands in the bundled mail sink at `http://localhost:8025` (mailpit); open it and click the link.
 
 Windows has not been tested for development.
 mDNS may not work as expected with WSL and virtualization in general.
 Currently, dual booting Ubuntu is the recommended solution for running Drone Grid locally on a Windows machine.
-
-## Policies
-
-Operational runbooks: [docs/OPERATIONS.md](docs/OPERATIONS.md) · [docs/PRIVACY_OPS.md](docs/PRIVACY_OPS.md) · vulnerability reporting: [SECURITY.md](SECURITY.md).
-The hosted service's [Terms of Service](https://drone-grid.com/terms) and [Privacy Policy](https://drone-grid.com/privacy) are maintained in [services/ui/src/legal/](services/ui/src/legal/).

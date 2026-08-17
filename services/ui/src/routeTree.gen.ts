@@ -11,8 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as ShareTokenRouteImport } from './routes/shares.$token'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutDronesRouteImport } from './routes/_layout/drones'
 import { Route as LayoutSharesRouteImport } from './routes/_layout/shares'
@@ -25,16 +23,6 @@ const LayoutRoute = LayoutRouteImport.update({
 const ShareTokenRoute = ShareTokenRouteImport.update({
   id: '/shares/$token',
   path: '/shares/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LayoutIndexRoute = LayoutIndexRouteImport.update({
@@ -64,8 +52,6 @@ export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
   '/drones/$droneId': typeof LayoutDronesDroneIdRoute
   '/shares/$token': typeof ShareTokenRoute
-  '/terms': typeof TermsRoute
-  '/privacy': typeof PrivacyRoute
 }
 export interface FileRoutesByTo {
   '/drones': typeof LayoutDronesRoute
@@ -73,8 +59,6 @@ export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/drones/$droneId': typeof LayoutDronesDroneIdRoute
   '/shares/$token': typeof ShareTokenRoute
-  '/terms': typeof TermsRoute
-  '/privacy': typeof PrivacyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -84,22 +68,18 @@ export interface FileRoutesById {
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/drones_/$droneId': typeof LayoutDronesDroneIdRoute
   '/shares/$token': typeof ShareTokenRoute
-  '/terms': typeof TermsRoute
-  '/privacy': typeof PrivacyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/drones' | '/shares' | '/' | '/drones/$droneId' | '/shares/$token' | '/terms' | '/privacy'
+  fullPaths: '/drones' | '/shares' | '/' | '/drones/$droneId' | '/shares/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/drones' | '/shares' | '/' | '/drones/$droneId' | '/shares/$token' | '/terms' | '/privacy'
-  id: '__root__' | '/_layout' | '/_layout/drones' | '/_layout/shares' | '/_layout/' | '/_layout/drones_/$droneId' | '/shares/$token' | '/terms' | '/privacy'
+  to: '/drones' | '/shares' | '/' | '/drones/$droneId' | '/shares/$token'
+  id: '__root__' | '/_layout' | '/_layout/drones' | '/_layout/shares' | '/_layout/' | '/_layout/drones_/$droneId' | '/shares/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   LayoutRoute: typeof LayoutRouteWithChildren
   ShareTokenRoute: typeof ShareTokenRoute
-  TermsRoute: typeof TermsRoute
-  PrivacyRoute: typeof PrivacyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -146,20 +126,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShareTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -183,8 +149,6 @@ const LayoutRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
   ShareTokenRoute: ShareTokenRoute,
-  TermsRoute: TermsRoute,
-  PrivacyRoute: PrivacyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

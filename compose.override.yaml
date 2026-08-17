@@ -27,13 +27,6 @@ services:
       - traefik.http.routers.${STACK_NAME}-identity-secure.tls.certresolver=
       - traefik.http.routers.${STACK_NAME}-identity-sensitive-secure.tls.certresolver=
 
-  # Local mail sink — Keycloak delivers verification/reset emails to
-  # mailpit:1025 (see local-realm.json smtpServer); read them at :8025.
-  mailpit:
-    image: axllent/mailpit
-    ports:
-      - "8025:8025" # web UI; SMTP stays compose-internal
-
   backend:
     command: bash -c "/src/scripts/prestart.sh && fastapi dev --host 0.0.0.0 app/main.py"
     ports:

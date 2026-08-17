@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Drone Grid</title>
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+:root{color-scheme:dark}
+body{margin:0;background:#0b0e13;color:#d6dbe3;font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:46rem;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+a{color:#5c9ae0}
+h1{font-size:1.7rem;line-height:1.25;letter-spacing:-.01em;margin:0 0 .4rem;color:#eef1f5}
+h2{font-size:1.12rem;margin:2.2rem 0 .6rem;letter-spacing:-.01em;color:#eef1f5}
+p{margin:.65rem 0}
+.meta{color:#8a93a3;font-size:.9rem;margin:0 0 1.5rem}
+blockquote{margin:1.25rem 0;padding:.9rem 1.1rem;border-left:3px solid #2e6cb8;background:#131a24;border-radius:0 6px 6px 0}
+blockquote p{margin:.45rem 0}
+ul{padding-left:1.25rem}
+li{margin:.35rem 0}
+code{background:#1a2230;border-radius:4px;padding:.1em .35em;font-size:.9em}
+strong{color:#eef1f5}
+table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.92rem}
+th,td{border:1px solid #263040;padding:.5rem .65rem;text-align:left;vertical-align:top}
+th{background:#131a24;color:#eef1f5}
+.brand{display:inline-flex;align-items:center;gap:.6rem;color:#eef1f5;text-decoration:none;font-weight:600;margin-bottom:2rem}
+.brand img{width:2rem;height:2rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="brand" href="/"><img src="/favicon.svg" alt="">Drone Grid</a>
+
+<h1>Drone Grid — Privacy Policy</h1>
+<p class="meta"><strong>Version:</strong> <code>pp-2026-08</code> · <strong>Effective:</strong> 16 August 2026</p>
+
+<blockquote>
+<p><strong>Plain-language summary.</strong> This summary is for readability; the sections below are authoritative.</p>
+<ul>
+<li>Your account is an <strong>email address and a password hash</strong>. We removed the first-name/last-name fields on purpose — we don't want data we don't need.</li>
+<li><strong>Telemetry and video pass through our servers live and are never stored.</strong> No flight logs, no recordings.</li>
+<li><strong>No ads, no analytics trackers, no sale of data, no profiling.</strong></li>
+<li>Emails we send you are strictly transactional (verification, password reset).</li>
+<li>To exercise any privacy right, email <strong>privacy@drone-grid.com</strong>.</li>
+</ul>
+</blockquote>
+
+<h2>1. Who is responsible (controller)</h2>
+<p>The controller for personal data processed by the hosted Drone Grid service at <code>drone-grid.com</code> (the "Service") is <strong>Rado Dimanov</strong>, an individual operating the Service as a non-commercial community project.</p>
+<p>Contact: <strong>privacy@drone-grid.com</strong> (privacy requests) · <strong>support@drone-grid.com</strong> (anything else).</p>
+<p>If you run your own instance of the open-source Drone Grid software, the person running that instance — not us — is the controller for it; this policy covers only the hosted Service.</p>
+
+<h2>2. What we process</h2>
+<p><strong>2.1 Account and sign-in data</strong> (identity service): your email address (which is also your username), your password stored <strong>only as a salted hash</strong>, the Terms of Service version you accepted, optional two-factor authentication secrets if you enable them, and sign-in/session records (timestamps and, where security event logging applies, IP addresses).</p>
+<p><strong>2.2 Platform data</strong>: an internal account identifier; drones you register (the name you choose, a <strong>hash</strong> of the drone's provisioning secret, timestamps); share links you create (the label you choose, a <strong>hash</strong> of the link token, creation/expiry/revocation timestamps).</p>
+<p><strong>2.3 Live flight data — transient only</strong>: while you operate, telemetry (including GPS position, altitude, battery, flight mode, armed state, and control inputs) and camera video are relayed in real time between your drone, our servers, and the browsers of you and anyone you share a stream with. <strong>This data is never recorded or stored</strong> — it exists only in transit and volatile memory, and is gone the moment the stream ends.</p>
+<p><strong>2.4 Server logs</strong>: like practically every web service, our reverse proxy and services log IP addresses, requested URLs, timestamps, and browser user-agent strings. Logs are kept short-term for security and troubleshooting (see §6).</p>
+<p><strong>2.5 Correspondence</strong>: emails you send to our support and related mailboxes.</p>
+<p><strong>2.6 What we deliberately do not collect</strong>: real names (the fields are removed from registration), phone numbers, postal addresses, payment data (the Service is free), advertising or analytics identifiers, third-party CAPTCHA or tracking services, stored flight logs, or video recordings.</p>
+<p>Please don't put personal data into free-text fields such as drone names or share labels — they are meant for labels like "drone1" or "field crew".</p>
+
+<h2>3. Why we process it (purposes and legal bases)</h2>
+<table>
+<tr><th>Purpose</th><th>Data</th><th>Legal basis (GDPR)</th></tr>
+<tr><td>Providing your account and the Service (registration, sign-in, drones, shares, live relay)</td><td>2.1, 2.2, 2.3</td><td>Contract — Art. 6(1)(b)</td></tr>
+<tr><td>Transactional email: address verification, password reset</td><td>email address</td><td>Contract — Art. 6(1)(b)</td></tr>
+<tr><td>Security, abuse prevention, rate limiting, troubleshooting</td><td>2.4, security events</td><td>Legitimate interests — Art. 6(1)(f): keeping a free community service and its users safe</td></tr>
+<tr><td>Answering you</td><td>2.5</td><td>Contract / legitimate interests</td></tr>
+<tr><td>Compliance with legal obligations</td><td>as required</td><td>Legal obligation — Art. 6(1)(c)</td></tr>
+</table>
+<p>We send <strong>no marketing email</strong> and make <strong>no automated decisions with legal or similarly significant effects</strong> about you.</p>
+
+<h2>4. Who receives data (processors and recipients)</h2>
+<p>We <strong>never sell</strong> personal data and show no advertising. Data is shared only with the infrastructure providers (processors) needed to run the Service, under data-processing agreements:</p>
+<table>
+<tr><th>Provider</th><th>Role</th><th>Location / transfer safeguard</th></tr>
+<tr><td>DigitalOcean, LLC</td><td>Server infrastructure hosting the Service</td><td>EU-U.S. Data Privacy Framework certified; data processing agreement</td></tr>
+<tr><td>Amazon Web Services (Amazon SES)</td><td>Sending transactional email, from the EU (Frankfurt) region</td><td>AWS DPA (incorporated in AWS Service Terms); EU-U.S. Data Privacy Framework certified</td></tr>
+<tr><td>Migadu Ltd.</td><td>Support mailboxes</td><td>Switzerland — EU adequacy decision</td></tr>
+</table>
+<p>Beyond processors: people <strong>you</strong> give share links to receive the live streams and telemetry you share; and we may disclose data where the law requires it.</p>
+
+<h2>5. International transfers</h2>
+<p>Where a provider involves a transfer outside the EU/EEA, it is covered by an adequacy decision (Switzerland, EU-U.S. Data Privacy Framework) or EU Standard Contractual Clauses incorporated in the provider's data-processing agreement. Provider locations are listed in the table in §4.</p>
+
+<h2>6. How long we keep data</h2>
+<table>
+<tr><th>Data</th><th>Retention</th></tr>
+<tr><td>Account, drones, share links, consent record</td><td>Until your account is deleted (on request — see §9; self-service deletion is on the roadmap)</td></tr>
+<tr><td>Live telemetry and video</td><td><strong>Not stored</strong> — transit only</td></tr>
+<tr><td>Server logs</td><td>Short rotation — typically days, at most a few weeks</td></tr>
+<tr><td>Support correspondence</td><td>For the duration of the matter, then periodically cleared</td></tr>
+<tr><td>Email suppression records (addresses that hard-bounced)</td><td>Maintained by the email provider to protect recipients and deliverability</td></tr>
+</table>
+
+<h2>7. Cookies and similar technologies</h2>
+<p>The Service uses <strong>strictly necessary cookies only</strong>: the session cookies of our sign-in system that keep you logged in. Interface preferences are stored locally in your browser. We use <strong>no analytics, advertising, or cross-site tracking cookies</strong> — which is why there is no cookie banner.</p>
+
+<h2>8. Security</h2>
+<p>All traffic is encrypted in transit (TLS). Passwords are stored only as salted hashes; drone secrets and share-link tokens are likewise stored only as hashes. Access to production systems is limited to the operator. No internet service can guarantee absolute security; if a personal-data breach occurs, we will notify the supervisory authority and affected users as required by GDPR Articles 33–34.</p>
+
+<h2>9. Your rights</h2>
+<p>Under the GDPR you have the right to <strong>access</strong> your data, <strong>rectify</strong> it, have it <strong>erased</strong>, <strong>restrict</strong> processing, receive it in a portable format (<strong>portability</strong>), and <strong>object</strong> to processing based on legitimate interests.</p>
+<p>To exercise any of these, email <strong>privacy@drone-grid.com from your registered email address</strong> (that is how we verify it's you). We respond within one month. Account deletion removes your identity data, drones, and share links; the deletion order and scope are documented in the project's public operations runbook.</p>
+<p>You also have the right to complain to a data-protection supervisory authority — your local one is fine; any EU authority can receive your complaint.</p>
+<p><strong>Wherever you live</strong>, we extend the same rights to you. For California residents: we do not sell or share personal information as defined by the CCPA/CPRA, and we honor access and deletion requests regardless of statutory applicability.</p>
+
+<h2>10. Children</h2>
+<p>The Service requires users to be at least 18 years old. It is not directed at minors, and we do not knowingly process their data. If you believe a minor has created an account, contact us and we will remove it.</p>
+
+<h2>11. Shared streams: viewers and bystanders</h2>
+<p><strong>Viewers</strong> of a share link who have no account are covered by this policy too: we process their server-log data (§2.4) and relay the live stream to them; nothing else.</p>
+<p><strong>Bystanders</strong>: a drone camera may capture people and property on the ground. We never store that footage — it is relayed live and discarded. The user operating the drone and sharing the stream is responsible, as the party controlling the camera, for complying with the privacy and data-protection laws that apply to what they capture and share. This responsibility is part of our <a href="/terms">Terms of Service</a>.</p>
+
+<h2>12. Changes to this policy</h2>
+<p>We will update this policy when the Service changes. Each version carries an identifier and effective date at the top; material changes will be announced in the Service or via re-acceptance at sign-in.</p>
+
+<h2>13. Contact</h2>
+<p><strong>privacy@drone-grid.com</strong> · Rado Dimanov · general contact: <strong>hello@drone-grid.com</strong></p>
+</div>
+</body>
+</html>

@@ -33,10 +33,10 @@
   "registrationAllowed": true,
   "registrationEmailAsUsername": true,
   "rememberMe": false,
-  "verifyEmail": true,
+  "verifyEmail": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
-  "resetPasswordAllowed": true,
+  "resetPasswordAllowed": false,
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
   "permanentLockout": false,
@@ -1595,21 +1595,13 @@
     "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
     "strictTransportSecurity": "max-age=31536000; includeSubDomains"
   },
-  "smtpServer": {
-    "host": "mailpit",
-    "port": "1025",
-    "from": "noreply@drone-grid.local",
-    "fromDisplayName": "Drone Grid",
-    "auth": "false",
-    "ssl": "false",
-    "starttls": "false"
-  },
-  "eventsEnabled": true,
+  "smtpServer": {},
+  "eventsEnabled": false,
   "eventsListeners": [
     "jboss-logging"
   ],
   "enabledEventTypes": [],
-  "adminEventsEnabled": true,
+  "adminEventsEnabled": false,
   "adminEventsDetailsEnabled": false,
   "identityProviders": [],
   "identityProviderMappers": [],
@@ -2629,7 +2621,7 @@
     "clientOfflineSessionMaxLifespan": "0",
     "oauth2DevicePollingInterval": "5",
     "clientSessionIdleTimeout": "0",
-    "actionTokenGeneratedByUserLifespan.verify-email": "86400",
+    "actionTokenGeneratedByUserLifespan.verify-email": "",
     "actionTokenGeneratedByUserLifespan.idp-verify-account-via-email": "",
     "clientOfflineSessionIdleTimeout": "0",
     "actionTokenGeneratedByUserLifespan.execute-actions": "",
@@ -2640,7 +2632,7 @@
     "parRequestUriLifespan": "60",
     "clientSessionMaxLifespan": "0",
     "shortVerificationUri": "",
-    "actionTokenGeneratedByUserLifespan.reset-credentials": "1800"
+    "actionTokenGeneratedByUserLifespan.reset-credentials": ""
   },
   "keycloakVersion": "26.5.6",
   "userManagedAccessAllowed": false,
@@ -2652,6 +2644,5 @@
   },
   "clientPolicies": {
     "policies": []
-  },
-  "eventsExpiration": 2592000
+  }
 }

@@ -5,12 +5,8 @@
 Email **security@drone-grid.com**. Please do not open public issues for
 security problems.
 
-You should receive a response within a few days. Coordinated disclosure is
-appreciated — give us reasonable time to ship a fix before publishing.
+You will receive a response as soon as possible.
 
-Scope: this repository and the hosted service at drone-grid.com. When
-testing against the hosted service, do not involve real users or degrade
-availability (see the Terms of Service) — `docker compose up` gives you a
-full local stack to test against instead.
+Scope: this repository and the central Drone Grid instance at drone-grid.com
 
 Machine-readable contact: https://drone-grid.com/.well-known/security.txt
