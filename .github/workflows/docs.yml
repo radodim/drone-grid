@@ -19,23 +19,19 @@ concurrency:
 
 jobs:
   build:
-    # NOT self-hosted — that runner is the production VPS
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: docs
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v9
+      - uses: astral-sh/setup-uv@v7
       - run: uv run --group docs zensical build --strict
       - uses: actions/upload-pages-artifact@v5
         with:
           path: docs/site
 
   deploy:
-    # Pages can't be enabled while the repo is private on the free plan.
-    # Go-live: Settings → Pages → Source = "GitHub Actions", then set the
-    # repository variable DEPLOY_DOCS=true.
     if: vars.DEPLOY_DOCS == 'true'
     needs: build
     runs-on: ubuntu-latest

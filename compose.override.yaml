@@ -25,6 +25,7 @@ services:
       # Override prod path restriction — allow all paths for admin console access in dev
       - traefik.http.routers.${STACK_NAME}-identity.rule=Host(`auth.${DOMAIN}`)
       - traefik.http.routers.${STACK_NAME}-identity-secure.tls.certresolver=
+      - traefik.http.routers.${STACK_NAME}-identity-sensitive-secure.tls.certresolver=
 
   backend:
     command: bash -c "/src/scripts/prestart.sh && fastapi dev --host 0.0.0.0 app/main.py"

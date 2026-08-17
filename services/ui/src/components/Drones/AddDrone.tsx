@@ -93,7 +93,7 @@ const AddDrone = () => {
           so the keyboard can't hide the dialog, and no focus on open — the
           keyboard appears only when the name field is tapped. */}
       <DialogContent
-        className="top-8 translate-y-0 max-h-[calc(100dvh-4rem)] overflow-y-auto sm:top-[50%] sm:translate-y-[-50%] sm:max-w-md"
+        className="top-8 translate-y-0 max-h-[calc(100dvh-4rem)] overflow-y-auto sm:top-[50%] sm:translate-y-[-50%] sm:max-w-lg"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <DialogHeader>

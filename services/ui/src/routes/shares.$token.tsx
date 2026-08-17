@@ -104,7 +104,9 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
     <div
       ref={containerRef}
       className={cn(
-        "@container flex h-screen w-screen flex-col bg-black",
+        // Always-dark surface: the page is a black video canvas, so children's
+        // dark: variants must apply regardless of the user's theme choice.
+        "dark @container flex h-screen w-screen flex-col bg-black",
         // Fullscreen owns the physical screen edges — keep the bottom strip
         // clear of gesture bars (env() needs viewport-fit=cover).
         isFullscreen && "pb-[env(safe-area-inset-bottom)]",
@@ -113,7 +115,10 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
       {/* In-flow above the picture area, like the owner view — the HUD's
           top chips keep their corner. Safe-area padding clears notches
           (viewport-fit=cover). */}
-      <ExperimentalNotice className="pt-[calc(env(safe-area-inset-top)+0.375rem)]" />
+      <ExperimentalNotice
+        className="pt-[calc(env(safe-area-inset-top)+0.375rem)]"
+        legalLinks
+      />
       <div className="relative min-h-0 flex-1">
         <video
           ref={videoRef}

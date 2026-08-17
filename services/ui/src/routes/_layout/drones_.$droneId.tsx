@@ -133,7 +133,9 @@ function DroneStream() {
       <div
         ref={containerRef}
         className={cn(
-          "@container relative rounded-lg overflow-hidden border bg-black flex flex-col",
+          // Always-dark surface: black video canvas, so children's dark:
+          // variants must apply regardless of the user's theme choice.
+          "dark @container relative rounded-lg overflow-hidden border bg-black flex flex-col",
           // Fullscreen owns the physical screen edges — keep controls clear
           // of gesture bars and notches (env() needs viewport-fit=cover).
           isFullscreen &&

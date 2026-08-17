@@ -16,13 +16,13 @@
 
 <div align="center">
 
-| [Public Drone Grid instance](https://drone-grid.com) | [Documentation](https://docs.drone-grid.com) |
+| [Public instance](https://drone-grid.com) | [Documentation](https://docs.drone-grid.com) |
 | ---------------------------------------------------- | -------------------------------------------- |
 
 </div>
 
 > [!WARNING]
-> This system is currently in an experimental state. [Recommendations](https://docs.drone-grid.com/hardware/) can be found in the documentation, but they are no substitute for your local laws and regulations — you are solely responsible for complying with the legal framework applicable in your area when controlling unmanned aerial vehicles.
+> This system is in an experimental state. [Safety Recommendations](https://docs.drone-grid.com/hardware/x650-raspberry-pi/safety-recommendations/) can be found in the documentation, but they are no substitute for your local laws and regulations — you are solely responsible for complying with the legal framework applicable in your area when controlling unmanned aerial vehicles.
 
 ## Quick start for local development and testing
 
@@ -34,12 +34,12 @@
 bash scripts/run_drone_grid.sh
 ```
 
-Then open a browser on any computer that is connected to your local area network and access your Drone Grid instance over mDNS:
+Then open a browser on any computer that is connected to your local area network and access your local instance over mDNS:
 ```
 http://<HOSTNAME_OF_YOUR_MACHINE>.local
 ```
 
-You may then register a user within the system and proceed with configuring your first drone.
+You may then register a user and proceed with configuring your first drone.
 
 Windows has not been tested for development.
 mDNS may not work as expected with WSL and virtualization in general.

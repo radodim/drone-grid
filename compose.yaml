@@ -65,18 +65,47 @@ services:
       resources:
         limits:
           memory: 1g
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
     labels:
       - traefik.enable=true
       - traefik.constraint-label=traefik-public
-      # Only expose paths required for OIDC — /admin, /metrics, /health are blocked
+      # Only expose paths required for OIDC, and only for the app realm —
+      # /admin, /metrics, /health AND /realms/master (admin login + token
+      # endpoints) are blocked. Admin access goes through the SSH tunnel;
+      # the master realm's Frontend URL must point at 127.0.0.1:8080 first.
       # See: https://www.keycloak.org/server/reverseproxy#_exposed_path_recommendations
-      - traefik.http.routers.${STACK_NAME}-identity.rule=Host(`auth.${DOMAIN}`) && (PathPrefix(`/realms`) || PathPrefix(`/resources`) || PathPrefix(`/.well-known`))
+      - traefik.http.routers.${STACK_NAME}-identity.rule=Host(`auth.${DOMAIN}`) && (PathPrefix(`/realms/drone-grid`) || PathPrefix(`/resources`) || PathPrefix(`/.well-known`))
       - traefik.http.routers.${STACK_NAME}-identity.entrypoints=http
       # HTTPS (ignored in dev — no https entrypoint defined)
-      - traefik.http.routers.${STACK_NAME}-identity-secure.rule=Host(`auth.${DOMAIN}`) && (PathPrefix(`/realms`) || PathPrefix(`/resources`) || PathPrefix(`/.well-known`))
+      - traefik.http.routers.${STACK_NAME}-identity-secure.rule=Host(`auth.${DOMAIN}`) && (PathPrefix(`/realms/drone-grid`) || PathPrefix(`/resources`) || PathPrefix(`/.well-known`))
       - traefik.http.routers.${STACK_NAME}-identity-secure.entrypoints=https
       - traefik.http.routers.${STACK_NAME}-identity-secure.tls=true
       - traefik.http.routers.${STACK_NAME}-identity-secure.tls.certresolver=le
+      # Per-source-IP rate limit on the endpoints that send email or accept
+      # credentials (registration, verify-email resend, reset-credentials,
+      # login POSTs). Keycloak has no per-IP limiting of its own. Traefik v3
+      # ranks routers by rule length, so the narrower rule needs an explicit
+      # priority to win over the main router. sourceCriterion stays unset:
+      # Traefik is the edge, RemoteAddr is the true client IP.
+      - traefik.http.routers.${STACK_NAME}-identity-sensitive.rule=Host(`auth.${DOMAIN}`) && PathPrefix(`/realms/drone-grid/login-actions`)
+      - traefik.http.routers.${STACK_NAME}-identity-sensitive.entrypoints=http
+      - traefik.http.routers.${STACK_NAME}-identity-sensitive.priority=1000
+      - traefik.http.routers.${STACK_NAME}-identity-sensitive.middlewares=${STACK_NAME}-kc-ratelimit
+      - traefik.http.routers.${STACK_NAME}-identity-sensitive-secure.rule=Host(`auth.${DOMAIN}`) && PathPrefix(`/realms/drone-grid/login-actions`)
+      - traefik.http.routers.${STACK_NAME}-identity-sensitive-secure.entrypoints=https
+      - traefik.http.routers.${STACK_NAME}-identity-sensitive-secure.tls=true
+      - traefik.http.routers.${STACK_NAME}-identity-sensitive-secure.tls.certresolver=le
+      - traefik.http.routers.${STACK_NAME}-identity-sensitive-secure.priority=1000
+      - traefik.http.routers.${STACK_NAME}-identity-sensitive-secure.middlewares=${STACK_NAME}-kc-ratelimit
+      # A human registration is ~4 requests; 12/min sustained with burst 24
+      # is generous for people and hostile to scripts. Rejections return 429.
+      - traefik.http.middlewares.${STACK_NAME}-kc-ratelimit.ratelimit.average=12
+      - traefik.http.middlewares.${STACK_NAME}-kc-ratelimit.ratelimit.period=1m
+      - traefik.http.middlewares.${STACK_NAME}-kc-ratelimit.ratelimit.burst=24
       # Shared service target
       - traefik.http.services.${STACK_NAME}-identity.loadbalancer.server.port=8080
 
@@ -108,6 +137,11 @@ services:
       timeout: 3s
       retries: 5
       start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
     labels:
       - traefik.enable=true
       - traefik.constraint-label=traefik-public
@@ -200,6 +234,14 @@ services:
   proxy:
     image: traefik:v3
     restart: unless-stopped
+    # Access logs record client IPs (and query strings) — bounded rotation
+    # keeps disk use flat and gives the privacy policy a truthful retention
+    # statement (logs age out within days-to-weeks).
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
     command:
       - --providers.docker
       - --providers.docker.constraints=Label(`traefik.constraint-label`, `traefik-public`)

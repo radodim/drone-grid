@@ -8,7 +8,7 @@ The person, operating the drone through Drone Grid, can focus on the User interf
 
 How does this work? Through the kill switch mechanism:
 
-![Kill switch wiring — ESP32, ELRS receiver and Raspberry Pi connections, viewed from above](../../assets/img/x650/side_top.jpg)
+![](../../assets/img/x650/side_top.jpg)
 
 ## Principle of operation
 

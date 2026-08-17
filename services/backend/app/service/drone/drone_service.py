@@ -3,11 +3,12 @@ import uuid
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from app.data.db.model.drone import Drone
 from app.data.db.session import DbSessionDep
-from app.service.exceptions import NonExistentDroneError
+from app.service.exceptions import DuplicateDroneNameError, NonExistentDroneError
 from app.utils import get_utcnow, sha256_hex
 
 
@@ -42,7 +43,13 @@ class DroneService:
             secret_hash=sha256_hex(raw_secret),
         )
         self.__db_session.add(drone)
-        self.__db_session.commit()
+        try:
+            self.__db_session.commit()
+        except IntegrityError as e:
+            self.__db_session.rollback()
+            raise DuplicateDroneNameError(
+                f"Drone name '{drone_name}' already exists for user {user_id}."
+            ) from e
         self.__db_session.refresh(drone)
 
         return drone, raw_secret
