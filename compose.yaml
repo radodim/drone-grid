@@ -68,8 +68,8 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "20m"
-        max-file: "3"
+        max-size: "50m"
+        max-file: "5"
     labels:
       - traefik.enable=true
       - traefik.constraint-label=traefik-public
@@ -140,8 +140,8 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "20m"
-        max-file: "3"
+        max-size: "50m"
+        max-file: "5"
     labels:
       - traefik.enable=true
       - traefik.constraint-label=traefik-public
@@ -240,8 +240,8 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "20m"
-        max-file: "3"
+        max-size: "50m"
+        max-file: "5"
     command:
       - --providers.docker
       - --providers.docker.constraints=Label(`traefik.constraint-label`, `traefik-public`)

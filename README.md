@@ -22,7 +22,7 @@
 </div>
 
 > [!WARNING]
-> This system is in an experimental state. [Safety Recommendations](https://docs.drone-grid.com/hardware/) can be found in the documentation, but they are no substitute for your local laws and regulations — you are solely responsible for complying with the legal framework applicable in your area when controlling unmanned aerial vehicles.
+> This system is in an experimental state. [Safety Recommendations](https://docs.drone-grid.com/hardware/x650-raspberry-pi/safety-recommendations/) can be found in the documentation, but they are no substitute for your local laws and regulations — you are solely responsible for complying with the legal framework applicable in your area when controlling unmanned aerial vehicles.
 
 ## Quick start for local development and testing
 
