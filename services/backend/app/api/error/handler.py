@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.service.exceptions import (
     AppException,
+    DuplicateDroneNameError,
     InvalidShareTokenError,
     InvalidTokenError,
     MediaServerError,
@@ -16,6 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 EXCEPTIONS_STATUS_MAP: dict[type[AppException], tuple[int, str]] = {
+    DuplicateDroneNameError: (
+        status.HTTP_409_CONFLICT,
+        "A drone with this name already exists.",
+    ),
     InvalidTokenError: (status.HTTP_401_UNAUTHORIZED, "Invalid token."),
     InvalidShareTokenError: (status.HTTP_404_NOT_FOUND, "Share link not found."),
     MediaServerError: (status.HTTP_500_INTERNAL_SERVER_ERROR, "Media server error."),

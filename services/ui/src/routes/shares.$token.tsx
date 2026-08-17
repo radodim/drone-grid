@@ -104,7 +104,9 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
     <div
       ref={containerRef}
       className={cn(
-        "@container flex h-screen w-screen flex-col bg-black",
+        // Always-dark surface: the page is a black video canvas, so children's
+        // dark: variants must apply regardless of the user's theme choice.
+        "dark @container flex h-screen w-screen flex-col bg-black",
         // Fullscreen owns the physical screen edges — keep the bottom strip
         // clear of gesture bars (env() needs viewport-fit=cover).
         isFullscreen && "pb-[env(safe-area-inset-bottom)]",
@@ -113,19 +115,10 @@ function Viewer({ token, droneId }: { token: string; droneId: string }) {
       {/* In-flow above the picture area, like the owner view — the HUD's
           top chips keep their corner. Safe-area padding clears notches
           (viewport-fit=cover). */}
-      <ExperimentalNotice className="pt-[calc(env(safe-area-inset-top)+0.375rem)]" />
-      {/* Share viewers have no account — this line is what puts the
-          acceptable-use terms and privacy policy in front of them. */}
-      <p className="border-b border-amber-500/20 bg-amber-500/5 px-3 py-1 text-[10px] leading-snug text-amber-100/60">
-        By viewing this stream you agree to the acceptable-use terms —{" "}
-        <a href="/terms" className="underline underline-offset-2">
-          Terms
-        </a>{" "}
-        ·{" "}
-        <a href="/privacy" className="underline underline-offset-2">
-          Privacy
-        </a>
-      </p>
+      <ExperimentalNotice
+        className="pt-[calc(env(safe-area-inset-top)+0.375rem)]"
+        legalLinks
+      />
       <div className="relative min-h-0 flex-1">
         <video
           ref={videoRef}

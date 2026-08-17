@@ -477,7 +477,7 @@
 
 <header class="site">
   <div class="wrap nav">
-    <a class="brand" href="#">
+    <a class="brand" href="/">
       <svg viewBox="0 0 200 200" aria-hidden="true">
         <defs>
           <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
@@ -722,8 +722,8 @@
       <a href="https://github.com/radodim/drone-grid">GitHub</a>
       <a href="https://docs.drone-grid.com">Docs</a>
       <a href="mailto:hello@drone-grid.com">Contact</a>
-      <a href="/terms">Terms</a>
-      <a href="/privacy">Privacy</a>
+      <a href="/terms.txt">Terms</a>
+      <a href="/privacy.txt">Privacy</a>
       <a href="/drones">Log in</a>
     </nav>
     <span>Open source · <a href="https://github.com/radodim/drone-grid/blob/main/LICENSE">MIT License</a></span>
@@ -740,8 +740,8 @@
     let timer = null;
     const show = (n) => {
       i = (n + slides.length) % slides.length;
-      slides.forEach((s, k) => s.classList.toggle("is-active", k === i));
-      dots.forEach((d, k) => d.classList.toggle("on", k === i));
+      slides.forEach((s, k) => { s.classList.toggle("is-active", k === i); });
+      dots.forEach((d, k) => { d.classList.toggle("on", k === i); });
     };
     const stop = () => { clearInterval(timer); timer = null; };
     root.querySelector(".prev").addEventListener("click", () => { stop(); show(i - 1); });

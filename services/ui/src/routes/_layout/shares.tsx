@@ -1,9 +1,10 @@
 import { useQueries, useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { Circle } from "lucide-react"
+import { Circle, Drone } from "lucide-react"
 import { Suspense } from "react"
 
 import { DronesService } from "@/client"
+import { EmptyState } from "@/components/Common/EmptyState"
 import { formatExpiry, ShareDialog } from "@/components/Drones/ShareDialog"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -56,13 +57,13 @@ function ShareList() {
 
   if (drones.length === 0) {
     return (
-      <p className="text-muted-foreground py-12 text-center">
-        No drones yet — register one on the{" "}
+      <EmptyState icon={Drone} title="No drones yet">
+        Shares belong to a drone — register one on the{" "}
         <Link to="/drones" className="underline">
           Drones
         </Link>{" "}
-        page first.
-      </p>
+        page first
+      </EmptyState>
     )
   }
 
