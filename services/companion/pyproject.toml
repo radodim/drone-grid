@@ -1,7 +1,7 @@
 [project]
 name = "drone_grid_companion"
 version = "0.1.0"
-description = "Add your description here"
+description = "Companion program that connects a MAVLink flight controller and camera to a Drone Grid instance"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

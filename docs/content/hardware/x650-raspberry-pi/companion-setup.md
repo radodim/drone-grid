@@ -1,13 +1,13 @@
 # Companion setup
 
-### Flashing the SD card with Raspberry OS Lite 64-bit (Trixie 13.4)
+### Flashing the SD card with Raspberry Pi OS Lite 64-bit (Trixie 13.4)
 
 For this purpose [Raspberry Pi Imager](https://www.raspberrypi.com/software/) is used.
-Enabling SSH & connecting to your Wi-Fi network is recommended.
+Enabling SSH and connecting to your Wi-Fi network is recommended.
 
 ### Configuring the companion with the utility script
 
-!!! Info "The plan is to have fully automated companion onboarding (including credential generation via device grant authorization) but at this point in time there is some manual intervention"
+!!! Info "The plan is to have fully automated companion onboarding (including credential generation via the device authorization grant), but for now a few manual steps are required"
 
 Run the following commands and enter your password when prompted:
 
@@ -32,11 +32,11 @@ You should see the following output at the end:
 
 ### Video systemd service test
 
-Go to either the [central Drone Grid instance](https://drone-grid.com) if you are registered there or your local one to generate creds for the drone.
-Within the Drones menu click Add Drone (give it a name) and copy the credentials.
+To generate credentials for the drone, go to the [central Drone Grid instance](https://drone-grid.com) (if you are registered there) or your local instance.
+Within the Drones menu, click Add Drone (give it a name) and copy the credentials.
 
-Edit the companion.env at the location /etc/drone-grid/companion.env and paste the DRONE_ID & DRONE_SECRET pair.
-If using a local Drone Grid instance follow the instructions within the comments in the .env file
+Edit /etc/drone-grid/companion.env and paste the DRONE_ID and DRONE_SECRET pair.
+If using a local Drone Grid instance, follow the instructions in the comments of the env file:
 
 ``` shell
 # Drone Grid companion configuration
@@ -57,9 +57,8 @@ sudo systemctl start drone-grid-video
 journalctl -u drone-grid-video -f 
 ```
 
-If there are no errors in the logs go to the Drone Grid UI - within the Drones view the green Live status is clickable and clicking it navigates you to the live video feed.
+If there are no errors in the logs, go to the Drone Grid UI: within the Drones view, the green Live status is clickable and takes you to the live video feed.
 
-TODO: Validate glass-to-glass between SD cards
 
 ### Control configuration and test
 
@@ -87,9 +86,9 @@ EOF
 sudo netplan apply
 ```
 
-Some time is needed for the config to actually apply **and the drone must be connected to the companion via the ETH cable that comes with the X650 dev kit**.
+Some time is needed for the config to actually apply **and the drone must be connected to the companion via the Ethernet cable that comes with the X650 dev kit**.
 The drone should also be on and [configured](drone-setup.md).
-Here is what the configuring state looks like vs connected and the expected output of the ip route command after that.
+Here is what the connecting state looks like vs. connected, plus the expected output of the `ip route` command after that:
 
 ``` shell
 $ nmcli | grep eth0
@@ -102,7 +101,7 @@ $ ip route get 10.41.10.2
 10.41.10.2 dev eth0 src 10.41.10.1 uid 1000
 ```
 
-When the status switches to connected you can examine the logs of the systemd service of the companion (the control component)
+When the status switches to connected, start the companion systemd service (the control component) and examine its logs:
 
 ``` shell
 $ sudo systemctl start drone-grid-companion
@@ -119,17 +118,17 @@ Aug 16 17:00:06 dgpi python[1099]: INFO:app.drone.controller:Waiting for flight 
 Aug 16 17:00:06 dgpi python[1099]: INFO:app.drone.controller:Flight controller connected. Streaming telemetry and accepting commands.
 ```
 
-If you see the message "Streaming telemetry and accepting commands" in the logs, when clicking on the live stream in the UI (video must be up also) you will now see the live telemetry also.
+If you see the message "Streaming telemetry and accepting commands" in the logs, click the live stream in the UI (the video service must be running too) — you will now see live telemetry as well.
 
 ### 5G/4G modem connection
 
-Initially a 4G USB Modem was used (can be seen in the images) but the connection across restarts would take a really long time.
-Another interesting observation is that for the **initial** connection to work (during one 24-hour period) the SIM card had to be used through a phone.
+Initially, a 4G USB modem was used (it can be seen in the images), but re-establishing the connection after a restart took a really long time.
+Another interesting observation: the modem would not connect to the internet unless the SIM card had first been used in an actual mobile device — a successful connection through a real phone (within the same 24-hour period) was a prerequisite for the SIM working in the modem.
 
-After a while the modem became more and more unreliable. As a temporary solution an old phone is currently used as a mobile hotspot onboard.
+After a while, the modem became more and more unreliable. As a temporary solution, an old phone is currently used as a mobile hotspot onboard.
 Surprisingly, this works much better and the connection is a lot faster.
 
-How to connect to the mobile hostpot (your SSH connection will terminate - this is expected):
+How to connect to the mobile hotspot (your SSH connection will terminate - this is expected):
 
 ```
 $ sudo nmcli device wifi rescan
@@ -137,7 +136,7 @@ $ sudo nmcli device wifi list # find the SSID of your mobile hotspot
 $ sudo nmcli device wifi connect <HOTSPOT_SSID> password <YOUR_PASSWORD>
 ```
 
-After that nmcli should output your Wi-Fi hotspot's SSID.
+After that, `nmcli` should output your Wi-Fi hotspot's SSID.
 
 !!! Info "This solution is not ideal. Better mobile data hardware solutions are being explored."
 
