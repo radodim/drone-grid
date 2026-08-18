@@ -11,7 +11,7 @@ _An open-source cloud platform for operating drones in near real time._
 
 </div>
 
-<video controls muted playsinline poster="assets/video/landing-demo-poster.jpg" style="display: block; max-width: 720px; width: 100%; margin: 0 auto; border-radius: 8px;" src="assets/video/landing-demo.mp4"></video>
+<video controls muted playsinline poster="assets/video/readme_poster.jpg" style="display: block; max-width: 720px; width: 100%; margin: 0 auto; border-radius: 8px;" src="assets/video/landing-demo.mp4"></video>
 
 <div style="text-align: center;" markdown>
 
@@ -44,6 +44,25 @@ You may then register a user within the system and proceed with configuring your
 Windows has not been tested for development.
 mDNS may not work as expected with WSL and virtualization in general.
 Currently, dual booting Ubuntu is the recommended solution for running Drone Grid locally on a Windows machine.
+
+### Fly a simulated drone (PX4 SITL)
+
+No aircraft required — the local stack can fly a simulated PX4 drone with a virtual camera (Gazebo):
+
+1. In the UI, go to **Drones → Add Drone**, give it a name and copy the generated `DRONE_ID` / `DRONE_SECRET`.
+2. In `compose.override.yaml`, uncomment the `px4-sitl` and `companion` blocks and paste the credentials into the `companion` service's environment.
+3. Start the new services (the first run downloads the PX4 SITL image — give Gazebo a minute to boot):
+
+    ``` shell
+    docker compose up -d px4-sitl companion
+    ```
+
+4. Back in the Drones view the drone goes **Live** — open it to see the simulated camera feed and telemetry, then arm and fly it from the browser.
+
+!!! Info "Simulation performance"
+
+    The simulation is really slow (tested on a Mac mini M4) and is not representative of the system's performance on a real UAV — video and control latency are much lower on real hardware. It is nevertheless a useful instrument for testing.
+    There is a plan to enhance this with Simulation as a service, backed by proper GPU infrastructure — see the [roadmap](roadmap.md).
 
 ## Explore
 

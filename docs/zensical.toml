@@ -27,7 +27,6 @@ extra_css = ["stylesheets/extra.css"]
 # guard against publishing tooling files.
 exclude_docs = """
 .*
-*.mp4
 *.drawio
 """
 
@@ -75,4 +74,7 @@ Hardware = [
     { "Safety recommendations" = "hardware/x650-raspberry-pi/safety-recommendations.md" },
   ] },
 ]
+
+[[project.nav]]
+Roadmap = "roadmap.md"
 

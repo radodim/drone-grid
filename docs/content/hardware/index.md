@@ -7,11 +7,11 @@ hide:
 # Hardware
 
 Drone Grid has been tested with only one hardware configuration as of today, although there have been many successful flights with that single configuration :)
-In theory, the system should work with other companion computers and Pixhawk flight controllers (this is one of the many project goals) running PX4 - this of course needs to be tested thoroughly.
+In theory, the system should work with other companion computers and other Pixhawk flight controllers running PX4 (this is one of the many project goals) — this, of course, needs to be tested thoroughly.
 
-Each configuration will contain the used components, setup instructions and recommendations.
-The templates may later be generalized to extract companions into their own separate configurations if they can be reused across drone platforms.
-For now they are in one document for simplicity.
+Each configuration contains the components used, setup instructions and recommendations.
+Companions may later be extracted into separate configurations of their own if they can be reused across drone platforms.
+For now everything is in one document for simplicity.
 
 ## Supported configurations
 

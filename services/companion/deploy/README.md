@@ -9,7 +9,8 @@ SITL simulator only — not the Pi.)
 - **64-bit Raspberry Pi OS** (`uname -m` → `aarch64`). 32-bit is unsupported:
   uv has no managed Python 3.12 build for it. The Pi's default Python (3.14)
   is irrelevant — uv provisions its own **3.12** (pinned via `.python-version`),
-  matching the version the project is developed and tested on.
+  matching the version the project is developed and tested on. Flashing
+  walkthrough: [companion setup guide](../../../docs/content/hardware/x650-raspberry-pi/companion-setup.md#flashing-the-sd-card-with-raspberry-pi-os-lite-64-bit-trixie-134).
 - Camera enabled, and the service user in the `video` group
   (`sudo usermod -aG video "$USER"`; usually already true for `pi`).
 - Working clock (`timedatectl` — NTP synced), or the `wss://` TLS handshake
@@ -17,20 +18,15 @@ SITL simulator only — not the Pi.)
 
 ## First-time setup
 
-```bash
-# 1. Deploy key (read-only) so the Pi can pull this private repo:
-ssh-keygen -t ed25519 -f ~/.ssh/drone-grid -N ""
-cat ~/.ssh/drone-grid.pub      # add as a READ-ONLY Deploy Key in the repo settings
-cat >> ~/.ssh/config <<'EOF'
-Host github.com
-  IdentityFile ~/.ssh/drone-grid
-EOF
+The same steps with full context (drone credentials, video and control
+verification) live in the [companion setup guide](../../../docs/content/hardware/x650-raspberry-pi/companion-setup.md#configuring-the-companion-with-the-utility-script).
 
-# 2. Clone and install:
-git clone git@github.com:radodim/drone-grid.git
+```bash
+# 1. Clone and install:
+git clone https://github.com/radodim/drone-grid.git
 ./drone-grid/services/companion/deploy/install.sh
 
-# 3. Fill in secrets, then start:
+# 2. Fill in secrets, then start:
 sudo nano /etc/drone-grid/companion.env    # DRONE_ID, DRONE_SECRET, URLs...
 sudo systemctl start drone-grid-companion
 sudo systemctl start drone-grid-video
@@ -57,9 +53,13 @@ sudo systemctl restart drone-grid-companion
 Everything else lives in the documentation site (published at
 <https://docs.drone-grid.com>, sources in `docs/`):
 
-- [Companion install & operations](../../../docs/content/hardware/x650-raspberry-pi/companion-setup.md#companion-install)
-  — pointing at a LAN dev stack, persistent journald logs, ops commands
-- [Flight controller link](../../../docs/content/hardware/x650-raspberry-pi/companion-setup.md#flight-controller-link)
-  — Pi ↔ Pixhawk Ethernet, netplan + nsh config, verification
-- [Camera & video](../../../docs/content/hardware/x650-raspberry-pi/companion-setup.md#camera--video)
-  — the mediamtx + WHIP video service, camera settings, rollback
+- [Companion configuration](../../../docs/content/hardware/x650-raspberry-pi/companion-setup.md#configuring-the-companion-with-the-utility-script)
+  — install script, credentials, env file
+- [Video service test](../../../docs/content/hardware/x650-raspberry-pi/companion-setup.md#video-systemd-service-test)
+  — verifying the live feed end to end
+- [Control configuration](../../../docs/content/hardware/x650-raspberry-pi/companion-setup.md#control-configuration-and-test)
+  — Pi ↔ Pixhawk Ethernet, netplan, verification
+- [Mobile uplink](../../../docs/content/hardware/x650-raspberry-pi/companion-setup.md#5g4g-modem-connection)
+  — 4G/5G modem and hotspot notes
+- [Persistent journald logs](../../../docs/content/hardware/x650-raspberry-pi/companion-setup.md#enabling-persistent-journalctl-logs-by-default-they-are-only-in-ram)
+  — keeping flight logs across reboots

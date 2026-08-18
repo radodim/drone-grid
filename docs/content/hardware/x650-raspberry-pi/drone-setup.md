@@ -3,7 +3,7 @@
 !!! Danger "Please be careful and make sure the propellers are off during bench testing."
 
 - The drone assembly is done by following the [instructions](https://docs.holybro.com/drone-development-kit/x650-development-kit/download).
-- After assembly the drone must be configured. [The PX4 instructions](https://docs.px4.io/main/en/config_mc/#multicopter-configuration) for multicopter configuration are very useful for this purpose.
+- After assembly, the drone must be configured. [The PX4 instructions](https://docs.px4.io/main/en/config_mc/#multicopter-configuration) for multicopter configuration are very useful for this purpose.
 - [QGroundControl](https://qgroundcontrol.com/) was used for the drone configuration.
 
 ## Radio transmitter and receiver setup
@@ -13,29 +13,29 @@
     You need a radio because Drone Grid is an experimental system.<br>
     We recommend the flight configuration described in [Safety recommendations](safety-recommendations.md).
 
-You need to ensure that the receiver and transmitter are the same ELRS version (if applicable for your setup - in the EU only ELRS is allowed, feel free to use any compatible transmitter and receiver setup).
+You need to ensure that the receiver and transmitter run the same ELRS version (if applicable to your setup — feel free to use any compatible transmitter and receiver combination that is legal in your region).
 
-The RP2 ELRS receiver pads were soldered to pin headers that were then plugged into a RC Servo Y-harness.
+The RP2 ELRS receiver pads were soldered to pin headers that were then plugged into an RC servo Y-harness.
 The signal from the receiver goes to the kill switch as well as the RC IN input of the flight controller.
 
-- For the receiver follow [these instructions](http://expresslrs.org/quick-start/webui/)
-- For the transmitter follow [these](https://cdn.shopify.com/s/files/1/0701/8066/7584/files/T8L_V1.4.pdf?v=1770617495).
+- For the receiver, follow [these instructions](http://expresslrs.org/quick-start/webui/)
+- For the transmitter, follow [these instructions](https://cdn.shopify.com/s/files/1/0701/8066/7584/files/T8L_V1.4.pdf?v=1770617495).
 
 ## Specific configuration in QGroundControl
 
 !!! Info "For the initial configuration it is better to use the USB-C cable that comes with the X650 Dev Kit."
 
-    If you do not use the cable the Actuators menu item will not appear (this likely depends on the version of QGroundControl). Everything else can be setup over the SiK telemetry module wirelessly.
+    If you do not use the cable, the Actuators menu item will not appear (this likely depends on the version of QGroundControl). Everything else can be set up over the SiK telemetry module wirelessly.
 
 -   **Summary**
     - Airframe - Generic Quadcopter
     - PX4 version - 1.16.2
 -   Follow the instructions in the **Sensors Config** menu, refer to QGroundControl and PX4 docs (listed above) for additional details.
--   **Radio** - setup the radio after the section above
+-   **Radio** - set up the radio as described in the section above
 -   **Flight modes configuration**
     -   Flight Mode Settings
         - The first Drone Grid drone supports Stabilized, Position and Hold [flight modes](https://docs.px4.io/main/en/flight_modes_mc/) over radio. You may add any flight modes you wish here.
-        - Currently, only the POSCTL flight mode is supported in Drone Grid (requires an active GPS lock)
+        - Currently, only the POSCTL flight mode is supported in Drone Grid (requires an active GPS lock).
     -   Switch Settings (set the channels based on your preferences)
         -   Arm switch channel
         -   Emergency Kill switch channel
@@ -47,12 +47,12 @@ The signal from the receiver goes to the kill switch as well as the RC IN input 
         -   Return switch channel
 -   **[Power](https://docs.px4.io/v1.16/en/config/battery#basic_settings)**
 -   **Actuators**
-    - The motors were configured with DSHOT600 instead of PWM (AUX 1-4 corresponds to Motor 1-4). This removes the need for ESC calibration.
+    - The motors were configured with DSHOT600 instead of PWM (AUX 1-4 correspond to Motors 1-4). This removes the need for ESC calibration.
 -   **Safety**  
     -   !!! Warning 
 
             - Configuring Return To Launch settings that are appropriate for your flight location and in compliance with your local laws and regulations is a must.
-            - The same (as Return To Launch settings) goes for RC Loss failsafe trigger (return mode) and Low Battery Failsafe Trigger
+            - The same goes for the RC Loss failsafe trigger (return mode) and the Low Battery failsafe trigger
 
 ## Drone Grid configurations
 
@@ -67,7 +67,7 @@ nsh> param set COM_RC_IN_MODE 2
 nsh> param save
 ```
 
-Ensure the output of the nuttx shell command is as follows:
+Ensure the output of the NuttX shell command is as follows:
 
 ``` shell
 nsh> param show COM_RC_IN_MODE
@@ -80,7 +80,7 @@ x + COM_RC_IN_MODE [315,528] : 2
 
 ### [Ethernet configuration](https://docs.px4.io/v1.16/en/advanced_config/ethernet_setup#px4-ethernet-setup)
 
-There are slight discrepancies between the official PX4 ethernet setup guide and what actually had to be done.
+There are slight discrepancies between the official PX4 Ethernet setup guide and what actually had to be done.
 The following has been tested and works on this hardware configuration:
 
 ``` shell
@@ -102,8 +102,8 @@ reboot
 
 #### Verification (companion not connected)
 
-This is a completely expected result if you started with the drone setup and have not gotten to [the companion setup](./companion-setup.md) yet:
-In the output of the mavlink status command look for the instance whose transport protocol is UDP.
+This is a completely expected result if you started with the drone setup and have not gotten to [the companion setup](./companion-setup.md) yet.
+In the output of the `mavlink status` command, look for the instance whose transport protocol is UDP.
 
 ``` shell
 nsh> netman show
@@ -143,7 +143,7 @@ instance #1:
 
 #### Verification (companion configured and connected by following [the companion setup](./companion-setup.md))
 
-Raspberry Pi connected via ETH cable that comes with X650 dev kit:
+Raspberry Pi connected via the Ethernet cable that comes with the X650 dev kit:
 
 ``` shell
 nsh> ifconfig

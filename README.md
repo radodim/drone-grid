@@ -4,7 +4,7 @@
 
 <h1 align="center">Drone Grid</h1>
 
-<p align="center"><em>An open-source cloud platform for operating drones in near real time.</em><p>
+<p align="center"><em>An open-source cloud platform for operating drones in near real time.</em></p>
 
 ---
 <p align="center">
