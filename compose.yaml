@@ -256,6 +256,7 @@ services:
       - --certificatesresolvers.le.acme.storage=/certificates/acme.json
       - --certificatesresolvers.le.acme.httpchallenge.entrypoint=http
       - --accesslog
+      - --accesslog.fields.headers.names.User-Agent=keep
       - --log
     ports:
       - "80:80"
