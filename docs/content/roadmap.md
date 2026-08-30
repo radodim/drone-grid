@@ -19,16 +19,12 @@ Where this is headed. The stages below describe direction, not commitments or da
 
 ## Next up
 
-- Autonomous mission planning and execution (GIS, geofencing)
-- Flight telemetry aggregation and visualization
-- Onboard and offboard computer vision
-- Tests with fixed-wing and VTOL UAVs
-- Drone Grid flight via satellite internet
-- Expanding hardware and software support — ArduPilot, more flight controllers and companion computers
-- Simulation as a service, backed by proper GPU infrastructure — currently, [simulation](index.md#fly-a-simulated-drone-px4-sitl) is supported only locally
-- Continuous system refinement and optimization
+- Autonomous capabilities
+- Broader hardware and platform support
+- Scaling the system
 
-## Exploring
+## Full roadmap
 
-- Natural language interface to the drone
-- Beyond UAVs — other unmanned systems: rovers, boats, submarines
+The project's ambitions don't end here. If you want more details in the
+context of potential collaboration opportunities, we're one email away:
+[hello@drone-grid.com](mailto:hello@drone-grid.com).

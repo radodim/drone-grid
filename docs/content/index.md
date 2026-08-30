@@ -62,7 +62,6 @@ No aircraft required — the local stack can fly a simulated PX4 drone with a vi
 !!! Info "Simulation performance"
 
     The simulation is really slow (tested on a Mac mini M4) and is not representative of the system's performance on a real UAV — video and control latency are much lower on real hardware. It is nevertheless a useful instrument for testing.
-    There is a plan to enhance this with Simulation as a service, backed by proper GPU infrastructure — see the [roadmap](roadmap.md).
 
 ## Explore
 

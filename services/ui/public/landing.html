@@ -395,8 +395,9 @@
     background: var(--border);
   }
   .stage.now li::before { background: var(--chip-live); }
-  .stage li a { color: var(--primary); text-underline-offset: 3px; }
+  .stage a { color: var(--primary); text-underline-offset: 3px; }
   .stage li .warn { margin-top: 0.5rem; }
+  .stage p { font-size: 0.875rem; color: var(--card-foreground); line-height: 1.6; margin: 1.125rem 0 0; }
 
   /* ── Let's build together ────────────────────────────────── */
   .build {
@@ -526,8 +527,7 @@
       <h1>Fly a drone from anywhere.</h1>
       <p class="hero-sub">
         Today, Drone Grid is a cloud system for operating multirotor UAVs.
-        Its ambitions are far greater than that — see the
-        <a href="#roadmap">roadmap</a>.
+        Its ambitions are far greater than that.
       </p>
       <div class="hero-cta">
         <a class="btn btn-primary" href="/drones">Try Drone Grid</a>
@@ -666,22 +666,18 @@
         <div class="stage">
           <span class="stage-tag">Next up</span>
           <ul>
-            <li>Autonomous mission planning and execution (GIS, geofencing)</li>
-            <li>Flight telemetry aggregation and visualization</li>
-            <li>Onboard and offboard computer vision</li>
-            <li>Tests with fixed-wing and VTOL UAVs</li>
-            <li>Drone Grid flight via satellite internet</li>
-            <li>Expanding hardware and software support — ArduPilot, more flight controllers and companion computers</li>
-            <li>Simulation as a service — currently, simulation is supported only locally</li>
-            <li>Continuous system refinement and optimization</li>
+            <li>Autonomous capabilities</li>
+            <li>Broader hardware and platform support</li>
+            <li>Scaling the system</li>
           </ul>
         </div>
         <div class="stage">
-          <span class="stage-tag">Exploring</span>
-          <ul>
-            <li>Natural language interface to the drone</li>
-            <li>Beyond UAVs — other unmanned systems: rovers, boats, submarines</li>
-          </ul>
+          <span class="stage-tag">Full roadmap</span>
+          <p>
+            The project's ambitions don't end here. If you want more details
+            in the context of potential collaboration opportunities, we're one
+            email away: <a href="mailto:hello@drone-grid.com">hello@drone-grid.com</a>.
+          </p>
         </div>
       </div>
     </div>
